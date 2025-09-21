@@ -1,0 +1,257 @@
+/* Config Components Styles */
+.channel-config,
+.program-config {
+  padding: 20px;
+  color: var(--channel-text-color);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.config-button {
+  background-color: #333;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.config-button:hover {
+  background-color: #444;
+  box-shadow: 0 0 10px var(--channel-text-color);
+}
+
+.channel-form,
+.program-form {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border: 1px solid var(--channel-text-color);
+  margin: 20px 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  background-color: #222;
+  border: 1px solid var(--channel-text-color);
+  color: var(--channel-text-color);
+  font-family: inherit;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-with-button input {
+  flex: 1;
+}
+
+.input-with-button button {
+  white-space: nowrap;
+}
+
+/* Estilos específicos para el formulario de programa */
+.season-section {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid var(--channel-text-color);
+}
+
+.season-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--channel-text-color);
+}
+
+.episodes-list {
+  margin-top: 15px;
+}
+
+.episodes-list h4 {
+  margin-bottom: 10px;
+}
+
+.episode-item {
+  display: grid;
+  grid-template-columns: 100px 1fr 150px;
+  gap: 15px;
+  align-items: start;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(51, 255, 51, 0.2);
+}
+
+.episode-item .form-group {
+  margin-bottom: 0;
+}
+
+.episode-item .form-group label {
+  font-size: 0.9em;
+}
+
+.episode-item input {
+  padding: 5px;
+}
+
+.import-view {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid var(--channel-text-color);
+  text-align: center;
+}
+
+.import-view p {
+  margin-bottom: 20px;
+}
+
+.channels-list,
+.programs-list {
+  margin-top: 30px;
+}
+
+.channel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.channel-tag {
+  background-color: rgba(51, 255, 51, 0.1);
+  border: 1px solid var(--channel-text-color);
+  border-radius: 4px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-tag button {
+  background: none;
+  border: none;
+  color: #ff3333;
+  cursor: pointer;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channel-tag button:hover {
+  color: #ff6666;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.channel-item,
+.program-item {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--channel-text-color);
+  margin-bottom: 10px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.channel-list-item-info,
+.program-list-item-info {
+  flex: 1;
+}
+
+.channel-list-header,
+.program-list-header {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.channel-list-number,
+.program-list-number {
+  font-family: 'Digital-7', monospace;
+  font-size: 1.2em;
+}
+
+.channel-list-name,
+.program-list-name {
+  font-weight: bold;
+}
+
+.channel-list-description,
+.program-list-description {
+  color: #999;
+  font-size: 0.9em;
+  margin: 5px 0 0 0;
+}
+
+.channel-actions,
+.program-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-button,
+.delete-button {
+  padding: 5px 10px;
+  border: 1px solid var(--channel-text-color);
+  background-color: transparent;
+  color: var(--channel-text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-button:hover,
+.delete-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.delete-button {
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.delete-button:hover {
+  background-color: rgba(255, 68, 68, 0.1);
+}

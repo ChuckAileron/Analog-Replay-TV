@@ -1,0 +1,33 @@
+/* Menú estilo 90s */
+.menu-90s {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 300px;
+  z-index: 2000;
+}
+
+.menu-90s .menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.menu-90s .menu-sections {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.menu-90s .section-button {
+  flex: 1;
+  font-size: 16px !important;
+  padding: 8px 12px !important;
+}
+
+/* Botón de menú estilo 90s */
+.menu-button-90s {
+  padding: 8px 15px !important;
+  font-size: 18px !important;
+}

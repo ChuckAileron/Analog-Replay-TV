@@ -1,0 +1,135 @@
+/* Estilos comunes para la interfaz de los 90s */
+.style-90s {
+  --text-color: #33ff33;
+  --bg-color: rgba(0, 0, 0, 0.95);
+  --border-color: #33ff33;
+  --button-bg: #222;
+  --button-hover-bg: #333;
+  --button-active-bg: #33ff33;
+  --font-family: "Digital-7", 'Courier New', Courier, monospace;
+}
+
+/* Contenedores principales */
+.style-90s .content-container {
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  padding: 20px;
+  box-shadow: 0 0 20px var(--text-color);
+  font-family: var(--font-family);
+}
+
+/* Encabezados */
+.style-90s h1, 
+.style-90s h2, 
+.style-90s h3 {
+  color: var(--text-color);
+  text-align: center;
+  font-family: var(--font-family);
+  text-shadow: 0 0 10px var(--text-color);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--text-color);
+}
+
+/* Botones */
+.style-90s button:not(.tv-guide button) {
+  background-color: var(--button-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 10px 15px;
+  font-family: var(--font-family);
+  font-size: 18px;
+  cursor: pointer;
+  text-shadow: 0 0 5px var(--text-color);
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.style-90s button:hover:not(.tv-guide button) {
+  background-color: var(--button-hover-bg);
+  box-shadow: 0 0 15px var(--text-color);
+}
+
+.style-90s button.active:not(.tv-guide button) {
+  background-color: var(--button-active-bg);
+  color: #000;
+  text-shadow: none;
+}
+
+/* Inputs y campos de formulario */
+.style-90s input:not(.tv-guide input),
+.style-90s textarea:not(.tv-guide textarea) {
+  background: var(--button-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 12px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.style-90s input:focus:not(.tv-guide input),
+.style-90s textarea:focus:not(.tv-guide textarea) {
+  outline: none;
+  box-shadow: 0 0 10px var(--text-color);
+}
+
+/* Efectos de texto */
+.style-90s .glowing-text {
+  text-shadow: 
+    0 0 5px var(--text-color),
+    0 0 10px var(--text-color),
+    0 0 15px var(--text-color);
+}
+
+/* Listas y elementos de lista */
+.style-90s .list-item:not(.tv-guide .list-item) {
+  border-bottom: 1px solid rgba(51, 255, 51, 0.3);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.style-90s .list-item:last-child:not(.tv-guide .list-item) {
+  border-bottom: none;
+}
+
+/* Scrollbars personalizados */
+.style-90s *::-webkit-scrollbar {
+  width: 8px;
+}
+
+.style-90s *::-webkit-scrollbar-track {
+  background: var(--button-bg);
+}
+
+.style-90s *::-webkit-scrollbar-thumb {
+  background: var(--text-color);
+  border-radius: 4px;
+}
+
+.style-90s *::-webkit-scrollbar-thumb:hover {
+  background: var(--button-hover-bg);
+  box-shadow: 0 0 10px var(--text-color);
+}
+
+/* Efectos de animación */
+@keyframes textFlicker90s {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.style-90s .flicker-text {
+  animation: textFlicker90s 2s infinite;
+}
+
+/* Layout de secciones */
+.style-90s .section-container:not(.tv-guide .section-container) {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+}

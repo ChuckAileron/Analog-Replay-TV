@@ -1,0 +1,132 @@
+import { useEffect, useState } from 'react';
+import type { TVProgram, TVSeason, TVEpisode } from '../types/program.types';
+import { MediaPlayer, MediaProvider } from '@vidstack/react';
+import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
+import '@vidstack/react/player/styles/default/theme.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
+import '../styles/video-player.css';
+
+interface VideoPlayerProps {
+  program: TVProgram;
+  seasonNumber?: number;
+  decadeStyle?: '90s' | '00s';
+}
+
+export function VideoPlayer({
+  program,
+  seasonNumber = 1,
+  decadeStyle = '90s'
+}: VideoPlayerProps) {
+  const [currentSeason, setCurrentSeason] = useState<TVSeason | null>(null);
+  const [currentEpisode, setCurrentEpisode] = useState<TVEpisode | null>(null);
+  const [videoSource, setVideoSource] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Efecto para cargar la temporada y episodio
+  useEffect(() => {
+    try {
+      const season = program.seasons.find((s: TVSeason) => s.season === seasonNumber);
+      if (season && season.episodes.length > 0) {
+        setCurrentSeason(season);
+        setCurrentEpisode(season.episodes[0]);
+      } else {
+        throw new Error(`No se encontraron episodios para la temporada ${seasonNumber}`);
+      }
+    } catch (err) {
+      setError(`Error al cargar la temporada: ${err}`);
+    }
+  }, [program, seasonNumber]);
+
+  // Efecto para construir la ruta del video
+  useEffect(() => {
+    async function loadVideo() {
+      if (currentSeason?.contentPath && currentEpisode?.fileName) {
+        try {
+          let fullPath = currentSeason.contentPath;
+          if (!fullPath.endsWith('/') && !fullPath.endsWith('\\')) {
+            fullPath += '/';
+          }
+          fullPath += currentEpisode.fileName;
+
+          // Validar y obtener la ruta real del archivo
+          const realPath = await window.electronAPI.getLocalFilePath(fullPath);
+          const videoUrl = `asset://${realPath}`;
+          console.log('Video URL:', videoUrl);
+          setVideoSource(videoUrl);
+        } catch (err) {
+          console.error('Error loading video:', err);
+          setError(`Error al cargar el video: ${err}`);
+        }
+      }
+    }
+    loadVideo();
+  }, [currentSeason, currentEpisode]);
+
+  if (error) {
+    return (
+      <div className={`video-player-container style-${decadeStyle}`}>
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`video-player-container style-${decadeStyle}`}>
+      {videoSource && (
+        <div className="video-player">
+          <MediaPlayer
+            src={videoSource}
+            title={currentEpisode?.title}
+            crossorigin="anonymous"
+            playsinline
+            aspectRatio="16/9"
+            className="media-player video-wrapper"
+            onMouseEnter={() => setShowInfo(true)}
+            onMouseLeave={() => setShowInfo(false)}
+            onCanPlay={() => {
+              console.log('El video está listo para reproducirse');
+            }}
+            onLoadedData={() => {
+              console.log('Datos del video cargados');
+            }}
+            onLoadStart={() => {
+              console.log('Iniciando carga del video');
+              console.log('URL del video:', videoSource);
+            }}
+            onError={(error) => {
+              const message = error instanceof Error ? error.message : String(error);
+              console.error('Error en el reproductor:', message);
+              setError(`Error al cargar el video: ${message}`);
+            }}
+            autoplay
+            muted
+          >
+            <MediaProvider>
+              <DefaultVideoLayout icons={defaultLayoutIcons} thumbnails="" />
+              <div 
+                className={`episode-info ${showInfo ? 'show' : ''}`}
+              >
+                <div className="program-name">{program.name}</div>
+                {currentEpisode && (
+                  <>
+                    <div className="episode-title">
+                      <span className="episode-number">
+                        S{currentSeason?.season.toString().padStart(2, '0')}
+                        E{currentEpisode.episode.toString().padStart(2, '0')}
+                      </span>
+                      <span className="title">{currentEpisode.title}</span>
+                    </div>
+                    {currentEpisode.description && (
+                      <div className="episode-description">{currentEpisode.description}</div>
+                    )}
+                  </>
+                )}
+              </div>
+            </MediaProvider>
+          </MediaPlayer>
+        </div>
+      )}
+    </div>
+  );
+}

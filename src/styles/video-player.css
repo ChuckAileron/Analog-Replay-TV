@@ -1,0 +1,216 @@
+.video-player-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.media-player {
+  --media-brand: #4488ff;
+  --media-focus-ring: #4d90fe;
+  --media-focus-ring-width: 2px;
+  --media-loading-icon-size: 100px;
+  --media-control-height: 48px;
+  --media-control-padding: 8px;
+  --media-control-background: rgba(20, 20, 20, 0.7);
+  --media-control-hover-background: rgba(20, 20, 20, 0.85);
+  --media-control-border-radius: 4px;
+  --media-volume-width: 80px;
+  --media-time-width: 80px;
+  --media-time-divider: '/';
+}
+
+.media-player .vds-buffering-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.media-player .vds-scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.media-player:hover .vds-scrim {
+  opacity: 1;
+}
+
+.media-player .vds-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: var(--media-control-padding);
+  background: var(--media-control-background);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.media-player:hover .vds-controls {
+  opacity: 1;
+}
+
+.media-player .vds-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.media-player button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--media-brand);
+  border-radius: var(--media-control-border-radius);
+}
+
+.media-player button:hover {
+  background: var(--media-control-hover-background);
+}
+
+.media-player .vds-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 8px 0;
+  position: relative;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.media-player .vds-progress-value {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--media-brand);
+  border-radius: 2px;
+}
+
+.media-player .vds-volume {
+  width: var(--media-volume-width);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.media-player .vds-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--media-brand);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+.media-player .vds-volume::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Información del episodio */
+.episode-info {
+  width: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent);
+  padding: 20px;
+  pointer-events: none;
+}
+
+.episode-info.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.program-name {
+  font-size: 1.5em;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.episode-title {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.episode-number {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.title {
+  flex: 1;
+}
+
+.episode-description {
+  font-size: 0.9em;
+  opacity: 0.8;
+  max-width: 80%;
+  color: white;
+}
+
+/* Error message */
+.error-message {
+  padding: 20px;
+  text-align: center;
+  margin: 20px;
+  border-radius: 4px;
+  font-size: 1.1em;
+  color: #ff3333;
+  background: rgba(255, 0, 0, 0.1);
+  border: 2px solid #ff3333;
+}
+
+/* Estilos específicos para los 90s */
+.style-90s .media-player {
+  --media-brand: #33ff33;
+  --media-focus-ring: #33ff33;
+  border: 2px solid #33ff33;
+  box-shadow: 0 0 15px rgba(51, 255, 51, 0.5);
+}
+
+/* Estilos específicos para los 2000s */
+.style-00s .media-player {
+  --media-brand: #4488ff;
+  --media-focus-ring: #4488ff;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}

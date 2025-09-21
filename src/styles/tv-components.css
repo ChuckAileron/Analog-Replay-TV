@@ -1,0 +1,134 @@
+/* TV Channel Styles */
+.tv-channel {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.channel-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.channel-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  z-index: 100;
+}
+
+.channel-number {
+  font-size: 48px;
+  font-family: 'Digital-7', monospace;
+  color: var(--channel-text-color);
+  text-shadow: 0 0 10px var(--channel-text-color);
+}
+
+.channel-name {
+  font-size: 18px;
+  color: var(--channel-text-color);
+  text-shadow: 0 0 5px var(--channel-text-color);
+}
+
+/* TV Guide Styles */
+.tv-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background-color: rgba(0, 0, 0, 0.95);
+  border: 2px solid var(--channel-text-color);
+  color: var(--channel-text-color);
+  padding: 20px;
+  z-index: 1000;
+}
+
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--channel-text-color);
+  padding-bottom: 10px;
+}
+
+.close-button {
+  background: none;
+  border: 1px solid var(--channel-text-color);
+  color: var(--channel-text-color);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.program-list {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
+
+.program-item {
+  padding: 10px;
+  border-bottom: 1px solid rgba(51, 255, 51, 0.2);
+}
+
+.program-time {
+  font-family: 'Digital-7', monospace;
+  margin-right: 10px;
+}
+
+/* TV Controls Styles */
+.tv-controls-panel {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: var(--tv-border-color);
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.channel-controls,
+.menu-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.control-button {
+  background-color: #333;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: 'Digital-7', monospace;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.control-button:hover {
+  background-color: #444;
+  box-shadow: 0 0 10px var(--channel-text-color);
+}
+
+/* Static Effect */
+.channel-static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.2),
+    rgba(0, 0, 0, 0.2) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  opacity: 0.3;
+}

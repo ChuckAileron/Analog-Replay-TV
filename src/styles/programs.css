@@ -1,0 +1,166 @@
+/* Estilos específicos para el listado de programas */
+.program-item {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--channel-text-color);
+  margin-bottom: 15px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  border-radius: 4px;
+}
+
+.program-list-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.style-00s .program-list-header {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.style-00s .program-list-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.style-00s .program-list-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.style-00s .program-channels,
+.style-00s .program-seasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.style-00s .detail-label {
+  font-size: 0.9em;
+  color: #88aaff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Mantener estilos 90s */
+.style-90s .program-list-header {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(51, 255, 51, 0.2);
+}
+
+.style-90s .program-list-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--channel-text-color);
+  text-shadow: 0 0 5px var(--channel-text-color);
+}
+
+.style-90s .detail-label {
+  font-size: 0.9em;
+  color: rgba(51, 255, 51, 0.8);
+}
+
+.channel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.style-00s .channel-tag-small {
+  background: linear-gradient(to bottom, rgba(60, 100, 200, 0.2), rgba(40, 80, 180, 0.3));
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.style-00s .season-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.style-00s .season-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(to bottom, rgba(60, 100, 200, 0.2), rgba(40, 80, 180, 0.3));
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  color: #fff;
+}
+
+.style-00s .season-number {
+  font-weight: bold;
+  color: #88aaff;
+}
+
+.style-00s .season-year {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Mantener estilos 90s */
+.style-90s .channel-tag-small {
+  background-color: rgba(51, 255, 51, 0.1);
+  border: 1px solid rgba(51, 255, 51, 0.3);
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.style-90s .season-info {
+  background-color: rgba(51, 255, 51, 0.1);
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.style-90s .season-year {
+  color: rgba(51, 255, 51, 0.8);
+}
+
+.episode-count {
+  font-size: 0.85em;
+}
+
+.style-00s .no-items-message {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(to bottom, rgba(30, 50, 120, 0.3), rgba(20, 35, 90, 0.4));
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.style-90s .no-items-message {
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--channel-text-color);
+  border-radius: 4px;
+  color: rgba(51, 255, 51, 0.8);
+}
+
+.program-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: 20px;
+  align-self: center;
+}

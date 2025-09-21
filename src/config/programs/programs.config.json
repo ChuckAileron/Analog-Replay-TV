@@ -1,0 +1,154 @@
+{
+  "programs": [
+    {
+      "id": 1,
+      "name": "Soy La Comadreja",
+      "channel": [
+        "Cartoon Network",
+        "CN"
+      ],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 2025,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Soy La Comadreja   S05E01   I Are Terraformer!   La Colonia Espacial",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E01 - I Are Terraformer! - La Colonia Espacial.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "Soy La Comadreja   S05E03   The Drinking Fountain of Youth   La Fuente De La Juventud",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E03 - The Drinking Fountain of Youth - La Fuente De La Juventud.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "Soy La Comadreja   S05E04   Leave It to Weasel   Niños de Repuesto",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E04 - Leave It to Weasel - Niños de Repuesto.mp4"
+            },
+            {
+              "episode": 4,
+              "title": "Soy La Comadreja   S05E05   The Fairy GodFather   El Hada Padrino",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E05 - The Fairy GodFather - El Hada Padrino.mp4"
+            },
+            {
+              "episode": 5,
+              "title": "Soy La Comadreja   S05E06   I Are Robin Hood   Jaimico Robin Hood",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E06 - I Are Robin Hood - Jaimico Robin Hood.mp4"
+            },
+            {
+              "episode": 6,
+              "title": "Soy La Comadreja   S05E07   The Incredible Shrinking Weasel   La Comadreja Miniatura",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E07 - The Incredible Shrinking Weasel - La Comadreja Miniatura.mp4"
+            },
+            {
+              "episode": 7,
+              "title": "Soy La Comadreja   S05E08   Baboon Man and Boy Weasel   Soy La Man Y El Mono Maravilla",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E08 - Baboon Man and Boy Weasel - Soy La Man Y El Mono Maravilla.mp4"
+            },
+            {
+              "episode": 8,
+              "title": "Soy La Comadreja   S05E09   I M N  Love   Estamos Enamorados",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E09 - I.M.N. Love - Estamos Enamorados.mp4"
+            },
+            {
+              "episode": 9,
+              "title": "Soy La Comadreja   S05E11   The Sorcerers A Dentist   El Dentista Hechizero",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E11 - The Sorcerers A Dentist - El Dentista Hechizero.mp4"
+            },
+            {
+              "episode": 10,
+              "title": "Soy La Comadreja   S05E12   The Wrong Bros   Los Hermanos Wrong",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E12 - The Wrong Bros - Los Hermanos Wrong.mp4"
+            },
+            {
+              "episode": 11,
+              "title": "Soy La Comadreja   S05E13   I Am Cave Weasel   Comadreja Cavernicola",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E13 - I Am Cave Weasel - Comadreja Cavernicola.mp4"
+            },
+            {
+              "episode": 12,
+              "title": "Soy La Comadreja   S05E14   My Blue Hiney   Los Cantores",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E14 - My Blue Hiney - Los Cantores.mp4"
+            },
+            {
+              "episode": 13,
+              "title": "Soy La Comadreja   S05E16   De Regreso A La Escuela",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E16 - De Regreso A La Escuela.mp4"
+            },
+            {
+              "episode": 14,
+              "title": "Soy La Comadreja   S05E17   I Are a Artiste   Comadreja Artista",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E17 - I Are a Artiste - Comadreja Artista.mp4"
+            },
+            {
+              "episode": 15,
+              "title": "Soy La Comadreja   S05E19   I Are Bellhop   Jaimico Botones",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E19 - I Are Bellhop - Jaimico Botones.mp4"
+            },
+            {
+              "episode": 16,
+              "title": "Soy La Comadreja   S05E20   Take I R  Out to the Ballgame   Lleva A Jaimico Al Baseball",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E20 - Take I.R. Out to the Ballgame - Lleva A Jaimico Al Baseball.mp4"
+            },
+            {
+              "episode": 17,
+              "title": "Soy La Comadreja   S05E21   I Bee Weasel   Avejitas",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E21 - I Bee Weasel - Avejitas.mp4"
+            },
+            {
+              "episode": 18,
+              "title": "Soy La Comadreja   S05E23   A Troo Storee   Una Historia Real",
+              "duration": "06:50",
+              "fileName": "Soy La Comadreja - S05E23 - A Troo Storee - Una Historia Real.mp4"
+            },
+            {
+              "episode": 19,
+              "title": "Soy La Comadreja   S05E24   Rodeo Weasel   Comadreja de rodeo",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E24 - Rodeo Weasel - Comadreja de rodeo.mp4"
+            },
+            {
+              "episode": 20,
+              "title": "Soy La Comadreja   S05E25   La Leyenda De Trasero Grande",
+              "duration": "06:52",
+              "fileName": "Soy La Comadreja - S05E25 - La Leyenda De Trasero Grande.mp4"
+            },
+            {
+              "episode": 21,
+              "title": "Soy La Comadreja   S05E26   I Am Dragon Slayer   Dragones",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E26 - I Am Dragon Slayer - Dragones.mp4"
+            },
+            {
+              "episode": 22,
+              "title": "Soy La Comadreja   S05E27   I Are Legend   Soy Una Leyenda",
+              "duration": "06:51",
+              "fileName": "Soy La Comadreja - S05E27 - I Are Legend - Soy Una Leyenda.mp4"
+            }
+          ],
+          "contentPath": "C:\\Users\\Usuario\\Downloads\\La Vaca y el Pollito (Latino 528p)\\C0m4dr3ja T3mp5\\C0m4dr3ja T3mp 5"
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-09-21T15:03:46.825Z"
+}

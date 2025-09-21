@@ -1,0 +1,315 @@
+:root {
+  --menu-bg: rgba(0, 0, 0, 0.95);
+  --menu-border-color: #33ff33;
+  --menu-text-color: #33ff33;
+  --button-bg: rgba(51, 255, 51, 0.1);
+  --button-hover: rgba(51, 255, 51, 0.2);
+  --button-border: #33ff33;
+  --input-bg: rgba(0, 0, 0, 0.8);
+  --input-text: #33ff33;
+  --input-border: #33ff33;
+}
+
+.menu-90s, .menu-00s {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--menu-bg);
+  border: 2px solid var(--menu-border-color);
+  color: var(--menu-text-color);
+  padding: 20px;
+  z-index: 2000;
+  width: 500px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-90s {
+  box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+  text-transform: uppercase;
+}
+
+.menu-00s {
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(51, 255, 51, 0.2);
+}
+
+.menu-header {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--menu-border-color);
+  text-shadow: 0 0 5px var(--menu-text-color);
+}
+
+.menu-sections {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.section-button {
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  color: var(--menu-text-color);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.section-button:hover,
+.section-button.active {
+  background: var(--button-hover);
+  box-shadow: 0 0 10px var(--menu-text-color);
+}
+
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-options button {
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  color: var(--menu-text-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.menu-options button:hover {
+  background: var(--button-hover);
+  box-shadow: 0 0 10px var(--menu-text-color);
+}
+
+/* Input Styles */
+input[type="text"],
+input[type="number"],
+textarea {
+  background: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border: 1px solid var(--input-border) !important;
+  padding: 8px !important;
+  width: 100%;
+  font-family: monospace;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 5px var(--menu-text-color);
+}
+
+/* Scrollbar Styles */
+.menu-90s::-webkit-scrollbar,
+.menu-00s::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-90s::-webkit-scrollbar-track,
+.menu-00s::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.menu-90s::-webkit-scrollbar-thumb,
+.menu-00s::-webkit-scrollbar-thumb {
+  background: var(--menu-border-color);
+  border-radius: 3px;
+}
+
+/* Channel Config Styles */
+.channel-config {
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  font-size: 14px;
+  color: var(--menu-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.channel-config h2 {
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--menu-border-color);
+  text-shadow: 0 0 5px var(--menu-text-color);
+}
+
+.channel-config h3 {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  text-shadow: 0 0 3px var(--menu-text-color);
+}
+
+.channel-form {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid var(--menu-border-color);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: var(--menu-text-color);
+  text-shadow: 0 0 2px var(--menu-text-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px !important;
+  border: 1px solid var(--menu-border-color) !important;
+  background: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: monospace;
+  margin: 0;
+}
+
+.form-group textarea {
+  height: 60px;
+  resize: vertical;
+}
+
+.channel-config .channels-list {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid var(--menu-border-color);
+  margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.channels-list .channel-item {
+  border-bottom: 1px solid rgba(51, 255, 51, 0.3);
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.channel-item:last-child {
+  border-bottom: none;
+}
+
+.channel-list-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.channel-list-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.channel-list-number {
+  font-weight: bold;
+  color: var(--menu-text-color);
+  text-shadow: 0 0 3px var(--menu-text-color);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.channel-list-name {
+  color: var(--menu-text-color);
+  text-shadow: 0 0 2px var(--menu-text-color);
+  font-size: 16px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-list-description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--menu-text-color);
+  opacity: 0.8;
+  padding-left: 5px;
+}
+
+.channel-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.channel-actions button {
+  padding: 5px 10px;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.channel-config button {
+  background: var(--button-bg);
+  border: 1px solid var(--menu-border-color);
+  color: var(--menu-text-color);
+  padding: 8px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  text-shadow: 0 0 2px var(--menu-text-color);
+}
+
+.channel-config button:hover {
+  background: var(--button-hover);
+  box-shadow: 0 0 8px var(--menu-text-color);
+}
+
+.edit-button, .delete-button {
+  min-width: 80px !important;
+  text-align: center;
+  font-family: monospace;
+  font-size: 14px !important;
+  padding: 6px 12px !important;
+}
+
+.delete-button {
+  background: rgba(255, 51, 51, 0.1) !important;
+  border-color: #ff3333 !important;
+  color: #ff3333 !important;
+}
+
+.delete-button:hover {
+  background: rgba(255, 51, 51, 0.2) !important;
+  box-shadow: 0 0 8px #ff3333 !important;
+}
+
+/* Ajustar el margen del último botón del formulario */
+.channel-form button:last-child {
+  margin-left: 10px;
+}

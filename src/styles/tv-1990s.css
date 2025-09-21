@@ -1,0 +1,249 @@
+/* Variables específicas para la TV 90s */
+.tv-container.style-90s {
+  --tv-border-color: #2c2c2c;
+  --tv-screen-color: #000000;
+}
+
+/* Contenedor principal para TV 90s */
+.tv-container.style-90s {
+  background-color: #121212;
+}
+
+/* Pantalla de TV 90s */
+.tv-container.style-90s .tv-screen {
+  max-width       : min(800px, calc(100% - 40px));
+  height          : 60vh;
+  min-height      : 400px;
+  max-height      : 600px;
+  background-color: var(--tv-screen-color);
+  border          : 20px solid var(--tv-border-color);
+  border-radius   : 20px;
+  position        : relative;
+  overflow        : hidden;
+  box-shadow      : 0 0 50px rgba(0, 0, 0, 0.5);
+  margin          : 20px auto;
+}
+
+/* Manejo de aspect ratio */
+.tv-container.style-90s .tv-screen.aspect-16-9 {
+  aspect-ratio: 16/9;
+}
+
+.tv-container.style-90s .tv-screen.aspect-4-3 {
+  aspect-ratio: 4/3;
+}
+
+/* Display de canal estilo 90s */
+.tv-container.style-90s .channel-display {
+  position      : absolute;
+  top           : 20px;
+  right         : 20px;
+  z-index       : 1000;
+  font-size     : 24px;
+  color         : var(--text-color);
+  font-family   : var(--font-family);
+  padding       : 8px 15px;
+  visibility    : hidden;
+  animation     : channelDisplay90s 5s linear;
+  text-shadow   : 
+    0 0 10px var(--text-color),
+    0 0 20px var(--text-color),
+    0 0 30px var(--text-color);
+  letter-spacing: 1px;
+  min-width     : 60px;
+  display       : flex;
+  justify-content: flex-end;
+}
+
+/* Efecto de resplandor del texto */
+.tv-container.style-90s .channel-display::before {
+  content     : attr(data-text);
+  position    : absolute;
+  left        : 8px;
+  width       : 100%;
+  height      : 100%;
+  filter      : blur(8px);
+  opacity     : 0.5;
+  color       : var(--channel-text-color);
+  pointer-events: none;
+}
+
+/* Efecto de líneas CRT */
+.tv-container.style-90s .channel-display::after {
+  content    : attr(data-text);
+  position   : absolute;
+  left       : 8px;
+  text-shadow: 
+    0 0 15px var(--channel-text-color),
+    0 0 25px var(--channel-text-color);
+  opacity    : 0.3;
+  animation  : textFlicker90s 0.08s infinite;
+  pointer-events: none;
+}
+
+@keyframes textFlicker90s {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes channelDisplay90s {
+  0% {
+    visibility: visible;
+    opacity: 1;
+    text-shadow: 
+      0 0 10px var(--channel-text-color),
+      0 0 20px var(--channel-text-color),
+      0 0 30px var(--channel-text-color);
+  }
+  5% {
+    text-shadow: 
+      0 0 15px var(--channel-text-color),
+      0 0 25px var(--channel-text-color),
+      0 0 35px var(--channel-text-color);
+  }
+  10% {
+    text-shadow: 
+      0 0 10px var(--channel-text-color),
+      0 0 20px var(--channel-text-color),
+      0 0 30px var(--channel-text-color);
+  }
+  99.9% {
+    visibility: visible;
+    opacity: 1;
+  }
+  100% {
+    visibility: hidden;
+    opacity: 1;
+  }
+}
+
+@keyframes scanline90s {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(20px);
+  }
+}
+
+/* Controles de TV 90s */
+.tv-container.style-90s .tv-controls {
+  margin-top     : 20px;
+  display        : flex;
+  gap            : 20px;
+  flex-wrap      : wrap;
+  justify-content: center;
+}
+
+.tv-container.style-90s .channel-buttons,
+.tv-container.style-90s .settings-buttons {
+  display: flex;
+  gap    : 10px;
+}
+
+.tv-container.style-90s .tv-controls button {
+  background-color: #333;
+  color          : #fff;
+  border         : 2px solid #666;
+  padding        : 10px 20px;
+  border-radius  : 5px;
+  cursor         : pointer;
+  font-family    : 'Courier New', Courier, monospace;
+  transition     : all 0.3s ease;
+}
+
+.tv-container.style-90s .tv-controls button:hover {
+  background-color: #444;
+  border-color    : #888;
+}
+
+/* Guía de programación 90s */
+.tv-container.style-90s .program-guide {
+  position        : absolute;
+  top             : 50%;
+  left            : 50%;
+  transform       : translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  border          : 2px solid var(--text-color);
+  padding         : 20px;
+  width           : 80%;
+  height          : 80%;
+  color           : var(--text-color);
+  text-shadow     : 0 0 5px var(--text-color);
+  overflow-y      : auto;
+}
+
+/* Efectos de pantalla 90s */
+.tv-container.style-90s .tv-screen::after {
+  content   : "";
+  position  : absolute;
+  top       : 0;
+  left      : 0;
+  width     : 100%;
+  height    : 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Animaciones para el estilo 90s */
+@keyframes flicker90s {
+  0% { 
+    opacity: 0.97;
+  }
+  50% { 
+    opacity: 0.95;
+  }
+  100% { 
+    opacity: 0.97;
+  }
+}
+
+.tv-container.style-90s .tv-screen {
+  animation: flicker90s 0.15s infinite;
+}
+
+/* Efecto de encendido/apagado 90s */
+@keyframes turnOn90s {
+  0% {
+    transform: scaleY(0);
+    opacity  : 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity  : 1;
+  }
+}
+
+.tv-container.style-90s .tv-screen.turning-on {
+  animation: turnOn90s 0.3s ease-out forwards;
+}
+
+/* Efecto de cambio de canal 90s */
+@keyframes changeChannel90s {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.tv-container.style-90s .tv-screen.changing-channel {
+  animation: changeChannel90s 0.2s linear;
+}

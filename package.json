@@ -1,0 +1,52 @@
+{
+  "name": "analog-replay-tv",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "electron:dev": "npm run compile:electron && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env DEBUG=electron:* electron -r esbuild-register --loader=esm electron/main.ts\"",
+    "electron:build": "npm run compile:electron && npm run build && electron-builder",
+    "electron:start": "npm run compile:electron && cross-env DEBUG=electron:* electron -r esbuild-register --loader=esm electron/main.ts",
+    "compile:electron": "tsc -p electron/tsconfig.json"
+  },
+  "main": "electron/main.ts",
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@vidstack/react": "^1.9.6",
+    "get-video-duration": "^4.1.0",
+    "lit": "^3.3.1",
+    "media-icons": "^0.10.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-player": "^3.3.3",
+    "react-router-dom": "^6.16.0",
+    "vidstack": "^0.6.15"
+  },
+  "devDependencies": {
+    "@types/electron": "^1.6.10",
+    "@types/node": "^20.8.2",
+    "@types/react": "^18.2.24",
+    "@types/react-dom": "^18.2.8",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "@vitejs/plugin-react": "^4.1.0",
+    "concurrently": "^8.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^38.1.2",
+    "electron-builder": "^24.6.4",
+    "electron-is-dev": "^2.0.0",
+    "esbuild": "^0.25.10",
+    "esbuild-register": "^3.5.0",
+    "eslint": "^8.50.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "typescript": "^5.2.2",
+    "vite": "^7.1.6",
+    "wait-on": "^7.0.1"
+  }
+}
