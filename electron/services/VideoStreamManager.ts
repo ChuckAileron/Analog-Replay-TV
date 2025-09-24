@@ -47,6 +47,15 @@ export interface PlaybackResult {
 }
 
 /**
+ * Información de mensaje de error
+ */
+export interface ErrorMessageInfo {
+  title: string;
+  message: string;
+  type: 'file-not-found' | 'transcoding-error' | 'playback-error' | 'general-error';
+}
+
+/**
  * Manager principal para reproducción adaptiva de video
  * Detecta formatos y selecciona la mejor estrategia de reproducción
  */
@@ -180,6 +189,24 @@ export class VideoStreamManager {
     console.log(`🎮 [VideoStreamManager] Reproduciendo: ${filePath}`);
     console.log(`⏰ [VideoStreamManager] Seek time: ${seekTime}s`);
     console.log(`🎨 [VideoStreamManager] CRT Filter: ${crtFilter}`);
+
+    // Verificar que el archivo fuente existe
+    try {
+      await fs.access(filePath);
+      console.log(`✅ [VideoStreamManager] Archivo fuente encontrado: ${filePath}`);
+    } catch (error) {
+      const errorMessage = `❌ [VideoStreamManager] Archivo fuente no encontrado: ${filePath}`;
+      console.error(errorMessage);
+      
+      // Mostrar mensaje de error al usuario
+      await this.showErrorMessage({
+        title: 'Archivo no encontrado',
+        message: `No se pudo encontrar el archivo de video en la ruta especificada:\n\n${filePath}\n\nVerifica que el archivo existe y que la ruta sea correcta.`,
+        type: 'file-not-found'
+      });
+      
+      throw new Error(`Source file not found: ${filePath}`);
+    }
 
     // Detener reproducción anterior si existe
     await this.stopCurrentPlayback();
@@ -608,7 +635,33 @@ export class VideoStreamManager {
     } catch (error) {
       console.error(`❌ [VideoStreamManager] Error en transcoding:`, error);
       
-      // Fallback: mostrar mensaje informativo y no reproducir nada
+      // Determinar el tipo de error y mostrar mensaje apropiado
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      let errorType: ErrorMessageInfo['type'] = 'transcoding-error';
+      let title = 'Error de Transcoding';
+      let message = `Ocurrió un error durante la conversión del video:\n\n${errorMessage}\n\nVerifica que FFmpeg esté instalado y disponible.`;
+      
+      // Detectar errores específicos
+      if (errorMessage.includes('No such file or directory') || errorMessage.includes('ENOENT')) {
+        errorType = 'file-not-found';
+        title = 'Archivo no encontrado';
+        message = `No se pudo encontrar el archivo de video durante el transcoding:\n\n${filePath}\n\nVerifica que el archivo existe y que la ruta sea correcta.`;
+      } else if (errorMessage.includes('Permission denied') || errorMessage.includes('EACCES')) {
+        title = 'Error de permisos';
+        message = `No se tienen permisos para acceder al archivo:\n\n${filePath}\n\nVerifica los permisos del archivo y la carpeta.`;
+      } else if (errorMessage.includes('ffmpeg') || errorMessage.includes('spawn')) {
+        title = 'FFmpeg no encontrado';
+        message = `FFmpeg no está disponible o no se pudo ejecutar.\n\nAsegúrate de que FFmpeg esté instalado y disponible en PATH.`;
+      }
+      
+      // Mostrar mensaje de error al usuario
+      await this.showErrorMessage({
+        title,
+        message,
+        type: errorType
+      });
+      
+      // Fallback: mostrar mensaje en el contenedor de video también
       console.warn('⚠️ [VideoStreamManager] Transcoding falló, mostrando mensaje de error');
       
       const errorScript = `
@@ -616,12 +669,14 @@ export class VideoStreamManager {
           const container = document.getElementById('video-container');
           if (container) {
             container.innerHTML = \`
-              <div style="color: #ff6b6b; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 8px;">
-                <h3>🔄 Transcoding Requerido</h3>
-                <p>Este archivo requiere conversión de MPEG-2 a H.264.</p>
+              <div style="color: #ff6b6b; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 8px; font-family: Arial, sans-serif;">
+                <h3 style="margin-top: 0;">🔄 Error de Transcoding</h3>
                 <p><strong>Archivo:</strong> ${path.basename(filePath)}</p>
-                <p><strong>Error:</strong> ${error instanceof Error ? error.message : String(error)}</p>
-                <p>Verifica que FFmpeg esté instalado y disponible en PATH.</p>
+                <p style="color: #ffaa00; margin: 15px 0;">${title}</p>
+                <details style="text-align: left; margin-top: 20px; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 4px;">
+                  <summary style="cursor: pointer; font-weight: bold;">Ver detalles técnicos</summary>
+                  <p style="margin: 10px 0; font-family: monospace; font-size: 12px; word-break: break-all;">${errorMessage}</p>
+                </details>
               </div>
             \`;
           }
@@ -757,7 +812,12 @@ export class VideoStreamManager {
     try {
       // Obtener estadísticas del archivo para el hash
       const stats = await fs.stat(originalFilePath);
-      const fileInfo = `${originalFilePath}_${stats.size}_${stats.mtime.getTime()}`;
+      
+      // Normalizar el nombre del archivo para consistencia entre sesiones  
+      const normalizedFileName = path.basename(originalFilePath);
+      const fileInfo = `${normalizedFileName}_${stats.size}_${stats.mtime.getTime()}`;
+      
+      console.log(`📋 [VideoStreamManager] Cache key: ${fileInfo}`);
       
       // Crear hash único
       const hash = crypto.createHash('md5').update(fileInfo).digest('hex');
@@ -800,6 +860,117 @@ export class VideoStreamManager {
       if ((error as any).code !== 'ENOENT') {
         console.warn(`⚠️ [VideoStreamManager] Error limpiando archivo temporal:`, error);
       }
+    }
+  }
+
+  /**
+   * Muestra un mensaje de error al usuario
+   */
+  private async showErrorMessage(errorInfo: ErrorMessageInfo): Promise<void> {
+    const { title, message, type } = errorInfo;
+    
+    try {
+      const errorScript = `
+        (() => {
+          // Crear y mostrar un mensaje de error personalizado
+          const createErrorMessage = () => {
+            // Remover mensajes de error anteriores
+            const existingErrors = document.querySelectorAll('.vsm-error-message');
+            existingErrors.forEach(el => el.remove());
+            
+            // Crear elemento de error
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'vsm-error-message';
+            errorDiv.style.cssText = \`
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+              color: white;
+              padding: 20px 30px;
+              border-radius: 10px;
+              box-shadow: 0 8px 25px rgba(238, 90, 82, 0.3);
+              z-index: 10000;
+              max-width: 500px;
+              font-family: 'Arial', sans-serif;
+              text-align: center;
+              animation: errorFadeIn 0.3s ease-out;
+            \`;
+            
+            // Agregar animación CSS
+            if (!document.getElementById('vsm-error-styles')) {
+              const style = document.createElement('style');
+              style.id = 'vsm-error-styles';
+              style.textContent = \`
+                @keyframes errorFadeIn {
+                  from {
+                    opacity: 0;
+                    transform: translate(-50%, -50%) scale(0.9);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translate(-50%, -50%) scale(1);
+                  }
+                }
+                
+                .vsm-error-message h3 {
+                  margin: 0 0 15px 0;
+                  font-size: 20px;
+                  font-weight: bold;
+                }
+                
+                .vsm-error-message p {
+                  margin: 0;
+                  line-height: 1.5;
+                  white-space: pre-line;
+                }
+                
+                .vsm-error-close {
+                  margin-top: 20px;
+                  padding: 10px 20px;
+                  background: rgba(255, 255, 255, 0.2);
+                  color: white;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  transition: background 0.2s;
+                }
+                
+                .vsm-error-close:hover {
+                  background: rgba(255, 255, 255, 0.3);
+                }
+              \`;
+              document.head.appendChild(style);
+            }
+            
+            // Crear contenido del error
+            errorDiv.innerHTML = \`
+              <h3>${title}</h3>
+              <p>${message}</p>
+              <button class="vsm-error-close" onclick="this.parentElement.remove()">Cerrar</button>
+            \`;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Auto-remover después de 8 segundos
+            setTimeout(() => {
+              if (errorDiv.parentElement) {
+                errorDiv.remove();
+              }
+            }, 8000);
+          };
+          
+          createErrorMessage();
+        })()
+      `;
+      
+      await this.mainWindow.webContents.executeJavaScript(errorScript);
+      
+      console.log(`📢 [VideoStreamManager] Mensaje de error mostrado: ${type} - ${title}`);
+    } catch (error) {
+      console.error('❌ [VideoStreamManager] Error mostrando mensaje de error:', error);
     }
   }
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { TVSettings } from '../types/tv.types';
 import { ChannelConfig } from './ChannelConfig';
-import ProgramConfig from './ProgramConfig';
+import ShowConfig from './ShowConfig';
 
 interface MenuBaseProps {
   settings: TVSettings;
@@ -78,7 +78,7 @@ export const MenuBase: React.FC<MenuBaseProps> = ({
       ) : activeSection === 'channels' ? (
         <ChannelConfig />
       ) : (
-        <ProgramConfig />
+        <ShowConfig />
       )}
     </div>
   );

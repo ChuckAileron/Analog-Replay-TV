@@ -457,42 +457,42 @@ ipcMain.handle('import-channel-file', async (_, filePath) => {
   }
 });
 
-// Manejo de eventos IPC para programas
-ipcMain.handle('save-programs-config', async (_, config) => {
+// Manejo de eventos IPC para shows
+ipcMain.handle('save-shows-config', async (_, config) => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/programs/programs.config.json');
+    const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
     await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
     return true;
   }
   catch (error) {
-    console.error('Error saving programs config:', error);
+    console.error('Error saving shows config:', error);
     throw error;
   }
 });
 
-ipcMain.handle('load-programs-config', async () => {
+ipcMain.handle('load-shows-config', async () => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/programs/programs.config.json');
+    const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
     const data = await fs.readFile(configPath, 'utf-8');
     return JSON.parse(data);
   }
   catch (error: unknown) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       // Si el archivo no existe, devolver una configuración vacía
-      return { programs: [], lastUpdated: new Date().toISOString() };
+      return { shows: [], lastUpdated: new Date().toISOString() };
     }
-    console.error('Error loading programs config:', error);
+    console.error('Error loading shows config:', error);
     throw error;
   }
 });
 
-ipcMain.handle('import-program-file', async (_, filePath) => {
+ipcMain.handle('import-show-file', async (_, filePath) => {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   }
   catch (error) {
-    console.error('Error importing program file:', error);
+    console.error('Error importing show file:', error);
     throw error;
   }
 });
@@ -532,12 +532,12 @@ ipcMain.handle('get-folder-videos', async (_, folderPath) => {
   }
 });
 
-ipcMain.handle('select-program-file', async () => {
+ipcMain.handle('select-show-file', async () => {
   try {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],
       filters: [{ name: 'JSON', extensions: ['json'] }],
-      defaultPath: path.join(process.cwd(), 'src/config/programs')
+      defaultPath: path.join(process.cwd(), 'src/config/shows')
     });
 
     if (!result.canceled && result.filePaths.length > 0) {
@@ -546,7 +546,7 @@ ipcMain.handle('select-program-file', async () => {
     return null;
   }
   catch (error) {
-    console.error('Error selecting program file:', error);
+    console.error('Error selecting show file:', error);
     throw error;
   }
 });

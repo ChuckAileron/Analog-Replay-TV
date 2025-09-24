@@ -16,11 +16,11 @@ export const showManager = {
       try {
         if (!isInitialized) {
           console.log('Initializing shows...');
-          const config = await window.electronAPI.loadProgramsConfig();
+          const config = await window.electronAPI.loadShowsConfig();
           // Convertir programs a shows añadiendo IDs si no los tienen
-          shows = (config.programs || []).map((program: any, index: number) => ({
-            ...program,
-            id: program.id || index + 1
+          shows = (config.shows || []).map((show: any, index: number) => ({
+            ...show,
+            id: show.id || index + 1
           })) as TVShow[];
           isInitialized = true;
           console.log('Shows initialized:', shows);
@@ -131,7 +131,7 @@ export const showManager = {
   // Importar un archivo de show
   importShowFile: async (filePath: string): Promise<void> => {
     try {
-      const show = await window.electronAPI.importProgramFile(filePath);
+      const show = await window.electronAPI.importShowFile(filePath);
       if (show) {
         await showManager.addShow(show);
       }
@@ -150,8 +150,8 @@ async function saveToFile(): Promise<void> {
   };
 
   // Guardar usando el formato actual para mantener compatibilidad
-  await window.electronAPI.saveProgramsConfig({
-    programs: shows,
+  await window.electronAPI.saveShowsConfig({
+    shows: shows,
     lastUpdated: config.lastUpdated
   });
 }

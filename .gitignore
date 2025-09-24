@@ -64,7 +64,7 @@ tmp/
 
 # Local config files
 channels.config.json
-programs.config.json
+shows.config.json
 user.settings.json
 
 # FFmpeg and other binaries (if downloaded)
@@ -77,7 +77,11 @@ test-*.html
 # User configuration and data
 src/config/user/
 src/config/channels/
-src/config/programs/
+src/config/shows/
 
 # Electron forge/builder cache
 .webpack/
+
+# TODO
+TODO.txt
+TODO.md

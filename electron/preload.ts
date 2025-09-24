@@ -80,48 +80,48 @@ try {
         }
       },
 
-      // Programs API
-      saveProgramsConfig: async (config: any) => {
+      // Shows API
+      saveShowsConfig: async (config: any) => {
         console.log('Saving programs config:', config);
         try {
-          const result = await ipcRenderer.invoke('save-programs-config', config);
+          const result = await ipcRenderer.invoke('save-shows-config', config);
           console.log('Save result:', result);
           return result;
         } catch (error) {
-          console.error('Error in saveProgramsConfig:', error);
+          console.error('Error in saveShowsConfig:', error);
           throw error;
         }
       },
-      loadProgramsConfig: async () => {
+      loadShowsConfig: async () => {
         console.log('Loading programs config');
         try {
-          const result = await ipcRenderer.invoke('load-programs-config');
+          const result = await ipcRenderer.invoke('load-shows-config');
           console.log('Load result:', result);
           return result;
         } catch (error) {
-          console.error('Error in loadProgramsConfig:', error);
+          console.error('Error in loadShowsConfig:', error);
           throw error;
         }
       },
-      importProgramFile: async (filePath: string) => {
+      importShowFile: async (filePath: string) => {
         console.log('Importing program file:', filePath);
         try {
-          const result = await ipcRenderer.invoke('import-program-file', filePath);
+          const result = await ipcRenderer.invoke('import-show-file', filePath);
           console.log('Import result:', result);
           return result;
         } catch (error) {
-          console.error('Error in importProgramFile:', error);
+          console.error('Error in importShowFile:', error);
           throw error;
         }
       },
-      selectProgramFile: async () => {
+      selectShowFile: async () => {
         console.log('Opening file dialog');
         try {
-          const result = await ipcRenderer.invoke('select-program-file');
+          const result = await ipcRenderer.invoke('select-show-file');
           console.log('Selected file:', result);
           return result;
         } catch (error) {
-          console.error('Error in selectProgramFile:', error);
+          console.error('Error in selectShowFile:', error);
           throw error;
         }
       },
@@ -488,3 +488,10 @@ try {
 } catch (error) {
   console.error('Error in preload script:', error);
 }
+
+
+
+
+
+
+

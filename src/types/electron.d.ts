@@ -46,10 +46,10 @@ declare global {
     selectChannelFile: () => Promise<string>;
     importChannelFile: (filePath: string) => Promise<ChannelConfig>;
     
-    // Programs API
-    saveProgramsConfig: (config: ProgramConfig) => Promise<boolean>;
-    loadProgramsConfig: () => Promise<ProgramConfig>;
-    importProgramFile: (filePath: string) => Promise<{
+    // Shows API
+    saveShowsConfig: (config: ShowConfig) => Promise<boolean>;
+    loadShowsConfig: () => Promise<ShowConfig>;
+    importShowFile: (filePath: string) => Promise<{
       name: string;
       channel: string[];
       seasons: Array<{
@@ -62,8 +62,15 @@ declare global {
         }>;
       }>;
     }>;
-    selectProgramFile: () => Promise<string>;
+    selectShowFile: () => Promise<string>;
     selectVideoFile: () => Promise<string>;
+    selectFolder: () => Promise<string>;
+    getFolderVideos: (folderPath: string) => Promise<Array<{
+      episode: number;
+      title: string;
+      duration: string;
+      fileName: string;
+    }>>;
     
     // Asset API
     getLocalFilePath: (virtualPath: string) => Promise<string>;

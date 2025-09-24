@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { TVProgramPlayer } from '../components/TVProgramPlayer';
-import { programManager } from '../features/programs/programManager';
+import { TVShowPlayer } from '../components/TVShowPlayer';
+import { showManager } from '../features/shows/showManager';
 import { channelManager } from '../features/channels/channelManager';
-import type { TVProgram, TVSeason } from '../types/program.types';
+import type { TVShow, TVSeason } from '../types/show.types';
 import '../styles/views.css';
 
 interface TVViewProps {
@@ -11,7 +11,7 @@ interface TVViewProps {
 }
 
 export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
-  const [currentProgram, setCurrentProgram] = useState<TVProgram | null>(null);
+  const [currentShow, setCurrentShow] = useState<TVShow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,10 +23,10 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
         setLoading(true);
         setError(null);
         
-        // Inicializar channel manager y program manager
+        // Inicializar channel manager y show manager
         await Promise.all([
           channelManager.initialize(),
-          programManager.initialize()
+          showManager.initialize()
         ]);
         
         const channelInfo = await channelManager.getChannelInfo(channelNumber);
@@ -41,59 +41,59 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
           const error = `Canal ${channelNumber} no encontrado`;
           console.log('❌ [TVView]', error);
           setError(error);
-          setCurrentProgram(null);
+          setCurrentShow(null);
           return;
         }
 
-        // Obtener todos los programas y encontrar el que corresponde al canal por nombre
-        const programs = await programManager.getPrograms();
-        console.log('📺 [TVView] Programas disponibles:', programs.map(p => ({
+        // Obtener todos los shows y encontrar el que corresponde al canal por nombre
+        const shows = await showManager.getShows();
+        console.log('📺 [TVView] Shows disponibles:', shows.map(p => ({
           id: p.id,
           nombre: p.name,
           canales: p.channel,
           temporadas: p.seasons.length
         })));
         
-        console.log('🔍 [TVView] Buscando programa para canal:', channelInfo.name);
+        console.log('🔍 [TVView] Buscando show para canal:', channelInfo.name);
         
-        const matchingProgram = programs.find(program => 
-          program.channel.some(ch => ch.toLowerCase() === channelInfo.name.toLowerCase())
+        const matchingShow = shows.find(show => 
+          show.channel.some(ch => ch.toLowerCase() === channelInfo.name.toLowerCase())
         );
 
-        if (matchingProgram) {
-          console.log('✅ [TVView] Programa encontrado:', {
-            id: matchingProgram.id,
-            nombre: matchingProgram.name,
-            canalesConfigurados: matchingProgram.channel,
-            temporadas: matchingProgram.seasons.length,
-            episodiosTotales: matchingProgram.seasons.reduce((total, season) => total + season.episodes.length, 0)
+        if (matchingShow) {
+          console.log('✅ [TVView] Show encontrado:', {
+            id: matchingShow.id,
+            nombre: matchingShow.name,
+            canalesConfigurados: matchingShow.channel,
+            temporadas: matchingShow.seasons.length,
+            episodiosTotales: matchingShow.seasons.reduce((total, season) => total + season.episodes.length, 0)
           });
 
-          // Verificar si el programa tiene episodios disponibles
-          const hasAvailableEpisodes = matchingProgram.seasons.some(
+          // Verificar si el show tiene episodios disponibles
+          const hasAvailableEpisodes = matchingShow.seasons.some(
             (season: TVSeason) => season.episodes.length > 0 && season.contentPath
           );
 
           if (hasAvailableEpisodes) {
-            setCurrentProgram(matchingProgram);
+            setCurrentShow(matchingShow);
             
-            // TVProgramPlayer procesará automáticamente el video
+            // TVShowPlayer procesará automáticamente el video
           } else {
             const error = 'El programa no tiene episodios disponibles';
             console.log('❌ [TVView]', error);
             setError(error);
-            setCurrentProgram(null);
+            setCurrentShow(null);
           }
         } else {
           const error = `No se encontró programa para el canal ${channelInfo.name}`;
           console.log('❌ [TVView]', error);
           setError(error);
-          setCurrentProgram(null);
+          setCurrentShow(null);
         }
       } catch (error) {
         console.error('❌ [TVView] Error al cargar programa:', error);
         setError(`Error al cargar programa: ${error instanceof Error ? error.message : String(error)}`);
-        setCurrentProgram(null);
+        setCurrentShow(null);
       } finally {
         setLoading(false);
       }
@@ -118,7 +118,7 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
     );
   }
 
-  if (!currentProgram) {
+  if (!currentShow) {
     return (
       <div className={`tv-view style-${decadeStyle}`}>
         <div className="error-message">No hay programas disponibles</div>
@@ -128,8 +128,8 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
 
   return (
     <div className={`tv-view style-${decadeStyle}`}>
-      <TVProgramPlayer 
-        program={currentProgram}
+      <TVShowPlayer 
+        show={currentShow}
         seasonNumber={1}
         style={decadeStyle === '90s' ? 'retro-90s' : 'retro-00s'}
       />

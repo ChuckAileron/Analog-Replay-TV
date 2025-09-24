@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import type { TVProgram } from '../types/program.types';
-import { programManager } from '../features/programs/programManager';
+import type { TVShow } from '../types/show.types';
+import { showManager } from '../features/shows/showManager';
 import '../styles/config-components.css';
-import '../styles/programs.css';
+import '../styles/shows.css';
 import '../styles/loading-states.css';
 import '../styles/folder-select.css';
 
-type ProgramFormData = TVProgram;
+type ShowFormData = TVShow;
 
-const DEFAULT_PROGRAM: ProgramFormData = {
+const DEFAULT_SHOW: ShowFormData = {
   id: 0,
   name: "",
   channel: [],
@@ -23,30 +23,30 @@ const DEFAULT_PROGRAM: ProgramFormData = {
   }]
 };
 
-function ProgramConfig() {
-  const [programs, setPrograms] = useState<TVProgram[]>([]);
+function ShowConfig() {
+  const [shows, setShows] = useState<TVShow[]>([]);
   const [currentView, setCurrentView] = useState<'list' | 'create' | 'edit' | 'import'>('list');
-  const [formData, setFormData] = useState<ProgramFormData>(DEFAULT_PROGRAM);
+  const [formData, setFormData] = useState<ShowFormData>(DEFAULT_SHOW);
   const [channelInput, setChannelInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPrograms();
+    loadShows();
   }, []);
 
-  const loadPrograms = async () => {
+  const loadShows = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Loading programs...');
-      const loadedPrograms = await programManager.getPrograms();
-      console.log('Programs loaded:', loadedPrograms);
-      setPrograms(loadedPrograms);
+      console.log('Loading shows...');
+      const loadedShows = await showManager.getShows();
+      console.log('Shows loaded:', loadedShows);
+      setShows(loadedShows);
     } catch (error) {
-      console.error('Error loading programs:', error);
-      setError('Error al cargar los programas. Por favor, intenta de nuevo.');
-      setPrograms([]);
+      console.error('Error loading shows:', error);
+      setError('Error al cargar los shows. Por favor, intenta de nuevo.');
+      setShows([]);
     } finally {
       setIsLoading(false);
     }
@@ -54,26 +54,26 @@ function ProgramConfig() {
 
   const handleImport = async () => {
     try {
-      const filePath = await window.electronAPI.selectProgramFile();
+      const filePath = await window.electronAPI.selectShowFile();
       if (filePath) {
-        await programManager.importProgramFile(filePath);
-        await loadPrograms();
+        await showManager.importShowFile(filePath);
+        await loadShows();
       }
     } catch (error) {
-      console.error('Error importing program:', error);
-      alert('Error al importar el programa. Por favor, verifica el archivo e intenta de nuevo.');
+      console.error('Error importing show:', error);
+      alert('Error al importar el show. Por favor, verifica el archivo e intenta de nuevo.');
     }
   };
 
 
 
-  const handleDelete = async (program: TVProgram) => {
-    if (window.confirm(`¿Estás seguro de eliminar el programa "${program.name}"?`)) {
+  const handleDelete = async (show: TVShow) => {
+    if (window.confirm(`¿Estás seguro de eliminar el show "${show.name}"?`)) {
       try {
-        await programManager.deleteProgram(program.id);
-        await loadPrograms();
+        await showManager.deleteShow(show.id);
+        await loadShows();
       } catch (error) {
-        console.error('Error deleting program:', error);
+        console.error('Error deleting show:', error);
       }
     }
   };
@@ -155,25 +155,25 @@ function ProgramConfig() {
     e.preventDefault();
     try {
       if (currentView === 'edit') {
-        await programManager.updateProgram(formData.id, formData);
+        await showManager.updateShow(formData.id, formData);
       } else {
-        // Al agregar un nuevo programa, omitimos el id porque se generará automáticamente
-        const { id, ...programData } = formData;
-        await programManager.addProgram(programData);
+        // Al agregar un nuevo show, omitimos el id porque se generará automáticamente
+        const { id, ...showData } = formData;
+        await showManager.addShow(showData);
       }
       setCurrentView('list');
-      setFormData(DEFAULT_PROGRAM);
-      await loadPrograms();
+      setFormData(DEFAULT_SHOW);
+      await loadShows();
     } catch (error) {
-      console.error('Error saving program:', error);
-      alert('Error al guardar el programa. Por favor, verifica los datos e intenta de nuevo.');
+      console.error('Error saving show:', error);
+      alert('Error al guardar el show. Por favor, verifica los datos e intenta de nuevo.');
     }
   };
 
-  const renderProgramForm = () => (
-    <form onSubmit={handleSubmit} className="program-form">
+  const renderShowForm = () => (
+    <form onSubmit={handleSubmit} className="show-form">
       <div className="form-group">
-        <label htmlFor="name">Nombre del Programa:</label>
+        <label htmlFor="name">Nombre del Show:</label>
         <input
           type="text"
           id="name"
@@ -367,13 +367,13 @@ function ProgramConfig() {
 
       <div className="form-actions">
         <button type="submit" className="config-button">
-          {currentView === 'edit' ? 'Actualizar Programa' : 'Crear Programa'}
+          {currentView === 'edit' ? 'Actualizar Show' : 'Crear Show'}
         </button>
         <button
           type="button"
           className="config-button"
           onClick={() => {
-            setFormData(DEFAULT_PROGRAM);
+            setFormData(DEFAULT_SHOW);
             setCurrentView('list');
           }}
         >
@@ -383,52 +383,52 @@ function ProgramConfig() {
     </form>
   );
 
-  const renderProgramsList = () => (
-    <div className="programs-list">
+  const renderShowsList = () => (
+    <div className="shows-list">
       <div className="config-actions">
         <button onClick={() => setCurrentView('create')} className="config-button">
-          Crear Programa
+          Crear Show
         </button>
         <button onClick={() => setCurrentView('import')} className="config-button">
-          Importar Programa
+          Importar Show
         </button>
       </div>
 
-      <h3>Programas Configurados</h3>
-      {isLoading && <p className="loading-message">Cargando programas...</p>}
+      <h3>Shows Configurados</h3>
+      {isLoading && <p className="loading-message">Cargando shows...</p>}
       {error && (
         <div className="error-message">
           {error}
-          <button onClick={loadPrograms} className="config-button">
+          <button onClick={loadShows} className="config-button">
             Reintentar
           </button>
         </div>
       )}
-      {!isLoading && !error && programs.length === 0 && (
-        <p className="no-items-message">No hay programas configurados</p>
+      {!isLoading && !error && shows.length === 0 && (
+        <p className="no-items-message">No hay shows configurados</p>
       )}
-      {!isLoading && !error && programs.length > 0 &&
-        programs.map((program) => (
-          <div key={program.name} className="program-item">
-            <div className="program-list-item-info">
-              <div className="program-list-header">
-                <span className="program-list-title">{program.name}</span>
+      {!isLoading && !error && shows.length > 0 &&
+        shows.map((show) => (
+          <div key={show.name} className="show-item">
+            <div className="show-list-item-info">
+              <div className="show-list-header">
+                <span className="show-list-title">{show.name}</span>
               </div>
-              <div className="program-list-details">
-                <div className="program-channels">
+              <div className="show-list-details">
+                <div className="show-channels">
                   <span className="detail-label">Canales:</span>
                   <div className="channel-tags">
-                    {program.channel.map((ch, idx) => (
+                    {show.channel.map((ch, idx) => (
                       <span key={idx} className="channel-tag-small">
                         {ch}
                       </span>
                     ))}
                   </div>
                 </div>
-                <div className="program-seasons">
+                <div className="show-seasons">
                   <span className="detail-label">Temporadas:</span>
                   <div className="season-summary">
-                    {program.seasons.map((season, idx) => (
+                    {show.seasons.map((season, idx) => (
                       <div key={idx} className="season-info">
                         <span className="season-number">T{season.season}</span>
                         <span className="season-year">({season.year})</span>
@@ -439,10 +439,10 @@ function ProgramConfig() {
                 </div>
               </div>
             </div>
-            <div className="program-actions">
+            <div className="show-actions">
               <button
                 onClick={() => {
-                  setFormData(program);
+                  setFormData(show);
                   setCurrentView('edit');
                 }}
                 className="config-button"
@@ -450,7 +450,7 @@ function ProgramConfig() {
                 Editar
               </button>
               <button
-                onClick={() => handleDelete(program)}
+                onClick={() => handleDelete(show)}
                 className="config-button delete-button"
               >
                 Eliminar
@@ -463,7 +463,7 @@ function ProgramConfig() {
 
   const renderImportView = () => (
     <div className="import-view">
-      <p>Selecciona un archivo JSON con la configuración del programa para importar.</p>
+      <p>Selecciona un archivo JSON con la configuración del show para importar.</p>
       <div className="config-actions">
         <button onClick={handleImport} className="config-button">
           Seleccionar Archivo
@@ -476,14 +476,14 @@ function ProgramConfig() {
   );
 
   return (
-    <div className="program-config">
-      <h2>Configuración de Programas</h2>
+    <div className="show-config">
+      <h2>Configuración de Shows</h2>
       
-      {currentView === 'list' && renderProgramsList()}
-      {(currentView === 'create' || currentView === 'edit') && renderProgramForm()}
+      {currentView === 'list' && renderShowsList()}
+      {(currentView === 'create' || currentView === 'edit') && renderShowForm()}
       {currentView === 'import' && renderImportView()}
     </div>
   );
 };
 
-export default React.memo(ProgramConfig);
+export default React.memo(ShowConfig);
