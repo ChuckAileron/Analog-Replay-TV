@@ -5,6 +5,7 @@ interface Menu90sProps {
   settings: TVSettings;
   onAspectRatioToggle: () => void;
   onStyleToggle: () => void;
+  onCRTFilterToggle: () => void;
   isMenuOpen: boolean;
 }
 
@@ -12,6 +13,7 @@ export const Menu90s = ({
   settings,
   onAspectRatioToggle,
   onStyleToggle,
+  onCRTFilterToggle,
   isMenuOpen
 }: Menu90sProps) => {
   return (
@@ -19,6 +21,7 @@ export const Menu90s = ({
       settings={settings}
       onAspectRatioToggle={onAspectRatioToggle}
       onStyleToggle={onStyleToggle}
+      onCRTFilterToggle={onCRTFilterToggle}
       isMenuOpen={isMenuOpen}
       menuClassName="menu-90s style-90s content-container"
       menuTitle="SETTINGS MENU"

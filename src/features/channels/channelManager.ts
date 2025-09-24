@@ -1,12 +1,12 @@
 import type { Channel } from '../../types/tv.types';
-import type { TVProgram } from '../../types/program.types';
+import type { TVShow } from '../../types/show.types';
 import { readConfig, writeConfig } from './channelsStorage';
-import { programManager } from '../programs/programManager';
+import { showManager } from '../shows/showManager';
 
 interface ChannelChangeResult {
   channelNumber: number;
   channelInfo: Channel | null;
-  program: TVProgram | null;
+  show: TVShow | null;
   error?: string;
 }
 
@@ -59,7 +59,7 @@ export const channelManager = {
       // Asegurarse de que ambos managers estén inicializados
       await Promise.all([
         !isInitialized ? channelManager.initialize() : Promise.resolve(),
-        programManager.initialize()
+        showManager.initialize()
       ]);
 
       // Si no hay canales configurados o están vacíos, usar el comportamiento básico
@@ -72,7 +72,7 @@ export const channelManager = {
         return {
           channelNumber: newChannel,
           channelInfo: null,
-          program: null,
+          show: null,
           error: 'No hay canales configurados'
         };
       }
@@ -88,7 +88,7 @@ export const channelManager = {
         return {
           channelNumber: currentChannel,
           channelInfo: null,
-          program: null,
+          show: null,
           error: 'No hay canales habilitados'
         };
       }
@@ -109,48 +109,48 @@ export const channelManager = {
         return {
           channelNumber: newChannelNumber,
           channelInfo: null,
-          program: null,
+          show: null,
           error: `No se encontró información para el canal ${newChannelNumber}`
         };
       }
 
       // Buscar el programa correspondiente
-      console.log('🔍 [channelManager] Buscando programa para el canal:', channelInfo.name);
-      const programs = await programManager.getPrograms();
-      const matchingProgram = programs.find(program => 
-        program.channel.some(ch => ch.toLowerCase() === channelInfo.name.toLowerCase())
+      console.log('🔍 [channelManager] Buscando show para el canal:', channelInfo.name);
+      const shows = await showManager.getShows();
+      const matchingShow = shows.find((show: TVShow) => 
+        show.channel.some((ch: string) => ch.toLowerCase() === channelInfo.name.toLowerCase())
       );
 
-      if (matchingProgram) {
+      if (matchingShow) {
         // Verificar que el programa tenga al menos una temporada con episodios
-        const hasEpisodes = matchingProgram.seasons.some(season => 
+        const hasEpisodes = matchingShow.seasons.some((season: any) => 
           season.episodes && season.episodes.length > 0 && season.contentPath
         );
 
         if (hasEpisodes) {
-          console.log('✅ [channelManager] Programa encontrado:', {
-            id: matchingProgram.id,
-            nombre: matchingProgram.name,
-            temporadas: matchingProgram.seasons.length,
-            episodiosTotales: matchingProgram.seasons.reduce((total, season) => total + season.episodes.length, 0)
+          console.log('✅ [channelManager] Show encontrado:', {
+            id: matchingShow.id,
+            nombre: matchingShow.name,
+            temporadas: matchingShow.seasons.length,
+            episodiosTotales: matchingShow.seasons.reduce((total: number, season: any) => total + season.episodes.length, 0)
           });
         } else {
-          console.log('⚠️ [channelManager] Programa encontrado pero no tiene episodios disponibles:', matchingProgram.name);
+          console.log('⚠️ [channelManager] Show encontrado pero no tiene episodios disponibles:', matchingShow.name);
           return {
             channelNumber: newChannelNumber,
             channelInfo,
-            program: null,
+            show: null,
             error: undefined // No mostramos error al usuario
           };
         }
       } else {
-        console.log('ℹ️ [channelManager] No se encontró programa para el canal');
+        console.log('ℹ️ [channelManager] No se encontró show para el canal');
       }
 
       return {
         channelNumber: newChannelNumber,
         channelInfo,
-        program: matchingProgram || null,
+        show: matchingShow || null,
         error: undefined // No mostramos error al usuario
       };
     } catch (error) {
@@ -158,7 +158,7 @@ export const channelManager = {
       return {
         channelNumber: currentChannel, // Mantener el canal actual en caso de error
         channelInfo: null,
-        program: null,
+        show: null,
         error: `Error al cambiar canal: ${error instanceof Error ? error.message : String(error)}`
       };
     }

@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { VideoPlayer } from '../components/VideoPlayer';
+import { TVProgramPlayer } from '../components/TVProgramPlayer';
 import { programManager } from '../features/programs/programManager';
 import { channelManager } from '../features/channels/channelManager';
 import type { TVProgram, TVSeason } from '../types/program.types';
-import { MediaProvider } from '@vidstack/react';
 import '../styles/views.css';
 
 interface TVViewProps {
@@ -15,9 +14,6 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
   const [currentProgram, setCurrentProgram] = useState<TVProgram | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSeason, setCurrentSeason] = useState<number>(1);
-
-
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -79,13 +75,9 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
           );
 
           if (hasAvailableEpisodes) {
-            // Encontrar la primera temporada con episodios disponibles
-            const firstAvailableSeason = matchingProgram.seasons.find(
-              (season: TVSeason) => season.episodes.length > 0 && season.contentPath
-            )?.season ?? 1;
-
             setCurrentProgram(matchingProgram);
-            setCurrentSeason(firstAvailableSeason);
+            
+            // TVProgramPlayer procesará automáticamente el video
           } else {
             const error = 'El programa no tiene episodios disponibles';
             console.log('❌ [TVView]', error);
@@ -136,13 +128,11 @@ export function TVView({ channelNumber, decadeStyle = '90s' }: TVViewProps) {
 
   return (
     <div className={`tv-view style-${decadeStyle}`}>
-      <MediaProvider>
-        <VideoPlayer 
-          program={currentProgram}
-          seasonNumber={currentSeason}
-          decadeStyle={decadeStyle}
-        />
-      </MediaProvider>
+      <TVProgramPlayer 
+        program={currentProgram}
+        seasonNumber={1}
+        style={decadeStyle === '90s' ? 'retro-90s' : 'retro-00s'}
+      />
     </div>
   );
 }

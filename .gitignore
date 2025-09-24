@@ -7,21 +7,77 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs
 dist
 dist-ssr
+dist-electron
 *.local
+
+# Electron Builder outputs
+release/
+out/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
+# TypeScript compiled files
+*.js.map
+*.d.ts.map
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Cache directories
+.cache/
+.npm
+.eslintcache
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Local config files
 channels.config.json
+programs.config.json
+user.settings.json
+
+# FFmpeg and other binaries (if downloaded)
+ffmpeg.exe
+ffprobe.exe
+
+# Test files (optional - remove if you want to track them)
+test-*.html
+
+# User configuration and data
+src/config/user/
+src/config/channels/
+src/config/programs/
+
+# Electron forge/builder cache
+.webpack/

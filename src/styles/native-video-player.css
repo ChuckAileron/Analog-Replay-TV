@@ -1,0 +1,331 @@
+/* Reproductor de Video Nativo - Estilo Desktop */
+
+.native-video-player {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-canvas {
+  flex: 1;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #000;
+  cursor: pointer;
+}
+
+/* Estados de carga y error */
+.native-video-player.loading,
+.native-video-player.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.loading-message,
+.error-message {
+  text-align: center;
+  color: white;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 12px;
+  border: 2px solid #333;
+}
+
+.loading-message h3,
+.error-message h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.5em;
+}
+
+.loading-message p,
+.error-message p {
+  margin: 0 0 20px 0;
+  opacity: 0.8;
+}
+
+.error-message button {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.error-message button:hover {
+  background: #ff6666;
+}
+
+/* Controles de video */
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 20px 15px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.native-video-player:not(:hover) .video-controls {
+  opacity: 0;
+}
+
+.native-video-player:hover .video-controls {
+  opacity: 1;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.control-buttons button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-buttons button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.control-buttons button:active {
+  transform: scale(0.95);
+}
+
+.play-pause-btn {
+  background: rgba(0, 150, 255, 0.3) !important;
+  border-color: rgba(0, 150, 255, 0.5) !important;
+}
+
+.play-pause-btn:hover {
+  background: rgba(0, 150, 255, 0.5) !important;
+}
+
+.time-display {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: auto;
+  padding: 0 15px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Barra de progreso */
+.progress-container {
+  width: 100%;
+  position: relative;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.progress-bar::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0096ff;
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.progress-bar::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #0080dd;
+}
+
+.progress-bar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0096ff;
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Control de volumen */
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.volume-container span {
+  font-size: 16px;
+}
+
+.volume-bar {
+  width: 80px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.volume-bar::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.volume-bar::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  background: #f0f0f0;
+}
+
+/* Información de debug */
+.debug-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  opacity: 0.7;
+  font-family: 'Courier New', monospace;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.native-video-player:hover .debug-info {
+  opacity: 1;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .control-buttons {
+    gap: 10px;
+  }
+  
+  .control-buttons button {
+    min-width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+  
+  .time-display {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  
+  .volume-container {
+    display: none; /* Ocultar en móvil */
+  }
+}
+
+/* Tema retro 90s */
+.native-video-player.retro-90s {
+  border: 3px solid #00ff00;
+  background: #000080;
+  font-family: 'Courier New', monospace;
+}
+
+.native-video-player.retro-90s .video-controls {
+  background: linear-gradient(transparent, #000080);
+}
+
+.native-video-player.retro-90s .control-buttons button {
+  background: #008000;
+  border: 2px outset #00ff00;
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.native-video-player.retro-90s .control-buttons button:hover {
+  background: #00a000;
+  border: 2px inset #00ff00;
+}
+
+.native-video-player.retro-90s .time-display {
+  background: #000;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+}
+
+/* Tema retro 00s */
+.native-video-player.retro-00s {
+  border: 2px solid #silver;
+  background: linear-gradient(135deg, #f0f0f0, #d0d0d0);
+}
+
+.native-video-player.retro-00s .video-controls {
+  background: linear-gradient(transparent, rgba(240, 240, 240, 0.9));
+}
+
+.native-video-player.retro-00s .control-buttons button {
+  background: linear-gradient(135deg, #e0e0e0, #c0c0c0);
+  border: 1px outset #999;
+  color: #333;
+}
+
+.native-video-player.retro-00s .control-buttons button:hover {
+  background: linear-gradient(135deg, #f0f0f0, #d0d0d0);
+}
+
+.native-video-player.retro-00s .time-display {
+  background: #333;
+  color: #0f0;
+  border: 1px inset #666;
+}

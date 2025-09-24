@@ -7,6 +7,7 @@ interface MenuBaseProps {
   settings: TVSettings;
   onAspectRatioToggle: () => void;
   onStyleToggle: () => void;
+  onCRTFilterToggle?: () => void;
   isMenuOpen: boolean;
   menuClassName: string;
   menuHeaderClassName?: string;
@@ -20,6 +21,7 @@ export const MenuBase: React.FC<MenuBaseProps> = ({
   settings,
   onAspectRatioToggle,
   onStyleToggle,
+  onCRTFilterToggle,
   isMenuOpen,
   menuClassName,
   menuHeaderClassName = 'menu-header',
@@ -67,6 +69,11 @@ export const MenuBase: React.FC<MenuBaseProps> = ({
           <button onClick={onStyleToggle}>
             {styleLabel}: {settings.tvStyle === '90s' ? '90\'s' : '00\'s'}
           </button>
+          {settings.tvStyle === '90s' && onCRTFilterToggle && (
+            <button onClick={onCRTFilterToggle}>
+              CRT FILTER: {settings.crtFilter ? 'ON' : 'OFF'}
+            </button>
+          )}
         </div>
       ) : activeSection === 'channels' ? (
         <ChannelConfig />

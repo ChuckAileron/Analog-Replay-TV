@@ -15,37 +15,55 @@
 
 /* Contenedor principal para estilo 2000s */
 .tv-container.style-00s {
-  background  : linear-gradient(to bottom, #001428, #000a14);
-  padding     : 30px;
-  font-family : Arial, sans-serif;
+  background: linear-gradient(to bottom, #001428, #000a14);
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
 }
 
-/* Pantalla de TV 2000s */
+/* Pantalla de TV 2000s - RESPONSIVE MEJORADO */
 .tv-container.style-00s .tv-screen {
-  max-width       : min(800px, calc(100% - 40px));
-  height          : 60vh;
-  min-height      : 400px;
-  max-height      : 600px;
-  border          : 15px solid;
-  border-image    : var(--metallic-border) 1;
-  border-radius   : 10px;
+  width: min(90vw, calc(90vh - 120px) * 16/9, 1000px);
+  height: min(90vh - 120px, 90vw * 9/16, 600px);
+  max-width: 1000px;
+  max-height: 600px;
+  min-width: 320px;
+  min-height: 240px;
+  border: 15px solid;
+  border-image: var(--metallic-border) 1;
+  border-radius: 10px;
   background-color: var(--tv-screen-color);
-  box-shadow      : 
+  box-shadow: 
     var(--screen-glow),
     inset 0 0 50px rgba(0, 128, 255, 0.1);
-  overflow        : hidden;
-  margin          : 20px auto;
-  position        : relative;
-  transition      : all 0.3s ease;
-}
-
-/* Manejo de aspect ratio */
-.tv-container.style-00s .tv-screen.aspect-16-9 {
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Asegurar que siempre mantenga proporción */
   aspect-ratio: 16/9;
 }
 
+/* Pantalla 4:3 responsive */
 .tv-container.style-00s .tv-screen.aspect-4-3 {
-  aspect-ratio: 4/3;
+  aspect-ratio: 4/3 !important;
+  width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
 }
 
 /* Display de canal estilo 2000s */
@@ -68,18 +86,21 @@
   animation     : channelDisplay00s 5s linear;
 }
 
-/* Controles de TV 2000s */
+/* Controles de TV 2000s - RESPONSIVE MEJORADO */
 .tv-container.style-00s .tv-controls {
-  margin-top     : 20px;
-  display        : flex;
-  gap            : 20px;
-  flex-wrap      : wrap;
+  width: 100%;
+  max-width: min(1000px, 90vw);
+  display: flex;
+  gap: clamp(12px, 2.5vw, 20px);
+  flex-wrap: wrap;
   justify-content: center;
-  background     : linear-gradient(to bottom, #001832, #000c1a);
-  padding        : 15px;
-  border-radius  : 8px;
-  border         : 1px solid var(--menu-border-color);
-  box-shadow     : 
+  align-items: center;
+  flex-shrink: 0;
+  background: linear-gradient(to bottom, #001832, #000c1a);
+  padding: clamp(12px, 2vh, 15px);
+  border-radius: 8px;
+  border: 1px solid var(--menu-border-color);
+  box-shadow: 
     0 2px 10px rgba(0, 64, 128, 0.2),
     inset 0 1px 1px rgba(0, 128, 255, 0.1);
 }
@@ -87,23 +108,25 @@
 .tv-container.style-00s .channel-buttons,
 .tv-container.style-00s .settings-buttons {
   display: flex;
-  gap    : 12px;
+  gap: clamp(8px, 1.5vw, 12px);
 }
 
 .tv-container.style-00s .tv-controls button {
-  background     : var(--button-bg);
-  border         : 1px solid var(--button-border);
-  color          : var(--channel-text-color);
-  padding        : 8px 16px;
-  border-radius  : 4px;
-  font-size      : 14px;
-  text-transform : none;
-  font-family    : Arial, sans-serif;
-  letter-spacing : 0.5px;
-  text-shadow    : var(--button-text-shadow);
-  transition     : all 0.2s ease;
-  cursor         : pointer;
-  box-shadow     : 
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  color: var(--channel-text-color);
+  padding: clamp(6px, 1.5vh, 8px) clamp(12px, 3vw, 16px);
+  border-radius: 4px;
+  font-size: clamp(12px, 2vw, 14px);
+  text-transform: none;
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.5px;
+  text-shadow: var(--button-text-shadow);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: fit-content;
+  box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
@@ -217,4 +240,105 @@
 
 .tv-container.style-00s .tv-screen.changing-channel {
   animation: changeChannel00s 0.4s ease-in-out;
+}
+
+/* ===== MEDIA QUERIES RESPONSIVE ===== */
+
+/* Mobile devices */
+@media (max-width: 480px) {
+  .tv-container.style-00s {
+    padding: 15px;
+  }
+  
+  .tv-container.style-00s .tv-screen {
+    width: 95%;
+    height: calc(85vh - 100px);
+    border-width: 8px;
+    border-radius: 6px;
+  }
+  
+  .tv-container.style-00s .channel-display {
+    font-size: 18px;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+  }
+  
+  .tv-container.style-00s .tv-controls {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .tv-container.style-00s .tv-controls button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Tablets */
+@media (min-width: 481px) and (max-width: 768px) {
+  .tv-container.style-00s {
+    padding: 20px;
+  }
+  
+  .tv-container.style-00s .tv-screen {
+    width: 92%;
+    height: calc(88vh - 110px);
+    border-width: 12px;
+    border-radius: 8px;
+  }
+  
+  .tv-container.style-00s .channel-display {
+    font-size: 20px;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1200px) {
+  .tv-container.style-00s .tv-screen {
+    max-width: 1200px;
+    max-height: 700px;
+  }
+  
+  .tv-container.style-00s .channel-display {
+    font-size: 28px;
+    top: 25px;
+    right: 25px;
+    padding: 10px 20px;
+  }
+  
+  .tv-container.style-00s .tv-controls {
+    padding: 20px;
+    gap: 25px;
+  }
+  
+  .tv-container.style-00s .tv-controls button {
+    padding: 10px 18px;
+    font-size: 16px;
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1600px) {
+  .tv-container.style-00s .tv-screen {
+    max-width: 1400px;
+    max-height: 800px;
+  }
+}
+
+/* High screens (vertical orientation) */
+@media (max-aspect-ratio: 4/3) {
+  .tv-container.style-00s .tv-screen {
+    height: calc(70vh - 120px);
+  }
+}
+
+/* Very wide screens (horizontal orientation) */
+@media (min-aspect-ratio: 21/9) {
+  .tv-container.style-00s .tv-screen {
+    height: calc(95vh - 120px);
+  }
 }

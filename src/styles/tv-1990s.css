@@ -7,30 +7,49 @@
 /* Contenedor principal para TV 90s */
 .tv-container.style-90s {
   background-color: #121212;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
 }
 
-/* Pantalla de TV 90s */
+/* Pantalla de TV 90s - RESPONSIVE MEJORADO */
 .tv-container.style-90s .tv-screen {
-  max-width       : min(800px, calc(100% - 40px));
-  height          : 60vh;
-  min-height      : 400px;
-  max-height      : 600px;
+  width: min(90vw, calc(90vh - 120px) * 16/9, 1000px);
+  height: min(90vh - 120px, 90vw * 9/16, 600px);
+  max-width: 1000px;
+  max-height: 600px;
+  min-width: 320px;
+  min-height: 240px;
   background-color: var(--tv-screen-color);
-  border          : 20px solid var(--tv-border-color);
-  border-radius   : 20px;
-  position        : relative;
-  overflow        : hidden;
-  box-shadow      : 0 0 50px rgba(0, 0, 0, 0.5);
-  margin          : 20px auto;
-}
-
-/* Manejo de aspect ratio */
-.tv-container.style-90s .tv-screen.aspect-16-9 {
+  border: 20px solid var(--tv-border-color);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Asegurar que siempre mantenga proporción */
   aspect-ratio: 16/9;
 }
 
+/* Pantalla 4:3 responsive */
 .tv-container.style-90s .tv-screen.aspect-4-3 {
-  aspect-ratio: 4/3;
+  aspect-ratio: 4/3 !important;
+  width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
 }
 
 /* Display de canal estilo 90s */
@@ -133,30 +152,37 @@
   }
 }
 
-/* Controles de TV 90s */
+/* Controles de TV 90s - RESPONSIVE MEJORADO */
 .tv-container.style-90s .tv-controls {
-  margin-top     : 20px;
-  display        : flex;
-  gap            : 20px;
-  flex-wrap      : wrap;
+  width: 100%;
+  max-width: min(1000px, 90vw);
+  display: flex;
+  gap: clamp(10px, 2vw, 20px);
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: clamp(10px, 2vh, 15px) clamp(15px, 3vw, 20px);
 }
 
 .tv-container.style-90s .channel-buttons,
 .tv-container.style-90s .settings-buttons {
   display: flex;
-  gap    : 10px;
+  gap: clamp(5px, 1vw, 10px);
 }
 
 .tv-container.style-90s .tv-controls button {
   background-color: #333;
-  color          : #fff;
-  border         : 2px solid #666;
-  padding        : 10px 20px;
-  border-radius  : 5px;
-  cursor         : pointer;
-  font-family    : 'Courier New', Courier, monospace;
-  transition     : all 0.3s ease;
+  color: #fff;
+  border: 2px solid #666;
+  padding: clamp(6px, 1.5vh, 10px) clamp(12px, 3vw, 20px);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(11px, 2vw, 14px);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .tv-container.style-90s .tv-controls button:hover {
@@ -198,21 +224,17 @@
   pointer-events: none;
 }
 
-/* Animaciones para el estilo 90s */
+/* Animaciones para el estilo 90s - SIN FLICKERING */
 @keyframes flicker90s {
   0% { 
-    opacity: 0.97;
+    opacity: 0.98;
   }
   50% { 
-    opacity: 0.95;
+    opacity: 0.99;
   }
   100% { 
-    opacity: 0.97;
+    opacity: 0.98;
   }
-}
-
-.tv-container.style-90s .tv-screen {
-  animation: flicker90s 0.15s infinite;
 }
 
 /* Efecto de encendido/apagado 90s */
@@ -246,4 +268,207 @@
 
 .tv-container.style-90s .tv-screen.changing-channel {
   animation: changeChannel90s 0.2s linear;
+}
+
+/* ===== FILTROS CRT PARA VIDEOS EN ESTILO 90's ===== */
+
+/* Aplicar efectos CRT a todos los elementos video en estilo 90s - SIN FLICKERING */
+.tv-container.style-90s video.crt-filter {
+  /* Filtros CSS combinados para simular CRT */
+  filter: 
+    contrast(1.2)
+    brightness(0.95)
+    saturate(1.3)
+    sepia(0.05)
+    hue-rotate(5deg);
+  
+  /* Curvatura sutil de pantalla CRT */
+  border-radius: 8px;
+  
+  /* Efecto de resplandor interno */
+  box-shadow: 
+    inset 0 0 30px rgba(0, 255, 0, 0.1),
+    inset 0 0 60px rgba(0, 255, 0, 0.05),
+    0 0 20px rgba(0, 0, 0, 0.8);
+  
+  /* Ligera distorsión para simular tubo CRT */
+  transform: perspective(1000px) rotateX(0.5deg);
+  
+  /* Transición suave al aplicar efectos */
+  transition: all 0.3s ease;
+}
+
+/* Overlay para líneas de escaneo CRT - solo cuando el filtro esté activado */
+.tv-container.style-90s video.crt-filter::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  
+  /* Líneas de escaneo horizontales */
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 255, 0, 0.03) 1px,
+    rgba(0, 255, 0, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  
+  /* Animación sutil de las líneas de escaneo - SIN FLICKERING */
+  animation: scanlinesCRT90s 0.2s linear infinite;
+}
+
+/* Contenedor de video con efectos CRT adicionales - solo cuando esté activado */
+.tv-container.style-90s .video-container.crt-filter {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de resplandor del fósforo CRT - solo cuando esté activado */
+.tv-container.style-90s video.crt-filter {
+  /* Simular el resplandor del fósforo verde de los CRT antiguos */
+  box-shadow: 
+    inset 0 0 30px rgba(0, 255, 0, 0.08),
+    inset 0 0 60px rgba(0, 255, 0, 0.04),
+    inset 0 0 100px rgba(0, 255, 0, 0.02),
+    0 0 20px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 255, 0, 0.02);
+}
+
+/* Keyframes para efectos CRT - SIN FLICKERING */
+@keyframes scanlinesCRT90s {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
+/* Efecto de curvatura más pronunciada para pantallas grandes */
+@media (min-width: 1200px) {
+  .tv-container.style-90s video.crt-filter {
+    border-radius: 12px;
+    transform: perspective(1200px) rotateX(1deg);
+  }
+}
+
+/* Efecto de envejecimiento del tubo CRT */
+.tv-container.style-90s video.crt-filter.aged {
+  filter: 
+    contrast(1.1)
+    brightness(0.93)
+    saturate(1.2)
+    sepia(0.08)
+    hue-rotate(8deg)
+    grayscale(0.05);
+}
+
+/* ===== FIN FILTROS CRT ===== */
+
+/* ===== MEDIA QUERIES RESPONSIVE ===== */
+
+/* Mobile devices */
+@media (max-width: 480px) {
+  .tv-container.style-90s {
+    padding: 10px;
+  }
+  
+  .tv-container.style-90s .tv-screen {
+    width: 95%;
+    height: calc(85vh - 100px);
+    border-width: 10px;
+    border-radius: 10px;
+  }
+  
+  .tv-container.style-90s .channel-display {
+    font-size: 18px;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+  }
+  
+  .tv-container.style-90s .tv-controls {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .tv-container.style-90s .tv-controls button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Tablets */
+@media (min-width: 481px) and (max-width: 768px) {
+  .tv-container.style-90s {
+    padding: 15px;
+  }
+  
+  .tv-container.style-90s .tv-screen {
+    width: 92%;
+    height: calc(88vh - 110px);
+    border-width: 15px;
+    border-radius: 15px;
+  }
+  
+  .tv-container.style-90s .channel-display {
+    font-size: 20px;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1200px) {
+  .tv-container.style-90s .tv-screen {
+    max-width: 1200px;
+    max-height: 700px;
+  }
+  
+  .tv-container.style-90s .channel-display {
+    font-size: 28px;
+    top: 25px;
+    right: 25px;
+    padding: 10px 20px;
+  }
+  
+  .tv-container.style-90s .tv-controls {
+    padding: 20px;
+    gap: 25px;
+  }
+  
+  .tv-container.style-90s .tv-controls button {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1600px) {
+  .tv-container.style-90s .tv-screen {
+    max-width: 1400px;
+    max-height: 800px;
+  }
+}
+
+/* High screens (vertical orientation) */
+@media (max-aspect-ratio: 4/3) {
+  .tv-container.style-90s .tv-screen {
+    height: calc(70vh - 120px);
+  }
+}
+
+/* Very wide screens (horizontal orientation) */
+@media (min-aspect-ratio: 21/9) {
+  .tv-container.style-90s .tv-screen {
+    height: calc(95vh - 120px);
+  }
 }

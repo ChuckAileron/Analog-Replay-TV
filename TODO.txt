@@ -1,0 +1,3 @@
+- Lógica de generación de programación por canal que estará atada a la fecha y hora del dipositivo, de manera que si cambio de canal, el show que esté activo según la programación deberá ser mostrado por medio de un cálculo aproximado de hora de transmisión y hora del dispositivo, reproduciendo el video correspondiente desde el tiempo calculado bajo esta aproximación.
+
+- Cuando se reproduzca un episodio, durante su reproducción se debe generar la conversión del próximo (solo cuando aplique una conversión)

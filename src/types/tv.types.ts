@@ -30,6 +30,7 @@ export interface TVSettings {
   isMuted     : boolean;
   aspectRatio : AspectRatio;
   tvStyle     : TVStyle;
+  crtFilter   : boolean;
 }
 
 export interface ChannelGuide {

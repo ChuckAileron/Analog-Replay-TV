@@ -12,6 +12,9 @@
   width: 100%;
   height: 100%;
   position: relative;
+  background: #000;
+  display: flex;
+  flex-direction: column;
 }
 
 .video-wrapper {
@@ -34,6 +37,211 @@
   --media-volume-width: 80px;
   --media-time-width: 80px;
   --media-time-divider: '/';
+  width: 100% !important;
+  height: 100% !important;
+  background: #000;
+}
+
+.vlc-container {
+  position: relative;
+  width: 100%;
+  flex: 1; /* Ocupar todo el espacio disponible */
+  min-height: 400px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #333;
+  /* Asegurar que el contenedor sea visible */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.vlc-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+  background: #000 !important;
+  border: none !important;
+  outline: none !important;
+  /* Forzar visibilidad */
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10 !important;
+  position: relative !important;
+  /* Evitar problemas de hardware acceleration */
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+}
+
+.vlc-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  z-index: 100;
+}
+
+.vlc-loading-overlay .status-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.vlc-loading-overlay h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.vlc-loading-overlay p {
+  margin: 0 0 16px 0;
+  color: #ccc;
+}
+
+/* Overlay para cuando solo se reproduce audio */
+.audio-only-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 50;
+  min-width: 300px;
+  border: 2px solid #ff9900;
+}
+
+.audio-only-overlay .status-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #ff9900;
+}
+
+.audio-only-overlay h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #ff9900;
+}
+
+.audio-only-overlay p {
+  margin: 0 0 8px 0;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #333;
+  border-top: 4px solid #4488ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Asegurar que el video elemento sea visible */
+.media-player video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  background: #000;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10;
+}
+
+/* Reproductor nativo como fallback */
+.native-video-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.native-video-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  background: #000;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10;
+  position: relative;
+}
+
+/* Reproductor VLC para codecs incompatibles */
+.vlc-video-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.vlc-video-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Forzar visibilidad general del contenedor */
+.video-player-container {
+  width: 100%;
+  height: 100%;
+  display: block !important;
+  visibility: visible !important;
+  background: #000;
+}
+
+/* Asegurar que los elementos de video no tengan estilos que los oculten */
+video {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Estilo para indicador de tipo de reproductor */
+.player-type {
+  color: #ffff00;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* Asegurar que el contenedor del video sea visible */
+.media-player [data-media-provider] {
+  width: 100% !important;
+  height: 100% !important;
+  background: #000;
+}
+
+/* Forzar visibilidad del video en diferentes estados */
+.media-player [data-media-provider] video,
+.media-player video,
+video {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
 }
 
 .media-player .vds-buffering-indicator {
@@ -187,16 +395,86 @@
   color: white;
 }
 
-/* Error message */
-.error-message {
+/* Error message y status actions */
+.error-message, .loading-message, .no-video-message {
   padding: 20px;
   text-align: center;
   margin: 20px;
   border-radius: 4px;
   font-size: 1.1em;
+  color: white;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error-message {
   color: #ff3333;
   background: rgba(255, 0, 0, 0.1);
-  border: 2px solid #ff3333;
+  border-color: #ff3333;
+}
+
+.video-status.error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 100;
+  min-width: 400px;
+}
+
+.status-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.action-button.retry {
+  background: #4488ff;
+  color: white;
+}
+
+.action-button.retry:hover {
+  background: #3377ee;
+}
+
+.action-button.external {
+  background: #ff6600;
+  color: white;
+}
+
+.action-button.external:hover {
+  background: #ee5500;
+}
+
+.action-button:not(.retry):not(.external) {
+  background: #666;
+  color: white;
+}
+
+.action-button:not(.retry):not(.external):hover {
+  background: #777;
 }
 
 /* Estilos específicos para los 90s */
@@ -213,4 +491,117 @@
   --media-focus-ring: #4488ff;
   border: 1px solid rgba(100, 150, 255, 0.2);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Hybrid Video Player Styles */
+.video-player-container .format-info {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.video-player-container .format-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+.video-player-container .format-badge.compatible {
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+}
+
+.video-player-container .format-badge.vlc-required {
+  background: rgba(255, 152, 0, 0.9);
+  color: white;
+}
+
+.video-player-container .format-badge.unknown {
+  background: rgba(158, 158, 158, 0.9);
+  color: white;
+}
+
+.video-player-container .loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+}
+
+.video-player-container .loading-content {
+  text-align: center;
+  color: white;
+}
+
+.video-player-container .loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.video-player-container .loading-content p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.video-player-container .loading-content small {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.video-player-container .program-info {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+}
+
+.video-player-container .program-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #ffab00;
+  font-size: 1.2rem;
+}
+
+.video-player-container .program-info p {
+  margin: 0;
+  color: #ccc;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.video-player-container .video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #666;
+  font-size: 1.2rem;
 }

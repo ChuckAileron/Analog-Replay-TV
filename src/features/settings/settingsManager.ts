@@ -7,7 +7,8 @@ const DEFAULT_SETTINGS: TVSettings = {
   volume      : 50,
   isMuted     : false,
   aspectRatio : '16:9',
-  tvStyle     : '90s'
+  tvStyle     : '90s',
+  crtFilter   : true  // Por defecto activado
 };// Clave para almacenamiento local
 const STORAGE_KEY: string = 'retro-tv-settings';
 
@@ -102,5 +103,14 @@ export const settingsManager = {
         const currentSettings: TVSettings = settingsManager.getCurrentSettings();
         const newStyle = currentSettings.tvStyle === '90s' ? '00s' : '90s';
         return settingsManager.updateSettings({ tvStyle: newStyle });
+    },
+
+    /**
+     * Activa/desactiva el filtro CRT
+     * @returns {TVSettings} Las nuevas configuraciones
+     */
+    toggleCRTFilter: (): TVSettings => {
+        const currentSettings: TVSettings = settingsManager.getCurrentSettings();
+        return settingsManager.updateSettings({ crtFilter: !currentSettings.crtFilter });
     }
 };
