@@ -1,6 +1,7 @@
 /* Config Components Styles */
 .channel-config,
-.program-config {
+.program-config,
+.config-container {
   padding: 20px;
   color: var(--channel-text-color);
   width: 100%;
@@ -254,4 +255,281 @@
 
 .delete-button:hover {
   background-color: rgba(255, 68, 68, 0.1);
+}
+
+/* Commercial Config Styles */
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--channel-text-color);
+}
+
+.config-header h2 {
+  margin: 0;
+  color: var(--channel-text-color);
+}
+
+.btn-primary {
+  background-color: #333;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #444;
+  box-shadow: 0 0 10px var(--channel-text-color);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: #ff4444;
+  border: 1px solid #ff4444;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: rgba(255, 68, 68, 0.1);
+  box-shadow: 0 0 5px #ff4444;
+}
+
+.context-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.context-card {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--channel-text-color);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.context-info h3 {
+  margin: 0 0 10px 0;
+  color: var(--channel-text-color);
+}
+
+.context-info p {
+  margin: 5px 0;
+  color: #ccc;
+  font-size: 0.9em;
+}
+
+.context-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.context-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.context-actions button {
+  background-color: transparent;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.context-actions button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #aaa;
+}
+
+.config-form {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border: 1px solid var(--channel-text-color);
+  margin: 20px 0;
+}
+
+.channel-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.channel-input-group input {
+  flex: 1;
+}
+
+.channel-input-group button {
+  background-color: #333;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 5px 15px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.channel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.channel-tag {
+  background-color: #444;
+  color: var(--channel-text-color);
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.channel-tag button {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.context-details-view {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #444;
+}
+
+.commercials-section {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border: 1px solid var(--channel-text-color);
+}
+
+.section-header {
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: var(--channel-text-color);
+}
+
+.add-commercial-form {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #444;
+}
+
+.add-commercial-form h4 {
+  margin: 0 0 15px 0;
+  color: var(--channel-text-color);
+}
+
+.commercial-form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.commercial-form-row input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.commercial-form-row button {
+  background-color: #333;
+  color: var(--channel-text-color);
+  border: 1px solid var(--channel-text-color);
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.commercials-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.commercial-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commercial-info {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.commercial-info span {
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .commercial-form-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .commercial-form-row input,
+  .commercial-form-row button {
+    width: 100%;
+  }
+  
+  .commercial-info {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .commercial-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 }

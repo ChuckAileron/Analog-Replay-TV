@@ -1,0 +1,397 @@
+{
+  "contexts": [
+    {
+      "id": "coca-cola-90s",
+      "name": "Coca-Cola",
+      "description": "Comerciales de Coca-Cola de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1992,
+          "duration": "00:30",
+          "fileName": "commercials/coca-cola/coca-cola-1992-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:15",
+          "fileName": "commercials/coca-cola/coca-cola-1995-15s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:30",
+          "fileName": "commercials/coca-cola/coca-cola-1998-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "mcdonalds-90s",
+      "name": "McDonald's",
+      "description": "Comerciales de McDonald's de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon"],
+      "commercials": [
+        {
+          "year": 1993,
+          "duration": "00:30",
+          "fileName": "commercials/mcdonalds/mcdonalds-1993-30s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:15",
+          "fileName": "commercials/mcdonalds/mcdonalds-1996-15s.mp4"
+        },
+        {
+          "year": 1999,
+          "duration": "00:30",
+          "fileName": "commercials/mcdonalds/mcdonalds-1999-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "pepsi-90s",
+      "name": "Pepsi",
+      "description": "Comerciales de Pepsi con celebridades de los 90s",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1991,
+          "duration": "00:30",
+          "fileName": "commercials/pepsi/pepsi-michael-jackson-1991-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:15",
+          "fileName": "commercials/pepsi/pepsi-spice-girls-1995-15s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:30",
+          "fileName": "commercials/pepsi/pepsi-britney-1997-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "disney-promos",
+      "name": "Disney Channel Promos",
+      "description": "Promocionales y comerciales del propio Disney Channel",
+      "channel": ["Disney Channel"],
+      "commercials": [
+        {
+          "year": 1992,
+          "duration": "00:15",
+          "fileName": "commercials/disney/disney-promo-1992-15s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:30",
+          "fileName": "commercials/disney/disney-promo-1995-30s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:15",
+          "fileName": "commercials/disney/disney-promo-1998-15s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:10",
+          "fileName": "commercials/disney/disney-movie-preview-1996-10s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "nickelodeon-promos",
+      "name": "Nickelodeon Promos",
+      "description": "Promocionales y comerciales del propio Nickelodeon",
+      "channel": ["Nickelodeon"],
+      "commercials": [
+        {
+          "year": 1991,
+          "duration": "00:10",
+          "fileName": "commercials/nickelodeon/nick-promo-1991-10s.mp4"
+        },
+        {
+          "year": 1994,
+          "duration": "00:15",
+          "fileName": "commercials/nickelodeon/nick-promo-1994-15s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:30",
+          "fileName": "commercials/nickelodeon/nick-promo-1997-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:05",
+          "fileName": "commercials/nickelodeon/nick-splat-logo-1995-5s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "cartoon-network-promos",
+      "name": "Cartoon Network Promos",
+      "description": "Promocionales y comerciales del propio Cartoon Network",
+      "channel": ["Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1992,
+          "duration": "00:15",
+          "fileName": "commercials/cartoon-network/cn-promo-1992-15s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:20",
+          "fileName": "commercials/cartoon-network/cn-promo-1995-20s.mp4"
+        },
+        {
+          "year": 1999,
+          "duration": "00:10",
+          "fileName": "commercials/cartoon-network/cn-promo-1999-10s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:30",
+          "fileName": "commercials/cartoon-network/cn-toonami-promo-1997-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "toys-90s-action",
+      "name": "Juguetes de Acción 90s",
+      "description": "Comerciales de juguetes de acción y superhéroes de los 90s",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1993,
+          "duration": "00:30",
+          "fileName": "commercials/toys/power-rangers-toy-1993-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:30",
+          "fileName": "commercials/toys/batman-toy-1995-30s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:15",
+          "fileName": "commercials/toys/x-men-toy-1997-15s.mp4"
+        },
+        {
+          "year": 1994,
+          "duration": "00:30",
+          "fileName": "commercials/toys/teenage-mutant-ninja-turtles-1994-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "toys-90s-dolls",
+      "name": "Muñecas y Juguetes 90s",
+      "description": "Comerciales de muñecas y juguetes populares de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon"],
+      "commercials": [
+        {
+          "year": 1995,
+          "duration": "00:15",
+          "fileName": "commercials/toys/barbie-1995-15s.mp4"
+        },
+        {
+          "year": 1999,
+          "duration": "00:20",
+          "fileName": "commercials/toys/furby-1999-20s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:30",
+          "fileName": "commercials/toys/american-girl-1996-30s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:15",
+          "fileName": "commercials/toys/beanie-babies-1998-15s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "toys-90s-games",
+      "name": "Juegos y Cartas 90s",
+      "description": "Comerciales de juegos de mesa y cartas coleccionables de los 90s",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1997,
+          "duration": "00:30",
+          "fileName": "commercials/toys/pokemon-cards-1997-30s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:15",
+          "fileName": "commercials/toys/magic-cards-1996-15s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:30",
+          "fileName": "commercials/toys/digimon-cards-1998-30s.mp4"
+        },
+        {
+          "year": 1994,
+          "duration": "00:30",
+          "fileName": "commercials/toys/monopoly-junior-1994-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "cereal-90s",
+      "name": "Cereales de los 90s",
+      "description": "Comerciales de cereales populares durante los años 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1992,
+          "duration": "00:30",
+          "fileName": "commercials/cereal/lucky-charms-1992-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:15",
+          "fileName": "commercials/cereal/trix-1995-15s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:30",
+          "fileName": "commercials/cereal/frosted-flakes-1998-30s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:30",
+          "fileName": "commercials/cereal/fruit-loops-1996-30s.mp4"
+        },
+        {
+          "year": 1994,
+          "duration": "00:15",
+          "fileName": "commercials/cereal/cocoa-puffs-1994-15s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "candy-90s",
+      "name": "Dulces y Snacks 90s",
+      "description": "Comerciales de dulces y snacks populares de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1993,
+          "duration": "00:15",
+          "fileName": "commercials/candy/skittles-1993-15s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:30",
+          "fileName": "commercials/candy/fruit-by-the-foot-1996-30s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:15",
+          "fileName": "commercials/candy/pop-rocks-1998-15s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:30",
+          "fileName": "commercials/candy/dunkaroos-1995-30s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:15",
+          "fileName": "commercials/candy/warheads-1997-15s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "video-games-90s",
+      "name": "Video Juegos 90s",
+      "description": "Comerciales de consolas y videojuegos de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1991,
+          "duration": "00:30",
+          "fileName": "commercials/videogames/super-nintendo-1991-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:30",
+          "fileName": "commercials/videogames/playstation-1995-30s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:15",
+          "fileName": "commercials/videogames/nintendo64-1996-15s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:30",
+          "fileName": "commercials/videogames/pokemon-red-blue-1998-30s.mp4"
+        },
+        {
+          "year": 1994,
+          "duration": "00:30",
+          "fileName": "commercials/videogames/mortal-kombat-1994-30s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "movies-90s",
+      "name": "Películas 90s",
+      "description": "Trailers y promociones de películas populares de los años 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1994,
+          "duration": "00:30",
+          "fileName": "commercials/movies/lion-king-trailer-1994-30s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:15",
+          "fileName": "commercials/movies/toy-story-trailer-1995-15s.mp4"
+        },
+        {
+          "year": 1998,
+          "duration": "00:30",
+          "fileName": "commercials/movies/mulan-trailer-1998-30s.mp4"
+        },
+        {
+          "year": 1997,
+          "duration": "00:30",
+          "fileName": "commercials/movies/hercules-trailer-1997-30s.mp4"
+        },
+        {
+          "year": 1996,
+          "duration": "00:15",
+          "fileName": "commercials/movies/space-jam-trailer-1996-15s.mp4"
+        }
+      ]
+    },
+    {
+      "id": "generic-90s",
+      "name": "Comerciales Genéricos 90s",
+      "description": "Comerciales genéricos y de transición de la década de los 90",
+      "channel": ["Disney Channel", "Nickelodeon", "Cartoon Network"],
+      "commercials": [
+        {
+          "year": 1995,
+          "duration": "00:05",
+          "fileName": "commercials/generic/we-now-return-1995-5s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:03",
+          "fileName": "commercials/generic/commercial-break-1995-3s.mp4"
+        },
+        {
+          "year": 1995,
+          "duration": "00:10",
+          "fileName": "commercials/generic/stay-tuned-1995-10s.mp4"
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-09-24T19:45:00.000Z"
+}
