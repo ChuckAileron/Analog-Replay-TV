@@ -152,8 +152,19 @@ export class VideoEngineMain {
     progressCallback?: (progress: ConversionProgress) => void
   ): Promise<VideoProcessingResult> {
     try {
-      const outputPath = await this.generateOutputPath(inputPath, options);
-      const args = this.buildFFmpegArgs(inputPath, outputPath, options);
+      // Analyze source video first to apply quality constraints
+      const sourceMetadata = await this.analyzeVideo(inputPath);
+      const constrainedOptions = this.applyQualityConstraints(options, sourceMetadata);
+      
+      console.log(`📐 [VideoEngineMain] Applying quality constraints:`, {
+        original: `${sourceMetadata.width}x${sourceMetadata.height}`,
+        target: constrainedOptions.resolution ? 
+          `${constrainedOptions.resolution.width}x${constrainedOptions.resolution.height}` : 
+          'original'
+      });
+
+      const outputPath = await this.generateOutputPath(inputPath, constrainedOptions);
+      const args = this.buildFFmpegArgs(inputPath, outputPath, constrainedOptions);
       
       return await this.executeConversion(inputPath, outputPath, args, progressCallback);
     } catch (error) {
@@ -162,6 +173,77 @@ export class VideoEngineMain {
         error: error instanceof Error ? error.message : String(error)
       };
     }
+  }
+
+  /**
+   * Applies quality constraints based on the requirement:
+   * - If resolution >= 480p, convert to 480p
+   * - If resolution < 480p, maintain original resolution
+   */
+  private applyQualityConstraints(
+    options: ConversionOptions,
+    sourceMetadata: VideoMetadata
+  ): ConversionOptions {
+    const { width, height } = sourceMetadata;
+    const constrainedOptions = { ...options };
+
+    // Determine if we need to apply 480p constraint
+    const isSD480OrHigher = height >= 480;
+
+    if (isSD480OrHigher) {
+      // Apply 480p constraint
+      console.log(`🎯 [VideoEngineMain] Applying 480p constraint to ${width}x${height} video`);
+      
+      // Calculate aspect ratio to maintain proportions
+      const aspectRatio = width / height;
+      
+      let targetWidth: number;
+      let targetHeight = 480;
+      
+      // Common aspect ratios
+      if (Math.abs(aspectRatio - (16/9)) < 0.01) {
+        // 16:9 aspect ratio
+        targetWidth = 854;
+      } else if (Math.abs(aspectRatio - (4/3)) < 0.01) {
+        // 4:3 aspect ratio
+        targetWidth = 640;
+      } else {
+        // Calculate width maintaining aspect ratio
+        targetWidth = Math.round(480 * aspectRatio);
+        // Ensure even numbers for better encoding
+        targetWidth = targetWidth % 2 === 0 ? targetWidth : targetWidth + 1;
+      }
+
+      constrainedOptions.resolution = {
+        width: targetWidth,
+        height: targetHeight
+      };
+
+      // Optimize bitrate for 480p if not specified
+      if (!constrainedOptions.bitrate) {
+        constrainedOptions.bitrate = 1500000; // 1.5 Mbps for 480p (in bits)
+      }
+
+      console.log(`📐 [VideoEngineMain] Target resolution: ${targetWidth}x${targetHeight}`);
+    } else {
+      // Keep original resolution for videos smaller than 480p
+      console.log(`📐 [VideoEngineMain] Maintaining original resolution: ${width}x${height} (below 480p)`);
+      
+      // Don't set resolution constraint
+      // Adjust bitrate based on original resolution if not specified
+      if (!constrainedOptions.bitrate) {
+        const pixelCount = width * height;
+        if (pixelCount <= (320 * 240)) {
+          constrainedOptions.bitrate = 500000; // 500 kbps for very small videos
+        } else if (pixelCount <= (480 * 360)) {
+          constrainedOptions.bitrate = 800000; // 800 kbps for small videos
+        } else {
+          constrainedOptions.bitrate = 1200000; // 1.2 Mbps for videos close to 480p
+        }
+      }
+    }
+
+    return constrainedOptions;
   }
 
   // Cancelar conversión

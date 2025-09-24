@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import type { ConversionProgress, VideoProcessingResult, ConversionOptions } from '../types/video.types';
+import type { ConversionProgress, VideoProcessingResult, ConversionOptions, VideoMetadata } from '../types/video.types';
 
 export class VideoConverter {
   private static instance: VideoConverter;
@@ -31,7 +31,8 @@ export class VideoConverter {
   async convertToHTML5Compatible(
     inputPath: string,
     options: Partial<ConversionOptions> = {},
-    onProgress?: (progress: ConversionProgress) => void
+    onProgress?: (progress: ConversionProgress) => void,
+    sourceMetadata?: VideoMetadata
   ): Promise<VideoProcessingResult> {
     const hash = this.generateFileHash(inputPath);
     
@@ -53,11 +54,90 @@ export class VideoConverter {
     this.conversionsInProgress.set(hash, true);
 
     try {
-      const result = await this.performConversion(inputPath, options, onProgress);
+      // Apply 480p quality constraint
+      const constrainedOptions = this.applyQualityConstraints(options, sourceMetadata);
+      const result = await this.performConversion(inputPath, constrainedOptions, onProgress);
       return result;
     } finally {
       this.conversionsInProgress.delete(hash);
     }
+  }
+
+  /**
+   * Applies quality constraints based on the requirement:
+   * - If resolution >= 480p, convert to 480p
+   * - If resolution < 480p, maintain original resolution
+   */
+  private applyQualityConstraints(
+    options: Partial<ConversionOptions>,
+    sourceMetadata?: VideoMetadata
+  ): Partial<ConversionOptions> {
+    if (!sourceMetadata) {
+      return options;
+    }
+
+    const { width, height } = sourceMetadata;
+    const constrainedOptions = { ...options };
+
+    // Determine if we need to apply 480p constraint
+    // 480p = 854x480 (16:9) or 640x480 (4:3)
+    // 480i = same resolution, different scanning
+    const isSD480OrHigher = height >= 480;
+
+    if (isSD480OrHigher) {
+      // Apply 480p constraint
+      console.log(`🎯 [VideoConverter] Applying 480p constraint to ${width}x${height} video`);
+      
+      // Calculate aspect ratio to maintain proportions
+      const aspectRatio = width / height;
+      
+      let targetWidth: number;
+      let targetHeight = 480;
+      
+      // Common aspect ratios
+      if (Math.abs(aspectRatio - (16/9)) < 0.01) {
+        // 16:9 aspect ratio
+        targetWidth = 854;
+      } else if (Math.abs(aspectRatio - (4/3)) < 0.01) {
+        // 4:3 aspect ratio
+        targetWidth = 640;
+      } else {
+        // Calculate width maintaining aspect ratio
+        targetWidth = Math.round(480 * aspectRatio);
+        // Ensure even numbers for better encoding
+        targetWidth = targetWidth % 2 === 0 ? targetWidth : targetWidth + 1;
+      }
+
+      constrainedOptions.resolution = {
+        width: targetWidth,
+        height: targetHeight
+      };
+
+      // Optimize bitrate for 480p
+      if (!constrainedOptions.bitrate) {
+        constrainedOptions.bitrate = 1500; // 1.5 Mbps for 480p
+      }
+
+      console.log(`📐 [VideoConverter] Target resolution: ${targetWidth}x${targetHeight}`);
+    } else {
+      // Keep original resolution for videos smaller than 480p
+      console.log(`📐 [VideoConverter] Maintaining original resolution: ${width}x${height} (below 480p)`);
+      
+      // Don't set resolution constraint, let FFmpeg maintain original
+      // Adjust bitrate based on original resolution if not specified
+      if (!constrainedOptions.bitrate) {
+        const pixelCount = width * height;
+        if (pixelCount <= (320 * 240)) {
+          constrainedOptions.bitrate = 500; // 500 kbps for very small videos
+        } else if (pixelCount <= (480 * 360)) {
+          constrainedOptions.bitrate = 800; // 800 kbps for small videos
+        } else {
+          constrainedOptions.bitrate = 1200; // 1.2 Mbps for videos close to 480p
+        }
+      }
+    }
+
+    return constrainedOptions;
   }
 
   private async performConversion(

@@ -796,7 +796,17 @@ ipcMain.handle('convert-video', async (_, inputPath: string, options: any) => {
   try {
     console.log('🔄 [VideoConverter] Iniciando conversión:', inputPath);
     
-    const result = await videoConverter.convertToHTML5Compatible(inputPath, options);
+    // Analyze video first to get metadata for quality constraints
+    const analysisResult = await videoAnalyzer.analyzeVideo(inputPath);
+    const sourceMetadata = analysisResult.metadata;
+    
+    console.log(`📊 [VideoConverter] Video metadata:`, {
+      resolution: `${sourceMetadata.width}x${sourceMetadata.height}`,
+      codec: sourceMetadata.videoCodec,
+      duration: sourceMetadata.duration
+    });
+    
+    const result = await videoConverter.convertToHTML5Compatible(inputPath, options, undefined, sourceMetadata);
     
     if (result.success) {
       console.log('✅ [VideoConverter] Conversión completada:', result.outputPath);
