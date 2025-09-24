@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { promises as fs } from 'fs';
 import crypto from 'crypto';
 import os from 'os';
+import { videoAnalyzer } from './VideoAnalyzer.js';
 
 /**
  * Estrategias de reproducción de video
@@ -514,6 +515,16 @@ export class VideoStreamManager {
     }
     
     try {
+      // Analizar el video fuente para aplicar restricciones de calidad
+      console.log(`🔍 [VideoStreamManager] Analizando video para restricciones de calidad...`);
+      const analysisResult = await videoAnalyzer.analyzeVideo(filePath);
+      const sourceMetadata = analysisResult.metadata;
+      
+      console.log(`📊 [VideoStreamManager] Metadata del video: ${sourceMetadata.width}x${sourceMetadata.height}, ${sourceMetadata.videoCodec}`);
+      
+      // Aplicar restricciones de calidad 480p
+      const qualityConstraints = this.applyQualityConstraints(sourceMetadata);
+      
       // Parámetros de FFmpeg mejorados para compatibilidad HTML5 completa y velocidad
       const ffmpegArgs = [
         '-i', filePath,
@@ -524,6 +535,7 @@ export class VideoStreamManager {
         '-profile:v', 'baseline',   // Perfil baseline para máxima compatibilidad
         '-level', '3.0',            // Nivel 3.0 para compatibilidad web
         '-pix_fmt', 'yuv420p',      // Formato de pixel compatible
+        ...qualityConstraints.videoArgs, // Aplicar restricciones de resolución y bitrate
         '-c:a', 'aac',              // Codec de audio AAC
         '-ac', '2',                 // 2 canales de audio
         '-ar', '44100',             // Sample rate
@@ -986,5 +998,63 @@ export class VideoStreamManager {
     }
     
     await this.stopCurrentPlayback();
+  }
+
+  /**
+   * Aplica restricciones de calidad basadas en el requerimiento:
+   * - Si resolución >= 480p, convertir a 480p
+   * - Si resolución < 480p, mantener resolución original
+   */
+  private applyQualityConstraints(sourceMetadata: any): { videoArgs: string[] } {
+    const { width, height } = sourceMetadata;
+    const videoArgs: string[] = [];
+
+    // Determinar si necesitamos aplicar la restricción de 480p
+    const isSD480OrHigher = height >= 480;
+
+    if (isSD480OrHigher) {
+      // Aplicar restricción de 480p
+      console.log(`🎯 [VideoStreamManager] Aplicando restricción 480p a video ${width}x${height}`);
+      
+      // Calcular relación de aspecto para mantener proporciones
+      const aspectRatio = width / height;
+      
+      let targetWidth: number;
+      let targetHeight = 480;
+      
+      // Relaciones de aspecto comunes
+      if (Math.abs(aspectRatio - (16/9)) < 0.01) {
+        // 16:9 aspect ratio
+        targetWidth = 854;
+      } else if (Math.abs(aspectRatio - (4/3)) < 0.01) {
+        // 4:3 aspect ratio
+        targetWidth = 640;
+      } else {
+        // Calcular ancho manteniendo relación de aspecto
+        targetWidth = Math.round(480 * aspectRatio);
+        // Asegurar números pares para mejor encoding
+        targetWidth = targetWidth % 2 === 0 ? targetWidth : targetWidth + 1;
+      }
+
+      videoArgs.push('-s', `${targetWidth}x${targetHeight}`);
+      videoArgs.push('-b:v', '1500k'); // 1.5 Mbps para 480p
+
+      console.log(`📐 [VideoStreamManager] Resolución objetivo: ${targetWidth}x${targetHeight}`);
+    } else {
+      // Mantener resolución original para videos menores a 480p
+      console.log(`📐 [VideoStreamManager] Manteniendo resolución original: ${width}x${height} (menor a 480p)`);
+      
+      // Ajustar bitrate basado en resolución original
+      const pixelCount = width * height;
+      if (pixelCount <= (320 * 240)) {
+        videoArgs.push('-b:v', '500k'); // 500 kbps para videos muy pequeños
+      } else if (pixelCount <= (480 * 360)) {
+        videoArgs.push('-b:v', '800k'); // 800 kbps para videos pequeños
+      } else {
+        videoArgs.push('-b:v', '1200k'); // 1.2 Mbps para videos cercanos a 480p
+      }
+    }
+
+    return { videoArgs };
   }
 }

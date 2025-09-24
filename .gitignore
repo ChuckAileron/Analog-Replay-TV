@@ -73,6 +73,8 @@ ffprobe.exe
 
 # Test files (optional - remove if you want to track them)
 test-*.html
+test-*.js
+scripts/test-*.js
 
 # User configuration and data
 src/config/user/
