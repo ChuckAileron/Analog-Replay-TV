@@ -40,6 +40,17 @@ declare global {
   }
 
   interface ElectronAPI {
+    // Schedule API
+    schedule: {
+      initialize: () => Promise<'needs_year_selection' | 'ready'>;
+      setPrimaryYear: (year: number) => Promise<void>;
+      getCurrentConfig: () => Promise<any>;
+      getCurrentScheduleEntry: (channelId?: string) => Promise<any>;
+      getScheduleEntryAt: (date: string, channelId?: string) => Promise<any>;
+      getMonthSchedule: (year: number, month: number) => Promise<any>;
+      generateYear: (year: number) => Promise<{ success: boolean; error?: string; generatedMonths?: number }>;
+    };
+
     // Channels API
     saveChannelsConfig: (config: ChannelConfig) => Promise<boolean>;
     loadChannelsConfig: () => Promise<ChannelConfig>;
@@ -96,6 +107,47 @@ declare global {
     
     // External applications API
     openExternal: (filePath: string) => Promise<any>;
+
+    // Video Conversion Queue API
+    startVideoConversions: (channelSchedules: any) => Promise<{
+      success: boolean;
+      message?: string;
+      error?: string;
+    }>;
+    queueNextEpisodeConversion: (data: {
+      currentShow: any;
+      nextShow: any;
+      channelId: string;
+    }) => Promise<{
+      success: boolean;
+      message?: string;
+      error?: string;
+    }>;
+    stopVideoConversions: () => Promise<{
+      success: boolean;
+      message?: string;
+    }>;
+    getConversionQueueStatus: () => Promise<{
+      isActive: boolean;
+      channelStatuses: any[];
+      overallProgress: number;
+      currentJob?: any;
+    }>;
+
+    // Conversion Event Listeners
+    onConversionQueueUpdate: (callback: (data: {
+      channelStatuses: any[];
+      overallProgress: number;
+      currentJob?: any;
+      isActive: boolean;
+    }) => void) => void;
+    onChannelConversionReady: (callback: (channelId: string) => void) => void;
+    onAllConversionsCompleted: (callback: () => void) => void;
+    onConversionError: (callback: (error: {
+      channelId: string;
+      jobId: string;
+      error: string;
+    }) => void) => void;
 
     // VLC Embedded API
     launchVLCEmbedded: (config: {

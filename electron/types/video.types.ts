@@ -63,3 +63,21 @@ export interface VideoProcessingResult {
   error?: string;
   metadata?: VideoMetadata;
 }
+
+/**
+ * Show entry for video engine processing
+ */
+export interface ShowEntry {
+  id: string;
+  showId: number;
+  showName: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  episodeTitle?: string;
+  channelId: string;
+  videoPath: string;
+  startTime: Date;
+  endTime: Date;
+  duration: number; // duration in minutes
+  description?: string;
+}

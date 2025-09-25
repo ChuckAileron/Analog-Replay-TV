@@ -158,7 +158,8 @@ function ShowConfig() {
         await showManager.updateShow(formData.id, formData);
       } else {
         // Al agregar un nuevo show, omitimos el id porque se generará automáticamente
-        const { id, ...showData } = formData;
+        const { id: _unused, ...showData } = formData;
+        void _unused; // Silenciar warning
         await showManager.addShow(showData);
       }
       setCurrentView('list');

@@ -1,0 +1,423 @@
+/* ScheduleSetup.css - Pantalla de configuración inicial */
+.schedule-setup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.schedule-setup-container {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid #4a90e2;
+  position: relative;
+}
+
+.schedule-setup-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.schedule-setup-header h2 {
+  color: #ffffff;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.schedule-setup-header p {
+  color: #b8d4f0;
+  font-size: 1.1em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.schedule-setup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Selección de décadas */
+.decade-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.decade-selection h3 {
+  color: #ffffff;
+  font-size: 1.4em;
+  margin: 0;
+  text-align: center;
+}
+
+.decades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.decade-button {
+  padding: 15px 20px;
+  border: 2px solid #4a90e2;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: center;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.decade-button:hover:not(:disabled) {
+  border-color: #5ba3f5;
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.decade-button.current-decade {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.2);
+}
+
+.decade-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.decade-label {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.decade-years {
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Selección de años específicos */
+.year-selection-header {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  padding: 8px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  align-self: flex-start;
+}
+
+.back-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.year-selection-header h3 {
+  color: #ffffff;
+  font-size: 1.3em;
+  margin: 0;
+  text-align: center;
+}
+
+.years-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 25px auto;
+}
+
+.year-button {
+  padding: 12px 15px;
+  border: 2px solid #4a90e2;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95em;
+  text-align: center;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.year-button:hover:not(:disabled) {
+  border-color: #5ba3f5;
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.year-button.selected {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  font-weight: 600;
+}
+
+.year-button.current-year {
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.year-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selected-year-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.selected-year-info h4 {
+  color: #ffffff;
+  font-size: 1.2em;
+  margin: 0;
+  text-align: center;
+  background: rgba(76, 175, 80, 0.2);
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+/* Mantener estilos existentes */
+.year-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.year-selection label {
+  color: #ffffff;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.year-selector {
+  padding: 12px 20px;
+  border: 2px solid #4a90e2;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 1.1em;
+  min-width: 200px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.year-selector:hover:not(:disabled) {
+  border-color: #5ba3f5;
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.year-selector:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.setup-info {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.setup-info h3 {
+  color: #ffffff;
+  font-size: 1.3em;
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.setup-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.setup-info li {
+  color: #e8f4ff;
+  padding: 8px 0;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.cancel-button, .generate-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  position: relative;
+}
+
+.cancel-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.generate-button {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: 2px solid #4CAF50;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.generate-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.generate-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+.generation-progress {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #81C784, #4CAF50);
+  background-size: 200% 100%;
+  animation: progressWave 1.5s ease-in-out infinite;
+}
+
+.generation-progress p {
+  color: #b8d4f0;
+  font-size: 1em;
+  margin: 0;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progressWave {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-setup-container {
+    margin: 20px;
+    padding: 20px;
+    max-width: none;
+  }
+  
+  .setup-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .cancel-button, .generate-button {
+    width: 100%;
+  }
+}

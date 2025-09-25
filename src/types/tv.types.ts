@@ -1,5 +1,6 @@
 export interface Channel {
-  id              : number;
+  id              : string | number; // Soporte para UUIDs (string) y IDs legacy (number)
+  uuid?           : string;          // UUID opcional para nueva estructura
   name            : string;
   number          : number;
   description?    : string;
@@ -12,12 +13,12 @@ export interface ChannelConfig {
 }
 
 export interface Program {
-  id          : number;
+  id          : string | number; // Soporte para UUIDs y IDs legacy
   name        : string;
   description : string;
   startTime   : string;
   endTime     : string;
-  channelId   : number;
+  channelId   : string | number; // Soporte para UUIDs y IDs legacy
 }
 
 export type AspectRatio = '16:9' | '4:3';

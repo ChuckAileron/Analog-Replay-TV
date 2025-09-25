@@ -1,0 +1,501 @@
+/* Schedule Display Component Styles */
+
+.schedule-display {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.schedule-display:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.schedule-display.compact {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Loading State */
+.schedule-display.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  color: #6b7280;
+}
+
+.schedule-display.compact.loading {
+  padding: 20px;
+}
+
+.loading-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9em;
+}
+
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* No Show State */
+.schedule-display.no-show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+}
+
+.schedule-display.compact.no-show {
+  padding: 20px;
+}
+
+.no-show-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: left;
+}
+
+.no-show-icon {
+  font-size: 2em;
+  opacity: 0.6;
+}
+
+.no-show-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.channel-name {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1em;
+}
+
+.no-show-message {
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.current-time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 0.85em;
+}
+
+/* Active Schedule */
+.schedule-display.active {
+  border: 1px solid #e5e7eb;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.channel-info .channel-name {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.schedule-header .current-time {
+  font-size: 1em;
+  color: #667eea;
+}
+
+/* Show Information */
+.show-info {
+  padding: 20px;
+}
+
+.show-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.show-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.show-episode {
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 600;
+  margin-left: 15px;
+  flex-shrink: 0;
+}
+
+/* Time Information */
+.time-info {
+  margin-bottom: 20px;
+}
+
+.time-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.time-row:last-child {
+  border-bottom: none;
+}
+
+.time-label {
+  font-size: 0.9em;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.time-value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #374151;
+  font-size: 0.9em;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.starting {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.progress-fill.ending {
+  background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8em;
+  color: #6b7280;
+}
+
+.elapsed-time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.remaining-time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+/* Status Notices */
+.ending-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 0.85em;
+  color: #92400e;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.ending-icon {
+  font-size: 1.1em;
+}
+
+.conversion-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.conversion-status.completed {
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.conversion-status.converting {
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+}
+
+.conversion-status.error {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.conversion-status.pending {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.conversion-icon {
+  font-size: 1em;
+}
+
+/* Compact Mode */
+.schedule-display.compact .show-info {
+  padding: 15px;
+}
+
+.schedule-display.compact .show-title {
+  font-size: 1.1em;
+}
+
+.schedule-display.compact .time-info {
+  display: none;
+}
+
+.schedule-display.compact .progress-info {
+  display: flex;
+  justify-content: center;
+}
+
+.schedule-display.compact .elapsed-time,
+.schedule-display.compact .remaining-time {
+  display: none;
+}
+
+.compact-time {
+  text-align: center;
+  padding: 0 15px 15px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 0.9em;
+}
+
+/* Day Schedule Preview */
+.day-schedule-preview {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.day-schedule-preview.loading,
+.day-schedule-preview.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px;
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.empty-icon {
+  font-size: 1.5em;
+  opacity: 0.6;
+}
+
+.preview-header {
+  padding: 20px 20px 15px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.preview-header h4 {
+  margin: 0 0 5px;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.preview-date {
+  font-size: 0.85em;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.preview-entries {
+  padding: 15px 0;
+}
+
+.preview-entry {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 20px;
+  transition: background 0.2s ease;
+}
+
+.preview-entry:hover {
+  background: #f9fafb;
+}
+
+.entry-time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 0.9em;
+  min-width: 60px;
+}
+
+.entry-show {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.entry-title {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9em;
+}
+
+.entry-episode {
+  font-size: 0.8em;
+  color: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .schedule-display {
+    border-radius: 8px;
+  }
+  
+  .schedule-header {
+    padding: 15px 15px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .show-info {
+    padding: 15px;
+  }
+  
+  .show-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .show-episode {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  
+  .time-info {
+    margin-bottom: 15px;
+  }
+  
+  .progress-info {
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: space-between;
+  }
+  
+  .day-schedule-preview {
+    border-radius: 8px;
+  }
+  
+  .preview-header {
+    padding: 15px;
+  }
+  
+  .preview-entry {
+    padding: 8px 15px;
+  }
+  
+  .entry-time {
+    min-width: 55px;
+    font-size: 0.85em;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-display.loading,
+  .schedule-display.no-show {
+    padding: 20px 15px;
+  }
+  
+  .no-show-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .show-title {
+    font-size: 1.2em;
+  }
+  
+  .progress-info {
+    font-size: 0.75em;
+  }
+  
+  .ending-notice {
+    font-size: 0.8em;
+    padding: 6px 10px;
+  }
+  
+  .conversion-status {
+    font-size: 0.75em;
+    padding: 5px 8px;
+  }
+}

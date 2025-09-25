@@ -1,0 +1,569 @@
+{
+  "shows": [
+    {
+      "id": 1,
+      "name": "Las Aventuras de Gumball",
+      "channel": ["Cartoon Network"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1995,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "El Primer Día",
+              "description": "Gumball comienza una nueva aventura",
+              "duration": "11:00",
+              "airDate": "1995-01-15",
+              "fileName": "gumball-s01e01-first-day.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "El Amigo Nuevo",
+              "description": "Gumball conoce a un nuevo amigo",
+              "duration": "11:30",
+              "airDate": "1995-01-22",
+              "fileName": "gumball-s01e02-new-friend.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "La Gran Competencia",
+              "description": "Una competencia épica entre amigos",
+              "duration": "12:00",
+              "airDate": "1995-01-29",
+              "fileName": "gumball-s01e03-big-competition.mp4"
+            }
+          ],
+          "contentPath": "shows/gumball/season-1"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Los Pequeños Looney Tunes",
+      "channel": ["Cartoon Network", "Nickelodeon"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1992,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Primer Día de Guardería",
+              "description": "Los pequeños Looney Tunes en su primer día",
+              "duration": "22:00",
+              "airDate": "1992-09-14",
+              "fileName": "tiny-toons-s01e01-first-day.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Travesura de Buster",
+              "description": "Buster planea una gran travesura",
+              "duration": "22:30",
+              "airDate": "1992-09-21",
+              "fileName": "tiny-toons-s01e02-buster-prank.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Show de Talentos",
+              "description": "Todos participan en el show de talentos",
+              "duration": "23:00",
+              "airDate": "1992-09-28",
+              "fileName": "tiny-toons-s01e03-talent-show.mp4"
+            }
+          ],
+          "contentPath": "shows/tiny-toons/season-1"
+        },
+        {
+          "season": 2,
+          "year": 1993,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Nuevas Aventuras",
+              "description": "Comienza una nueva temporada de diversión",
+              "duration": "22:15",
+              "airDate": "1993-09-13",
+              "fileName": "tiny-toons-s02e01-new-adventures.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "El Concurso de Chistes",
+              "description": "¿Quién cuenta el mejor chiste?",
+              "duration": "22:45",
+              "airDate": "1993-09-20",
+              "fileName": "tiny-toons-s02e02-joke-contest.mp4"
+            }
+          ],
+          "contentPath": "shows/tiny-toons/season-2"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Inspector Gadget",
+      "channel": ["Disney Channel", "Cartoon Network"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1994,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "El Caso de los Gadgets Locos",
+              "description": "Los gadgets de Inspector Gadget funcionan mal",
+              "duration": "24:00",
+              "airDate": "1994-03-05",
+              "fileName": "inspector-gadget-s01e01-crazy-gadgets.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Misión Imposible",
+              "description": "Una misión que parece imposible de completar",
+              "duration": "24:30",
+              "airDate": "1994-03-12",
+              "fileName": "inspector-gadget-s01e02-impossible-mission.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Villano Misterioso",
+              "description": "Aparece un nuevo villano en la ciudad",
+              "duration": "25:00",
+              "airDate": "1994-03-19",
+              "fileName": "inspector-gadget-s01e03-mysterious-villain.mp4"
+            }
+          ],
+          "contentPath": "shows/inspector-gadget/season-1"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Las Aventuras de Winnie the Pooh",
+      "channel": ["Disney Channel"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1996,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Un Día en el Bosque",
+              "description": "Pooh y sus amigos pasan un día especial",
+              "duration": "22:00",
+              "airDate": "1996-01-08",
+              "fileName": "winnie-pooh-s01e01-day-in-forest.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Búsqueda de la Miel",
+              "description": "Pooh busca miel por todo el bosque",
+              "duration": "22:30",
+              "airDate": "1996-01-15",
+              "fileName": "winnie-pooh-s01e02-honey-search.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Día Ventoso",
+              "description": "Un día muy ventoso en el Bosque de los Cien Acres",
+              "duration": "23:00",
+              "airDate": "1996-01-22",
+              "fileName": "winnie-pooh-s01e03-windy-day.mp4"
+            },
+            {
+              "episode": 4,
+              "title": "La Fiesta Sorpresa",
+              "description": "Los amigos organizan una fiesta sorpresa",
+              "duration": "22:45",
+              "airDate": "1996-01-29",
+              "fileName": "winnie-pooh-s01e04-surprise-party.mp4"
+            }
+          ],
+          "contentPath": "shows/winnie-pooh/season-1"
+        },
+        {
+          "season": 2,
+          "year": 1997,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Nuevos Amigos",
+              "description": "Aparecen nuevos amigos en el bosque",
+              "duration": "23:15",
+              "airDate": "1997-01-06",
+              "fileName": "winnie-pooh-s02e01-new-friends.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Gran Aventura",
+              "description": "Todos juntos en una gran aventura",
+              "duration": "24:00",
+              "airDate": "1997-01-13",
+              "fileName": "winnie-pooh-s02e02-big-adventure.mp4"
+            }
+          ],
+          "contentPath": "shows/winnie-pooh/season-2"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Rugrats",
+      "channel": ["Nickelodeon"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1991,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Tommy en Acción",
+              "description": "Las primeras aventuras de Tommy",
+              "duration": "11:00",
+              "airDate": "1991-08-11",
+              "fileName": "rugrats-s01e01-tommy-in-action.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Escapada de Angelica",
+              "description": "Angelica planea una gran escapada",
+              "duration": "11:30",
+              "airDate": "1991-08-18",
+              "fileName": "rugrats-s01e02-angelica-escape.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Monstruo Debajo de la Cama",
+              "description": "Los bebés enfrentan sus miedos",
+              "duration": "12:00",
+              "airDate": "1991-08-25",
+              "fileName": "rugrats-s01e03-monster-under-bed.mp4"
+            },
+            {
+              "episode": 4,
+              "title": "La Gran Búsqueda",
+              "description": "Buscando el juguete perdido de Tommy",
+              "duration": "11:45",
+              "airDate": "1991-09-01",
+              "fileName": "rugrats-s01e04-big-search.mp4"
+            }
+          ],
+          "contentPath": "shows/rugrats/season-1"
+        },
+        {
+          "season": 2,
+          "year": 1992,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Nuevas Travesuras",
+              "description": "Los bebés encuentran nuevas formas de divertirse",
+              "duration": "11:15",
+              "airDate": "1992-09-06",
+              "fileName": "rugrats-s02e01-new-mischief.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "El Día de Lluvia",
+              "description": "Diversión en casa durante un día lluvioso",
+              "duration": "11:30",
+              "airDate": "1992-09-13",
+              "fileName": "rugrats-s02e02-rainy-day.mp4"
+            }
+          ],
+          "contentPath": "shows/rugrats/season-2"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Rocko's Modern Life",
+      "channel": ["Nickelodeon"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1993,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Nueva Vida en América",
+              "description": "Rocko comienza su nueva vida",
+              "duration": "23:00",
+              "airDate": "1993-09-18",
+              "fileName": "rockos-modern-life-s01e01-new-life.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "El Trabajo Perfecto",
+              "description": "Rocko busca el trabajo ideal",
+              "duration": "23:30",
+              "airDate": "1993-09-25",
+              "fileName": "rockos-modern-life-s01e02-perfect-job.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "Los Vecinos Locos",
+              "description": "Problemas con los vecinos excéntricos",
+              "duration": "24:00",
+              "airDate": "1993-10-02",
+              "fileName": "rockos-modern-life-s01e03-crazy-neighbors.mp4"
+            }
+          ],
+          "contentPath": "shows/rockos-modern-life/season-1"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Darkwing Duck",
+      "channel": ["Disney Channel"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1991,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "El Terror que Aleteó en la Noche",
+              "description": "Darkwing Duck hace su primera aparición",
+              "duration": "22:00",
+              "airDate": "1991-09-08",
+              "fileName": "darkwing-duck-s01e01-terror-flapped.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "La Planta Mutante",
+              "description": "Una planta mutante amenaza la ciudad",
+              "duration": "22:30",
+              "airDate": "1991-09-15",
+              "fileName": "darkwing-duck-s01e02-mutant-plant.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Villano Invisible",
+              "description": "Un enemigo invisible causa problemas",
+              "duration": "23:00",
+              "airDate": "1991-09-22",
+              "fileName": "darkwing-duck-s01e03-invisible-villain.mp4"
+            }
+          ],
+          "contentPath": "shows/darkwing-duck/season-1"
+        },
+        {
+          "season": 2,
+          "year": 1992,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "El Regreso del Peligro",
+              "description": "Nuevas amenazas para San Patario",
+              "duration": "22:15",
+              "airDate": "1992-09-12",
+              "fileName": "darkwing-duck-s02e01-return-danger.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "El Doble Problema",
+              "description": "Darkwing enfrenta a su doble malvado",
+              "duration": "22:45",
+              "airDate": "1992-09-19",
+              "fileName": "darkwing-duck-s02e02-double-trouble.mp4"
+            }
+          ],
+          "contentPath": "shows/darkwing-duck/season-2"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Talespin",
+      "channel": ["Disney Channel"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1990,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Plunder & Lightning Parte 1",
+              "description": "Baloo comienza sus aventuras aéreas",
+              "duration": "22:00",
+              "airDate": "1990-05-19",
+              "fileName": "talespin-s01e01-plunder-lightning-1.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "Plunder & Lightning Parte 2",
+              "description": "Continúan las aventuras de Baloo",
+              "duration": "22:30",
+              "airDate": "1990-05-20",
+              "fileName": "talespin-s01e02-plunder-lightning-2.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Vuelo Peligroso",
+              "description": "Un vuelo que se vuelve peligroso",
+              "duration": "23:00",
+              "airDate": "1990-09-07",
+              "fileName": "talespin-s01e03-dangerous-flight.mp4"
+            }
+          ],
+          "contentPath": "shows/talespin/season-1"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Gargoyles",
+      "channel": ["Disney Channel"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1994,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Awakening Parte 1",
+              "description": "Los Gargoyles despiertan en el mundo moderno",
+              "duration": "22:00",
+              "airDate": "1994-10-24",
+              "fileName": "gargoyles-s01e01-awakening-1.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "Awakening Parte 2",
+              "description": "Continúa el despertar de los Gargoyles",
+              "duration": "22:30",
+              "airDate": "1994-10-24",
+              "fileName": "gargoyles-s01e02-awakening-2.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "El Primer Vuelo",
+              "description": "Los Gargoyles exploran Nueva York",
+              "duration": "23:00",
+              "airDate": "1994-10-25",
+              "fileName": "gargoyles-s01e03-first-flight.mp4"
+            }
+          ],
+          "contentPath": "shows/gargoyles/season-1"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Hey Arnold!",
+      "channel": ["Nickelodeon"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1996,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Downtown as Fruits",
+              "description": "Arnold y sus amigos actúan como frutas",
+              "duration": "11:00",
+              "airDate": "1996-10-07",
+              "fileName": "hey-arnold-s01e01-downtown-fruits.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "Eugene's Bike",
+              "description": "Eugene tiene problemas con su bicicleta",
+              "duration": "11:30",
+              "airDate": "1996-10-07",
+              "fileName": "hey-arnold-s01e02-eugenes-bike.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "The Little Pink Book",
+              "description": "Arnold encuentra el diario de Ruth",
+              "duration": "11:15",
+              "airDate": "1996-10-14",
+              "fileName": "hey-arnold-s01e03-pink-book.mp4"
+            }
+          ],
+          "contentPath": "shows/hey-arnold/season-1"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Dexter's Laboratory",
+      "channel": ["Cartoon Network"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1996,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "Changes",
+              "description": "Dexter experimenta con cambios",
+              "duration": "07:00",
+              "airDate": "1996-04-28",
+              "fileName": "dexters-lab-s01e01-changes.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "The Big Sister",
+              "description": "Dee Dee causa problemas en el laboratorio",
+              "duration": "07:30",
+              "airDate": "1996-04-28",
+              "fileName": "dexters-lab-s01e02-big-sister.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "Maternal Combat",
+              "description": "La mamá de Dexter entra en acción",
+              "duration": "07:15",
+              "airDate": "1996-04-28",
+              "fileName": "dexters-lab-s01e03-maternal-combat.mp4"
+            }
+          ],
+          "contentPath": "shows/dexters-lab/season-1"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "The Powerpuff Girls",
+      "channel": ["Cartoon Network"],
+      "seasons": [
+        {
+          "season": 1,
+          "year": 1998,
+          "episodes": [
+            {
+              "episode": 1,
+              "title": "The Powerpuff Girls (Pilot)",
+              "description": "El origen de las Chicas Superpoderosas",
+              "duration": "07:00",
+              "airDate": "1998-11-18",
+              "fileName": "powerpuff-girls-s01e01-pilot.mp4"
+            },
+            {
+              "episode": 2,
+              "title": "Monkey See, Doggie Do",
+              "description": "Mojo Jojo transforma a todos en perros",
+              "duration": "11:00",
+              "airDate": "1998-11-18",
+              "fileName": "powerpuff-girls-s01e02-monkey-see.mp4"
+            },
+            {
+              "episode": 3,
+              "title": "Mommy Fearest",
+              "description": "Sedusa se hace pasar por su nueva mamá",
+              "duration": "11:30",
+              "airDate": "1998-11-18",
+              "fileName": "powerpuff-girls-s01e03-mommy-fearest.mp4"
+            }
+          ],
+          "contentPath": "shows/powerpuff-girls/season-1"
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-09-24T20:15:00.000Z"
+}

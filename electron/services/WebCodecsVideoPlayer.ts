@@ -402,7 +402,7 @@ export class WebCodecsVideoPlayer {
     });
   }
 
-  private async startAudioStream(filePath: string, audioCodec: string): Promise<void> {
+  private async startAudioStream(filePath: string, _audioCodec: string): Promise<void> {
     return new Promise((resolve, reject) => {
       console.log('🔊 [WebCodecsVideoPlayer] Iniciando stream de audio...');
       

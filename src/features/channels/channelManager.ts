@@ -115,11 +115,43 @@ export const channelManager = {
       }
 
       // Buscar el programa correspondiente
-      console.log('🔍 [channelManager] Buscando show para el canal:', channelInfo.name);
+      console.log('🔍 [channelManager] Buscando show para el canal:', channelInfo.name, `(ID: ${channelInfo.id}, UUID: ${channelInfo.uuid})`);
       const shows = await showManager.getShows();
-      const matchingShow = shows.find((show: TVShow) => 
-        show.channel.some((ch: string) => ch.toLowerCase() === channelInfo.name.toLowerCase())
-      );
+      
+      console.log('🎬 [channelManager] Shows disponibles:', shows.length);
+      shows.forEach((show: TVShow, index: number) => {
+        console.log(`  [${index}] ${show.name} -> canales:`, show.channel);
+        console.log(`    📝 Tipo de canales:`, typeof show.channel);
+        console.log(`    📝 ¿Es array?:`, Array.isArray(show.channel));
+        console.log(`    📝 Contenido:`, JSON.stringify(show.channel));
+      });
+      
+      const matchingShow = shows.find((show: TVShow) => {
+        const matches = show.channel.some((ch: string) => {
+          const uuidMatch = ch === channelInfo.uuid;
+          const idMatch = ch === String(channelInfo.id);
+          const nameMatch = ch.toLowerCase() === channelInfo.name.toLowerCase();
+          
+          console.log(`  🔍 Comparando "${ch}" con:`, {
+            uuid: channelInfo.uuid,
+            uuidMatch,
+            id: String(channelInfo.id),
+            idMatch,
+            name: channelInfo.name.toLowerCase(),
+            nameMatch,
+            chType: typeof ch,
+            chValue: ch
+          });
+          
+          return uuidMatch || idMatch || nameMatch;
+        });
+        
+        if (matches) {
+          console.log(`  ✅ Show encontrado: ${show.name}`);
+        }
+        
+        return matches;
+      });
 
       if (matchingShow) {
         // Verificar que el programa tenga al menos una temporada con episodios
@@ -134,6 +166,24 @@ export const channelManager = {
             temporadas: matchingShow.seasons.length,
             episodiosTotales: matchingShow.seasons.reduce((total: number, season: any) => total + season.episodes.length, 0)
           });
+          
+          // LOGS DETALLADOS PARA DEBUG
+          console.log(`📺 [channelManager] CANAL ACTUAL: ${newChannelNumber} (${channelInfo.name})`);
+          console.log(`🎬 [channelManager] SHOW SELECCIONADO: ${matchingShow.name}`);
+          console.log(`🎯 [channelManager] CANALES DEL SHOW: [${matchingShow.channel.join(', ')}]`);
+          
+          // Seleccionar episodio para mostrar info
+          const randomSeason = matchingShow.seasons[Math.floor(Math.random() * matchingShow.seasons.length)];
+          const randomEpisode = randomSeason.episodes[Math.floor(Math.random() * randomSeason.episodes.length)];
+          
+          console.log(`🎭 [channelManager] EPISODIO QUE SE VA A REPRODUCIR:`);
+          console.log(`   - Serie: ${matchingShow.name}`);
+          console.log(`   - Temporada: ${randomSeason.season}`);
+          console.log(`   - Episodio: ${randomEpisode.episode} - ${randomEpisode.title}`);
+          console.log(`   - Archivo: ${randomEpisode.fileName}`);
+          console.log(`   - Ruta: ${randomSeason.contentPath}`);
+          console.log(`📍 [channelManager] REPRODUCIENDO EN CANAL: ${newChannelNumber} (${channelInfo.name})`);
+          
         } else {
           console.log('⚠️ [channelManager] Show encontrado pero no tiene episodios disponibles:', matchingShow.name);
           return {
@@ -179,7 +229,7 @@ export const channelManager = {
   addChannel: async (channelData: Omit<Channel, 'id'>): Promise<Channel> => {
     const newChannel: Channel = {
       ...channelData,
-      id: Math.max(0, ...channels.map(ch => ch.id)) + 1
+      id: Math.max(0, ...channels.map(ch => typeof ch.id === 'number' ? ch.id : 0)) + 1
     };
     channels.push(newChannel);
 

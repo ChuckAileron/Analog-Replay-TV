@@ -1,0 +1,507 @@
+/* Year Selection Component Styles */
+
+.year-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.year-selection-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.year-selection-header {
+  text-align: center;
+  padding: 40px 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.app-title {
+  font-size: 2.5em;
+  margin: 0 0 10px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+}
+
+.selection-title {
+  font-size: 1.4em;
+  margin: 0 0 15px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.selection-description {
+  font-size: 1em;
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.9;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.year-selection-form {
+  padding: 40px;
+}
+
+.year-input-section {
+  margin-bottom: 30px;
+}
+
+.year-label {
+  display: block;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.year-selector {
+  margin-bottom: 25px;
+}
+
+.year-dropdown {
+  width: 100%;
+  padding: 15px 20px;
+  font-size: 1.1em;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: white;
+  color: #333;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 50px;
+}
+
+.year-dropdown:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.year-dropdown:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.popular-years {
+  margin-top: 20px;
+}
+
+.popular-label {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #666;
+  margin: 0 0 10px;
+}
+
+.popular-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.popular-year-btn {
+  padding: 8px 16px;
+  font-size: 0.9em;
+  border: 2px solid #e1e5e9;
+  border-radius: 20px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.popular-year-btn:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-1px);
+}
+
+.popular-year-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.popular-year-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.year-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.error-icon {
+  font-size: 1.2em;
+}
+
+.error-message {
+  margin: 0;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.year-info {
+  margin-bottom: 30px;
+}
+
+.info-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.info-box h3 {
+  margin: 0 0 15px;
+  font-size: 1em;
+  color: #374151;
+}
+
+.info-box ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-size: 0.9em;
+  line-height: 1.5;
+  position: relative;
+}
+
+.info-box li::before {
+  content: "•";
+  color: #667eea;
+  font-weight: bold;
+  position: absolute;
+  left: -15px;
+}
+
+.form-actions {
+  text-align: center;
+}
+
+.confirm-year-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 18px 40px;
+  font-size: 1.1em;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  justify-content: center;
+}
+
+.confirm-year-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.confirm-year-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.confirm-icon {
+  font-size: 1.2em;
+}
+
+.year-selection-footer {
+  padding: 20px 40px 40px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px;
+}
+
+.footer-text {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* Schedule Generation Loading Component */
+
+.schedule-generation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.schedule-generation-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.generation-content {
+  padding: 40px;
+}
+
+.loading-animation {
+  margin-bottom: 30px;
+}
+
+.tv-screen {
+  width: 120px;
+  height: 90px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #333;
+}
+
+.screen-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  animation: screenLines 2s linear infinite;
+}
+
+@keyframes screenLines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+.screen-static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.3) 0%, transparent 50%);
+  animation: staticNoise 0.5s linear infinite;
+}
+
+@keyframes staticNoise {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
+.generation-title {
+  font-size: 1.5em;
+  margin: 0 0 30px;
+  color: #333;
+  font-weight: 600;
+}
+
+.generation-steps {
+  margin-bottom: 30px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  color: #999;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  color: #333;
+}
+
+.step.active .step-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.step-icon {
+  font-size: 1.2em;
+  width: 24px;
+  text-align: center;
+}
+
+.step-text {
+  font-weight: 500;
+}
+
+.generation-description {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+  font-size: 0.9em;
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+  .year-selection-modal {
+    margin: 20px;
+    max-height: calc(100vh - 40px);
+  }
+  
+  .year-selection-header {
+    padding: 30px 20px 15px;
+  }
+  
+  .app-title {
+    font-size: 2em;
+  }
+  
+  .selection-title {
+    font-size: 1.2em;
+  }
+  
+  .year-selection-form {
+    padding: 30px 20px;
+  }
+  
+  .popular-buttons {
+    justify-content: center;
+  }
+  
+  .confirm-year-btn {
+    min-width: 100%;
+    padding: 16px 30px;
+  }
+  
+  .year-selection-footer {
+    padding: 15px 20px 30px;
+  }
+  
+  .schedule-generation-modal {
+    margin: 20px;
+  }
+  
+  .generation-content {
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .year-selection-overlay {
+    padding: 10px;
+  }
+  
+  .app-title {
+    font-size: 1.8em;
+  }
+  
+  .selection-title {
+    font-size: 1.1em;
+  }
+  
+  .selection-description {
+    font-size: 0.9em;
+  }
+  
+  .year-selection-form {
+    padding: 20px 15px;
+  }
+  
+  .popular-year-btn {
+    padding: 6px 12px;
+    font-size: 0.8em;
+  }
+}

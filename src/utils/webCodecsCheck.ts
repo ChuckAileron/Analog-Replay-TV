@@ -53,7 +53,7 @@ export const getSupportedCodecs = async (): Promise<{
       if (support.supported) {
         supportedVideo.push(codec);
       }
-    } catch (e) {
+    } catch {
       // Codec no soportado
     }
   }
@@ -66,7 +66,7 @@ export const getSupportedCodecs = async (): Promise<{
       if (support.supported) {
         supportedAudio.push(codec);
       }
-    } catch (e) {
+    } catch {
       // Codec no soportado
     }
   }

@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, protocol, shell } from 'electron';
 import path from 'path';
 import os from 'os';
-import isDev from 'electron-is-dev';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
 import { getVideoDurationInSeconds } from 'get-video-duration';
@@ -10,6 +9,7 @@ import { videoConverter } from './services/VideoConverter.js';
 import { videoAnalyzer } from './services/VideoAnalyzer.js';
 import { NativeVideoPlayerManager } from './services/NativeVideoPlayer.js';
 import { VideoStreamManager } from './services/VideoStreamManager.js';
+import { ScheduleService } from './services/ScheduleService.js';
 
 // Importar VideoEngineMain dinámicamente para evitar problemas de paths
 let VideoEngineMain: any;
@@ -34,7 +34,7 @@ if (!gotTheLock) {
   console.log('🚫 [Main] Another instance is already running. Exiting...');
   app.quit();
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
+  app.on('second-instance', (_event, _commandLine, _workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window instead
     console.log('🔔 [Main] Second instance attempted. Focusing existing window...');
     // Focus existing window if it exists
@@ -152,6 +152,14 @@ ipcMain.handle('open-external', async (_, filePath) => {
 });
 
 app.whenReady().then(async () => {
+  // Inicializar ScheduleService
+  try {
+    const scheduleService = ScheduleService.getInstance();
+    console.log('✅ [Main] ScheduleService inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando ScheduleService:', error);
+  }
+
   // Inicializar motor de video
   try {
     await initializeVideoEngine();
@@ -315,10 +323,9 @@ function createWindow(): BrowserWindow {
 
   console.log('🌐 [Main] Loading from:', useTestFile ? 'VideoStreamManager Test' : useLocalFiles ? 'Local files' : 'Dev server');
 
-  // Open the DevTools in development mode only
-  if (!useLocalFiles) {
-    mainWindow.webContents.openDevTools();
-  }
+  // Open the DevTools in development mode (always for debugging)
+  console.log('🔧 [Main] Opening DevTools for debugging...');
+  mainWindow.webContents.openDevTools();
 
   // Show window when ready to prevent layout issues
   mainWindow.once('ready-to-show', () => {
@@ -349,7 +356,7 @@ async function getVideoFiles(folderPath: string) {
 
     const videoInfoPromises = videoFiles.map(async (file, index) => {
       const filePath = path.join(folderPath, file);
-      const stats = await fs.stat(filePath);
+      await fs.stat(filePath); // Verificar que existe el archivo
       let duration;
       try {
         const durationInSeconds = await getVideoDurationInSeconds(filePath);
@@ -578,9 +585,7 @@ ipcMain.handle('select-video-file', async () => {
 });
 
 // Variable global para almacenar procesos de VLC
-let vlcProcesses: Map<string, ChildProcess> = new Map();
-
-// Función para encontrar la ruta de VLC
+  const vlcProcesses: Map<string, ChildProcess> = new Map();// Función para encontrar la ruta de VLC
 async function getVLCPath(): Promise<string> {
   // Rutas comunes de VLC en Windows
   const commonPaths = [
@@ -742,7 +747,7 @@ async function initializeVideoEngine() {
     try {
       await fs.access(modulePath);
       console.log('✅ [VideoEngine] Archivo encontrado');
-    } catch (error) {
+    } catch {
       throw new Error(`Archivo VideoEngineMain.js no encontrado en: ${modulePath}`);
     }
     

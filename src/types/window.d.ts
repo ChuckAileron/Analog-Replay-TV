@@ -1,5 +1,4 @@
 import { ChannelConfig } from '../features/channels/channelsStorage';
-import { TVShow, ShowConfig } from './show.types';
 import type { VideoMetadata, ConversionOptions } from './video.types';
 
 declare global {

@@ -7,6 +7,87 @@ try {
   contextBridge.exposeInMainWorld(
     'electronAPI',
     {
+      // Schedule API
+      schedule: {
+        initialize: async () => {
+          console.log('Schedule: Initialize');
+          try {
+            const result = await ipcRenderer.invoke('schedule:initialize');
+            console.log('Schedule initialize result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:initialize:', error);
+            throw error;
+          }
+        },
+        setPrimaryYear: async (year: number) => {
+          console.log('Schedule: Set primary year', year);
+          try {
+            const result = await ipcRenderer.invoke('schedule:setPrimaryYear', year);
+            console.log('Schedule setPrimaryYear result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:setPrimaryYear:', error);
+            throw error;
+          }
+        },
+        getCurrentConfig: async () => {
+          console.log('Schedule: Get current config');
+          try {
+            const result = await ipcRenderer.invoke('schedule:getCurrentConfig');
+            console.log('Schedule getCurrentConfig result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:getCurrentConfig:', error);
+            throw error;
+          }
+        },
+        getCurrentScheduleEntry: async (channelId?: string) => {
+          console.log('Schedule: Get current schedule entry', channelId ? `for channel: ${channelId}` : 'for current');
+          try {
+            const result = await ipcRenderer.invoke('schedule:getCurrentScheduleEntry', channelId);
+            console.log('Schedule getCurrentScheduleEntry result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:getCurrentScheduleEntry:', error);
+            throw error;
+          }
+        },
+        getScheduleEntryAt: async (date: string, channelId?: string) => {
+          console.log('Schedule: Get schedule entry at', date, channelId ? `for channel: ${channelId}` : '');
+          try {
+            const result = await ipcRenderer.invoke('schedule:getScheduleEntryAt', date, channelId);
+            console.log('Schedule getScheduleEntryAt result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:getScheduleEntryAt:', error);
+            throw error;
+          }
+        },
+        getMonthSchedule: async (year: number, month: number) => {
+          console.log('Schedule: Get month schedule', { year, month });
+          try {
+            const result = await ipcRenderer.invoke('schedule:getMonthSchedule', year, month);
+            console.log('Schedule getMonthSchedule result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:getMonthSchedule:', error);
+            throw error;
+          }
+        },
+        generateYear: async (year: number) => {
+          console.log('Schedule: Generate year', year);
+          try {
+            const result = await ipcRenderer.invoke('schedule:generateYear', year);
+            console.log('Schedule generateYear result:', result);
+            return result;
+          } catch (error) {
+            console.error('Error in schedule:generateYear:', error);
+            throw error;
+          }
+        }
+      },
+
       // Channels API
       saveChannelsConfig: async (config: any) => {
         console.log('Saving channels config:', config);
@@ -458,18 +539,118 @@ try {
 
       // ===== FIN VIDEOSTREAMMANAGER API =====
 
+      // ===== VIDEO CONVERSIONS QUEUE API =====
+      
+      // Start video conversions for channel schedules
+      startVideoConversions: async (channelSchedules: any) => {
+        console.log('Starting video conversions:', channelSchedules);
+        try {
+          const result = await ipcRenderer.invoke('start-video-conversions', channelSchedules);
+          console.log('Start conversions result:', result);
+          return result;
+        } catch (error) {
+          console.error('Error in startVideoConversions:', error);
+          throw error;
+        }
+      },
+
+      // Queue next episode conversion
+      queueNextEpisodeConversion: async (data: {
+        currentShow: any;
+        nextShow: any;
+        channelId: string;
+      }) => {
+        console.log('Queuing next episode conversion:', data);
+        try {
+          const result = await ipcRenderer.invoke('queue-next-episode-conversion', data);
+          console.log('Queue next episode result:', result);
+          return result;
+        } catch (error) {
+          console.error('Error in queueNextEpisodeConversion:', error);
+          throw error;
+        }
+      },
+
+      // Stop video conversions
+      stopVideoConversions: async () => {
+        console.log('Stopping video conversions');
+        try {
+          const result = await ipcRenderer.invoke('stop-video-conversions');
+          console.log('Stop conversions result:', result);
+          return result;
+        } catch (error) {
+          console.error('Error in stopVideoConversions:', error);
+          throw error;
+        }
+      },
+
+      // Get conversion queue status
+      getConversionQueueStatus: async () => {
+        console.log('Getting conversion queue status');
+        try {
+          const result = await ipcRenderer.invoke('get-conversion-queue-status');
+          console.log('Conversion queue status:', result);
+          return result;
+        } catch (error) {
+          console.error('Error in getConversionQueueStatus:', error);
+          throw error;
+        }
+      },
+
+      // ===== CONVERSION EVENT LISTENERS =====
+      
+      // Listen for conversion queue updates
+      onConversionQueueUpdate: (callback: (data: any) => void) => {
+        ipcRenderer.removeAllListeners('conversion-queue-update');
+        ipcRenderer.on('conversion-queue-update', (_, data) => callback(data));
+      },
+
+      // Listen for channel ready events
+      onChannelConversionReady: (callback: (channelId: string) => void) => {
+        ipcRenderer.removeAllListeners('channel-conversion-ready');
+        ipcRenderer.on('channel-conversion-ready', (_, channelId) => callback(channelId));
+      },
+
+      // Listen for all conversions completed
+      onAllConversionsCompleted: (callback: () => void) => {
+        ipcRenderer.removeAllListeners('all-conversions-completed');
+        ipcRenderer.on('all-conversions-completed', () => callback());
+      },
+
+      // Listen for conversion errors
+      onConversionError: (callback: (error: any) => void) => {
+        ipcRenderer.removeAllListeners('conversion-error');
+        ipcRenderer.on('conversion-error', (_, error) => callback(error));
+      },
+
+      // ===== FIN VIDEO CONVERSIONS QUEUE API =====
+
       // ===== RENDERER EVENTS API =====
       
       ipcRenderer: {
         on: (channel: string, callback: (...args: any[]) => void) => {
           // Lista de canales permitidos para seguridad
-          const allowedChannels = ['transcoding-progress', 'transcoding-complete'];
+          const allowedChannels = [
+            'transcoding-progress', 
+            'transcoding-complete',
+            'conversion-queue-update',
+            'channel-conversion-ready',
+            'all-conversions-completed',
+            'conversion-error'
+          ];
           if (allowedChannels.includes(channel)) {
             ipcRenderer.on(channel, callback);
           }
         },
         removeListener: (channel: string, callback: (...args: any[]) => void) => {
-          const allowedChannels = ['transcoding-progress', 'transcoding-complete'];
+          const allowedChannels = [
+            'transcoding-progress', 
+            'transcoding-complete',
+            'conversion-queue-update',
+            'channel-conversion-ready', 
+            'all-conversions-completed',
+            'conversion-error'
+          ];
           if (allowedChannels.includes(channel)) {
             ipcRenderer.removeListener(channel, callback);
           }

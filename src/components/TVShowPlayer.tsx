@@ -42,6 +42,13 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       setPlaybackStarting(false);
 
       console.log('🎬 [TVShowPlayer] Iniciando reproducción:', show.name);
+      
+      // LOGS DETALLADOS PARA DEBUG
+      console.log('🎭 [TVShowPlayer] DETALLES DE REPRODUCCIÓN:');
+      console.log(`   - Show: ${show.name}`);
+      console.log(`   - Show ID: ${show.id}`);
+      console.log(`   - Canales asignados: [${show.channel.join(', ')}]`);
+      console.log(`   - Temporada solicitada: ${seasonNumber}`);
 
       // Encontrar la temporada
       const season = show.seasons.find(s => s.season === seasonNumber) || show.seasons[0];
@@ -53,6 +60,13 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       const episode = season.episodes[0];
       const contentPath = season.contentPath;
       const fileName = episode.fileName;
+
+      console.log('📺 [TVShowPlayer] EPISODIO SELECCIONADO:');
+      console.log(`   - Temporada encontrada: ${season.season} (año: ${season.year})`);
+      console.log(`   - Episodio: ${episode.episode} - ${episode.title}`);
+      console.log(`   - Duración: ${episode.duration}`);
+      console.log(`   - Archivo: ${fileName}`);
+      console.log(`   - Ruta base: ${contentPath}`);
 
       if (!contentPath || !fileName) {
         throw new Error('Ruta de contenido o nombre de archivo no válido');
@@ -146,7 +160,7 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
           const result = await (window as any).electronAPI.executeScript(script);
           console.log('🎨 [TVShowPlayer] CRT filter toggle result:', result);
         }
-      } catch (error) {
+      } catch {
         console.log('🎨 [TVShowPlayer] No video element to apply CRT filter to yet');
       }
     };

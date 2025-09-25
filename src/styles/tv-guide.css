@@ -1,0 +1,551 @@
+/* TV Guide - Estilo clásico de los 90s/00s - FULL SCREEN */
+.tv-guide {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Estilo 90s - Negro con verde fosforescente */
+.tv-guide.style-90s {
+  background: #000000;
+  color: #00ff00;
+}
+
+/* Estilo 00s - Azul marino con blanco */
+.tv-guide.style-00s {
+  background: #001122;
+  color: #ffffff;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Header - Visible y funcional */
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 3px solid;
+  min-height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.tv-guide.style-90s .guide-header {
+  background: #000000;
+  border-bottom-color: #00ff00;
+}
+
+.tv-guide.style-00s .guide-header {
+  background: #000033;
+  border-bottom-color: #0066cc;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.guide-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  position: relative;
+  z-index: 150;
+}
+
+.tv-guide.style-90s .guide-header h1 {
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00;
+}
+
+.tv-guide.style-00s .guide-header h1 {
+  color: #ffffff;
+}
+
+.current-date {
+  font-size: 14px;
+  font-weight: normal;
+  position: relative;
+  z-index: 150;
+}
+
+.tv-guide.style-90s .current-date {
+  color: #00cc00;
+}
+
+.tv-guide.style-00s .current-date {
+  color: #cccccc;
+}
+
+/* Header Actions - MÁS VISIBLES y clickeables */
+.header-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  z-index: 200;
+}
+
+.header-actions button,
+.action-button {
+  border: 3px solid;
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: bold;
+  background: transparent;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 250;
+  min-width: 100px;
+  min-height: 50px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tv-guide.style-90s .header-actions button,
+.tv-guide.style-90s .action-button {
+  color: #00ff00;
+  border-color: #00ff00;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.tv-guide.style-90s .header-actions button:hover,
+.tv-guide.style-90s .action-button:hover {
+  background: #003300;
+  box-shadow: 0 0 8px #00ff00;
+  transform: scale(1.05);
+}
+
+.tv-guide.style-00s .header-actions button,
+.tv-guide.style-00s .action-button {
+  color: #ffffff;
+  border-color: #0066cc;
+  background: rgba(0, 20, 40, 0.8);
+}
+
+.tv-guide.style-00s .header-actions button:hover,
+.tv-guide.style-00s .action-button:hover {
+  background: #0066cc;
+  transform: scale(1.05);
+}
+
+.tv-guide.style-90s .header-actions button,
+.tv-guide.style-90s .action-button {
+  color: #00ff00;
+  border-color: #00ff00;
+}
+
+.tv-guide.style-90s .header-actions button:hover,
+.tv-guide.style-90s .action-button:hover {
+  background: #003300;
+  box-shadow: 0 0 4px #00ff00;
+}
+
+.tv-guide.style-00s .header-actions button,
+.tv-guide.style-00s .action-button {
+  color: #ffffff;
+  border-color: #0066cc;
+}
+
+.tv-guide.style-00s .header-actions button:hover,
+.tv-guide.style-00s .action-button:hover {
+  background: #0066cc;
+}
+
+.close-button {
+  background: #cc0000 !important;
+  color: #ffffff !important;
+  border-color: #cc0000 !important;
+  font-size: 20px !important;
+  min-width: 60px !important;
+  min-height: 50px !important;
+  z-index: 300 !important;
+  font-weight: bold !important;
+}
+
+.close-button:hover {
+  background: #ff0000 !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 10px #ff0000 !important;
+}
+
+/* Main Content - Sin doble scroll */
+.guide-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+/* Time Header - UN SOLO SCROLL */
+.time-header {
+  display: grid;
+  grid-template-columns: 180px repeat(36, minmax(120px, 1fr));
+  min-height: 50px;
+  border-bottom: 2px solid;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Ocultar scrollbar */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Ocultar scrollbar del header */
+.time-header::-webkit-scrollbar {
+  display: none;
+}
+
+.tv-guide.style-90s .time-header {
+  background: #000000;
+  border-bottom-color: #00ff00;
+}
+
+.tv-guide.style-00s .time-header {
+  background: #000033;
+  border-bottom-color: #0066cc;
+}
+
+.channel-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-right: 2px solid;
+  position: sticky;
+  left: 0;
+  z-index: 50;
+  min-height: 50px;
+}
+
+.tv-guide.style-90s .channel-column-header {
+  border-right-color: #00ff00;
+  color: #00ff00;
+  background: #000000;
+}
+
+.tv-guide.style-00s .channel-column-header {
+  border-right-color: #0066cc;
+  color: #ffffff;
+  background: #001122;
+}
+
+.time-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.tv-guide.style-90s .time-slot {
+  color: #00cc00;
+}
+
+.tv-guide.style-00s .time-slot {
+  color: #cccccc;
+}
+
+.time-slot.current {
+  font-weight: bold;
+}
+
+.tv-guide.style-90s .time-slot.current {
+  background: #003300;
+  color: #00ff00;
+}
+
+.tv-guide.style-00s .time-slot.current {
+  background: #003366;
+  color: #ffffff;
+}
+
+.time-slot.selected {
+  background: rgba(255,255,0,0.3) !important;
+  font-weight: bold;
+}
+
+/* Guide Grid - Solo UN scroll vertical */
+.guide-grid {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* NO scroll horizontal aqui */
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+/* Sincronizar el ancho del grid con el header */
+.guide-grid > * {
+  width: 100%;
+  min-width: calc(180px + 36 * 120px); /* Coincidir con el header */
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 180px repeat(36, minmax(120px, 1fr));
+  min-height: 70px;
+  border-bottom: 1px solid;
+}
+
+.tv-guide.style-90s .grid-row {
+  border-bottom-color: #003300;
+}
+
+.tv-guide.style-00s .grid-row {
+  border-bottom-color: #002244;
+}
+
+.grid-row:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.grid-row.selected-row {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Channel Info - Sticky left column */
+.channel-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border-right: 2px solid;
+  text-align: center;
+  gap: 6px;
+  position: sticky;
+  left: 0;
+  z-index: 50;
+  min-height: 70px;
+  width: 180px;
+  box-sizing: border-box;
+}
+
+.tv-guide.style-90s .channel-info {
+  border-right-color: #00ff00;
+  background: #000000;
+}
+
+.tv-guide.style-00s .channel-info {
+  border-right-color: #0066cc;
+  background: #001122;
+}
+
+.channel-number {
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.tv-guide.style-90s .channel-number {
+  color: #00ff00;
+}
+
+.tv-guide.style-00s .channel-number {
+  color: #ffffff;
+}
+
+.channel-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  line-height: 1.3;
+  text-align: center;
+  word-wrap: break-word;
+  max-width: 160px;
+  padding: 0 5px;
+  hyphens: auto;
+}
+
+.tv-guide.style-90s .channel-name {
+  color: #00cc00;
+}
+
+.tv-guide.style-00s .channel-name {
+  color: #cccccc;
+}
+
+/* Program Slots - Mejor presentación del contenido */
+.program-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 8px;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  overflow: hidden;
+  min-height: 60px;
+  transition: background-color 0.2s;
+}
+
+.program-slot:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.program-slot.current {
+  font-weight: bold;
+}
+
+.tv-guide.style-90s .program-slot.current {
+  background: #003300;
+  color: #00ff00;
+}
+
+.tv-guide.style-00s .program-slot.current {
+  background: #003366;
+  color: #ffffff;
+}
+
+.program-slot.selected {
+  background: rgba(255,255,0,0.3) !important;
+  font-weight: bold;
+  box-shadow: inset 0 0 0 2px rgba(255,255,0,0.6);
+}
+
+.program-slot.empty {
+  color: #666666;
+  font-style: italic;
+}
+
+.program-title {
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.episode-title {
+  font-size: 9px;
+  line-height: 1.1;
+  opacity: 0.8;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+/* Loading and Error States */
+.guide-loading,
+.error-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 16px;
+}
+
+.tv-guide.style-90s .guide-loading,
+.tv-guide.style-90s .error-content {
+  color: #00ff00;
+}
+
+.tv-guide.style-00s .guide-loading,
+.tv-guide.style-00s .error-content {
+  color: #ffffff;
+}
+
+.error-content button {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+  background: transparent;
+}
+
+.tv-guide.style-90s .error-content button {
+  color: #00ff00;
+  border-color: #00ff00;
+}
+
+.tv-guide.style-90s .error-content button:hover {
+  background: #003300;
+}
+
+.tv-guide.style-00s .error-content button {
+  color: #ffffff;
+  border-color: #0066cc;
+}
+
+.tv-guide.style-00s .error-content button:hover {
+  background: #0066cc;
+}
+
+/* Scrollbar Styling - Improved visibility */
+.guide-grid::-webkit-scrollbar,
+.time-header::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.tv-guide.style-90s .guide-grid::-webkit-scrollbar-track,
+.tv-guide.style-90s .time-header::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+.tv-guide.style-90s .guide-grid::-webkit-scrollbar-thumb,
+.tv-guide.style-90s .time-header::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border-radius: 6px;
+}
+
+.tv-guide.style-90s .guide-grid::-webkit-scrollbar-thumb:hover,
+.tv-guide.style-90s .time-header::-webkit-scrollbar-thumb:hover {
+  background: #00cc00;
+}
+
+.tv-guide.style-00s .guide-grid::-webkit-scrollbar-track,
+.tv-guide.style-00s .time-header::-webkit-scrollbar-track {
+  background: #001122;
+}
+
+.tv-guide.style-00s .guide-grid::-webkit-scrollbar-thumb,
+.tv-guide.style-00s .time-header::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border-radius: 6px;
+}
+
+.tv-guide.style-00s .guide-grid::-webkit-scrollbar-thumb:hover,
+.tv-guide.style-00s .time-header::-webkit-scrollbar-thumb:hover {
+  background: #0088ff;
+}

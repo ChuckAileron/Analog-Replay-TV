@@ -92,7 +92,7 @@ export class VideoConverter {
       const aspectRatio = width / height;
       
       let targetWidth: number;
-      let targetHeight = 480;
+      const targetHeight = 480;
       
       // Common aspect ratios
       if (Math.abs(aspectRatio - (16/9)) < 0.01) {
@@ -239,7 +239,7 @@ export class VideoConverter {
               success: true,
               outputPath
             });
-          } catch (error) {
+          } catch {
             reject(new Error('Conversion completed but output file not found'));
           }
         } else {
@@ -333,7 +333,7 @@ export class VideoConverter {
       if (cachedStat.mtime > inputStat.mtime) {
         return cachedPath;
       }
-    } catch (error) {
+    } catch {
       // File doesn't exist or error accessing
     }
     

@@ -286,6 +286,7 @@ export class NativeVideoPlayer {
       
       // Buscar delimitadores JPEG (FF D8 para start, FF D9 para end)
       let startIndex = 0;
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const jpegStart = imageBuffer.indexOf(Buffer.from([0xFF, 0xD8]), startIndex);
         if (jpegStart === -1) break;
@@ -376,7 +377,7 @@ export class NativeVideoPlayer {
     if (this.audioProcess.stdout) {
       // En una implementación real, aquí enviarías el audio al sistema de audio
       // Por ahora, simplemente drenar el stream para evitar buffer overflow
-      this.audioProcess.stdout.on('data', (chunk) => {
+      this.audioProcess.stdout.on('data', (_chunk) => {
         // TODO: Implementar reproducción de audio real
         // Por ahora solo drenar para evitar problemas de memoria
       });
@@ -544,7 +545,7 @@ export class NativeVideoPlayerManager {
 
   // Destruir todos los reproductores
   destroyAll(): void {
-    for (const [playerId, player] of this.players) {
+    for (const [, player] of this.players) {
       player.destroy();
     }
     this.players.clear();

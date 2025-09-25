@@ -64,6 +64,7 @@ tmp/
 
 # Local config files
 channels.config.json
+commercials.config.json
 shows.config.json
 user.settings.json
 
@@ -75,11 +76,18 @@ ffprobe.exe
 test-*.html
 test-*.js
 scripts/test-*.js
+generate-new-schedule.cjs
+tv-guide-90s-test.html
+tv-guide-test.html
 
 # User configuration and data
 src/config/user/
 src/config/channels/
-src/config/shows/
+# Ignore everything inside schedules, but do not ignore the schedules directory itself.
+# Keep a .gitkeep file so Git (and VS Code) will show the folder while its dynamic contents remain ignored.
+/src/config/schedules/*
+!/src/config/schedules/.gitkeep
+!/src/config/schedules/
 
 # Electron forge/builder cache
 .webpack/

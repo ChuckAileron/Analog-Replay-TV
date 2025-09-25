@@ -124,7 +124,7 @@ export class VideoStreamManager {
         ffprobe.on('error', () => {
           resolve(null);
         });
-      } catch (error) {
+      } catch {
         resolve(null);
       }
     });
@@ -195,7 +195,7 @@ export class VideoStreamManager {
     try {
       await fs.access(filePath);
       console.log(`✅ [VideoStreamManager] Archivo fuente encontrado: ${filePath}`);
-    } catch (error) {
+    } catch {
       const errorMessage = `❌ [VideoStreamManager] Archivo fuente no encontrado: ${filePath}`;
       console.error(errorMessage);
       
@@ -316,7 +316,7 @@ export class VideoStreamManager {
                          normalizedPath.includes('/Temp/') || 
                          normalizedPath.includes('AppData/Local/Temp') ||
                          normalizedPath.includes('analog_replay_') ||
-                         normalizedPath.match(/[\\/]analog_replay_\d+\.mp4$/);
+                         normalizedPath.match(/[/\\]analog_replay_[0-9]+[.]mp4$/);
           
           console.log('🔍 Path analysis:', JSON.stringify({
             originalPath: '${filePath}',
@@ -326,7 +326,7 @@ export class VideoStreamManager {
             containsTemp2: normalizedPath.includes('/Temp/'),
             containsLocalTemp: normalizedPath.includes('AppData/Local/Temp'),
             containsAnalogReplay: normalizedPath.includes('analog_replay_'),
-            matchesPattern: !!normalizedPath.match(/[\\/]analog_replay_\d+\.mp4$/)
+                        matchesPattern: !!normalizedPath.match(/[/\\]analog_replay_[0-9]+[.]mp4$/)
           }));
           
           if (isTemp) {
@@ -497,7 +497,7 @@ export class VideoStreamManager {
     
     // Crear nombre de archivo único basado en hash del archivo original
     const cachedFilePath = await this.getCachedVideoPath(filePath);
-    let tempFilePath = cachedFilePath;
+    const tempFilePath = cachedFilePath;
     
     console.log(`📁 [VideoStreamManager] Archivo de cache: ${cachedFilePath}`);
     
@@ -509,7 +509,7 @@ export class VideoStreamManager {
       // Reproducir el archivo cacheado directamente
       await this.playNativeVideo(cachedFilePath, 0, autoPlay, crtFilter); // seekTime ya aplicado durante transcoding original
       return;
-    } catch (error) {
+    } catch {
       // El archivo no existe en cache, proceder con transcoding
       console.log(`� [VideoStreamManager] Archivo no en cache, transcodificando...`);
     }
@@ -841,7 +841,7 @@ export class VideoStreamManager {
       // Crear directorio de cache si no existe
       try {
         await fs.mkdir(cacheDir, { recursive: true });
-      } catch (error) {
+      } catch {
         // Ignorar si ya existe
       }
       
@@ -1020,7 +1020,7 @@ export class VideoStreamManager {
       const aspectRatio = width / height;
       
       let targetWidth: number;
-      let targetHeight = 480;
+      const targetHeight = 480;
       
       // Relaciones de aspecto comunes
       if (Math.abs(aspectRatio - (16/9)) < 0.01) {

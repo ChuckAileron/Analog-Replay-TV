@@ -2,7 +2,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
 
 // Tipos simplificados para el proceso principal
 interface VideoMetadata {
@@ -198,7 +197,7 @@ export class VideoEngineMain {
       const aspectRatio = width / height;
       
       let targetWidth: number;
-      let targetHeight = 480;
+      const targetHeight = 480;
       
       // Common aspect ratios
       if (Math.abs(aspectRatio - (16/9)) < 0.01) {
@@ -327,14 +326,15 @@ export class VideoEngineMain {
     args: string[],
     progressCallback?: (progress: ConversionProgress) => void
   ): Promise<VideoProcessingResult> {
-    return new Promise(async (resolve) => {
+    const metadata = await this.analyzeVideo(inputPath);
+    
+    return new Promise((resolve) => {
       const ffmpegPath = this.config.binaryPath || 'ffmpeg';
       const process = spawn(ffmpegPath, args);
       
       this.activeConversions.set(inputPath, process);
 
       let stderr = '';
-      const metadata = await this.analyzeVideo(inputPath);
       
       process.stdout.on('data', (data) => {
         const progress = this.parseFFmpegProgress(data.toString(), metadata.duration);

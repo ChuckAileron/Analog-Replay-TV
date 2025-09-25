@@ -10,8 +10,6 @@ interface VideoDecoder {
   flush(): Promise<void>;
   reset(): void;
   close(): void;
-  
-  static isConfigSupported(config: VideoDecoderConfig): Promise<VideoDecoderSupport>;
 }
 
 interface VideoDecoderConfig {
@@ -45,8 +43,6 @@ interface AudioDecoder {
   flush(): Promise<void>;
   reset(): void;
   close(): void;
-  
-  static isConfigSupported(config: AudioDecoderConfig): Promise<AudioDecoderSupport>;
 }
 
 interface AudioDecoderConfig {

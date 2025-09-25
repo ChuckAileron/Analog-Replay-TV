@@ -349,14 +349,15 @@ export class VideoEngine {
     args: string[],
     events?: ConversionEvents
   ): Promise<VideoProcessingResult> {
-    return new Promise(async (resolve) => {
+    const metadata = await this.extractMetadata(inputPath);
+    
+    return new Promise((resolve) => {
       const ffmpegPath = this.config.binaryPath || 'ffmpeg';
       const process = spawn(ffmpegPath, args);
       
       this.activeConversions.set(inputPath, process);
 
       let stderr = '';
-      const metadata = await this.extractMetadata(inputPath);
       
       // Parsear progreso
       process.stdout.on('data', (data) => {
