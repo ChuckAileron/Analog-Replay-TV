@@ -714,7 +714,7 @@ function App() {
             </div>
           )}
 
-          {/* Panel de control remoto simulado (fuera de .tv-screen, debajo del frame de reproducción) */}
+          {/* Control remoto flotante sobre la parte inferior de la reproducción */}
           {remoteVisible && (
             <RemoteControl
               tvStyle={settings.tvStyle}

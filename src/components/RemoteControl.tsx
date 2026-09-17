@@ -18,49 +18,18 @@ interface RemoteControlProps {
   onLastChannel: () => void;
 }
 
-// Distribución tipo "control remoto real": una grilla de 3 columnas.
-// `null` representa un espacio vacío para mantener la alineación visual.
-const GRID: (string | null)[][] = [
-  ['power', null, 'mute'],
-  ['guide', null, 'menu'],
-  ['chUp', null, 'volUp'],
-  ['chDown', null, 'volDown'],
-  ['num1', 'num2', 'num3'],
-  ['num4', 'num5', 'num6'],
-  ['num7', 'num8', 'num9'],
-  ['last', 'num0', 'ok'],
+const FOCUS_ORDER = [
+  'power', 'mute', 'guide', 'menu',
+  'chDown', 'chUp', 'last',
+  'num1', 'num2', 'num3', 'num4', 'num5',
+  'num6', 'num7', 'num8', 'num9', 'num0', 'ok',
+  'volDown', 'volUp'
 ];
 
-function findPosition(id: string): [number, number] {
-  for (let r = 0; r < GRID.length; r++) {
-    for (let c = 0; c < GRID[r].length; c++) {
-      if (GRID[r][c] === id) return [r, c];
-    }
-  }
-  return [0, 0];
-}
-
 function moveFocus(currentId: string, direction: 'up' | 'down' | 'left' | 'right'): string {
-  const [r, c] = findPosition(currentId);
-  const rows = GRID.length;
-  const cols = GRID[0].length;
-
-  if (direction === 'left' || direction === 'right') {
-    let nc = c;
-    for (let i = 0; i < cols; i++) {
-      nc = direction === 'left' ? (nc - 1 + cols) % cols : (nc + 1) % cols;
-      const candidate = GRID[r][nc];
-      if (candidate) return candidate;
-    }
-  } else {
-    let nr = r;
-    for (let i = 0; i < rows; i++) {
-      nr = direction === 'up' ? (nr - 1 + rows) % rows : (nr + 1) % rows;
-      const candidate = GRID[nr][c];
-      if (candidate) return candidate;
-    }
-  }
-  return currentId;
+  const currentIndex = Math.max(0, FOCUS_ORDER.indexOf(currentId));
+  const step = direction === 'left' || direction === 'up' ? -1 : 1;
+  return FOCUS_ORDER[(currentIndex + step + FOCUS_ORDER.length) % FOCUS_ORDER.length];
 }
 
 export const RemoteControl: React.FC<RemoteControlProps> = ({
@@ -115,8 +84,14 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
     switch (id) {
       case 'power': onPowerToggle(); break;
       case 'mute': onMuteToggle(); break;
-      case 'guide': onGuideToggle(); break;
-      case 'menu': onMenuToggle(); break;
+      case 'guide':
+        onClose();
+        onGuideToggle();
+        break;
+      case 'menu':
+        onClose();
+        onMenuToggle();
+        break;
       case 'chUp': onChannelUp(); break;
       case 'chDown': onChannelDown(); break;
       case 'volUp': onVolumeUp(); break;
@@ -128,7 +103,7 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
           handleDigitPress(id.replace('num', ''));
         }
     }
-  }, [isPoweredOn, onPowerToggle, onMuteToggle, onGuideToggle, onMenuToggle, onChannelUp, onChannelDown, onVolumeUp, onVolumeDown, handleOk, handleClearOrLast, handleDigitPress]);
+  }, [isPoweredOn, onClose, onPowerToggle, onMuteToggle, onGuideToggle, onMenuToggle, onChannelUp, onChannelDown, onVolumeUp, onVolumeDown, handleOk, handleClearOrLast, handleDigitPress]);
 
   // Navegación por teclado: flechas mueven el foco, Enter activa el botón enfocado,
   // Escape cierra el panel del control remoto.
@@ -166,8 +141,7 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedId, activateButton, onClose]);
 
-  const renderButton = (id: string | null, label: string, extraClass = '') => {
-    if (!id) return <div className="remote-btn-spacer" key={Math.random()} />;
+  const renderButton = (id: string, label: string, extraClass = '', title?: string) => {
     const disabled = isDisabled(id);
     return (
       <button
@@ -175,6 +149,7 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
         type="button"
         className={`remote-btn ${extraClass} ${focusedId === id ? 'focused' : ''} ${disabled ? 'disabled' : ''}`}
         disabled={disabled}
+        title={title || label}
         onClick={() => {
           setFocusedId(id);
           activateButton(id);
@@ -187,14 +162,14 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
   };
 
   const labels: Record<string, string> = {
-    power: '⏻',
-    mute: isMuted ? '🔇' : '🔊',
+    power: 'POWER',
+    mute: isMuted ? 'MUTED' : 'MUTE',
     guide: 'GUIDE',
     menu: 'MENU',
-    chUp: 'CH ▲',
-    chDown: 'CH ▼',
-    volUp: 'VOL ▲',
-    volDown: 'VOL ▼',
+    chUp: 'CH +',
+    chDown: 'CH −',
+    volUp: 'VOL +',
+    volDown: 'VOL −',
     num1: '1', num2: '2', num3: '3',
     num4: '4', num5: '5', num6: '6',
     num7: '7', num8: '8', num9: '9',
@@ -204,28 +179,71 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
   };
 
   return (
-    <div className={`remote-control style-${tvStyle}`} ref={containerRef}>
-      <div className="remote-header">
-        <span className="remote-title">{tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control Remoto'}</span>
-        <div className="remote-digit-display">{digitBuffer || '---'}</div>
-        <button type="button" className="remote-close" onClick={onClose} title="Cerrar control remoto">
-          ✕
-        </button>
-      </div>
-
-      <div className="remote-grid">
-        {GRID.map((row, rowIndex) => (
-          <div className="remote-row" key={rowIndex}>
-            {row.map((id, colIndex) => {
-              const extraClass = id === 'power' ? 'power-btn' : id === 'mute' ? 'mute-btn' : '';
-              return (
-                <React.Fragment key={`${rowIndex}-${colIndex}`}>
-                  {renderButton(id, id ? labels[id] : '', extraClass)}
-                </React.Fragment>
-              );
-            })}
+    <div
+      className={`remote-modal-layer style-${tvStyle}`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="remote-control"
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Control remoto"
+      >
+        <div className="remote-header">
+          <div className="remote-heading">
+            <span className="remote-eyebrow">ANALOG REPLAY TV</span>
+            <span className="remote-title">{tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control remoto'}</span>
           </div>
-        ))}
+          <div className={`remote-digit-display ${digitBuffer ? 'has-value' : ''}`} aria-label="Canal ingresado">
+            <span>CANAL</span>
+            <strong>{digitBuffer || '---'}</strong>
+          </div>
+          <button type="button" className="remote-close" onClick={onClose} title="Cerrar control remoto" aria-label="Cerrar control remoto">
+            ×
+          </button>
+        </div>
+
+        <div className="remote-controls">
+          <section className="remote-group remote-system-group" aria-label="Controles del sistema">
+            <span className="remote-group-label">Sistema</span>
+            <div className="remote-button-grid remote-system-buttons">
+              {renderButton('power', labels.power, 'power-btn', 'Encender o apagar')}
+              {renderButton('mute', labels.mute, 'mute-btn', 'Silenciar')}
+              {renderButton('guide', labels.guide, '', 'Abrir guía')}
+              {renderButton('menu', labels.menu, '', 'Abrir menú')}
+            </div>
+          </section>
+
+          <section className="remote-group remote-channel-group" aria-label="Controles de canal">
+            <span className="remote-group-label">Canal</span>
+            <div className="remote-button-grid remote-channel-buttons">
+              {renderButton('chDown', labels.chDown)}
+              {renderButton('chUp', labels.chUp)}
+              {renderButton('last', labels.last, 'last-btn', digitBuffer ? 'Borrar canal ingresado' : 'Volver al canal anterior')}
+            </div>
+          </section>
+
+          <section className="remote-group remote-numpad-group" aria-label="Teclado numérico">
+            <span className="remote-group-label">Acceso directo</span>
+            <div className="remote-button-grid remote-numpad">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(number =>
+                renderButton(`num${number}`, String(number), 'number-btn', `Ingresar ${number}`)
+              )}
+              {renderButton('ok', labels.ok, 'ok-btn', 'Ir al canal ingresado')}
+            </div>
+          </section>
+
+          <section className="remote-group remote-volume-group" aria-label="Controles de volumen">
+            <span className="remote-group-label">Volumen</span>
+            <div className="remote-button-grid remote-volume-buttons">
+              {renderButton('volDown', labels.volDown)}
+              {renderButton('volUp', labels.volUp)}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
