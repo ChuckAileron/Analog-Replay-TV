@@ -90,6 +90,11 @@ declare global {
 
     // Empareja episodios existentes contra los archivos reales de una carpeta recién agregada
     matchFolderEpisodes: (folderPath: string, episodes: Array<{ episode: number; fileNames: string[] }>) => Promise<Record<number, string | null>>;
+
+    // Pantalla completa
+    toggleFullscreen: () => Promise<{ success: boolean; isFullscreen: boolean; error?: string }>;
+    getFullscreenStatus: () => Promise<{ isFullscreen: boolean }>;
+    onFullscreenChanged: (callback: (isFullscreen: boolean) => void) => void;
     
     // Asset API
     getLocalFilePath: (virtualPath: string) => Promise<string>;

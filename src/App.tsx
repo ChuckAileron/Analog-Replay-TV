@@ -43,6 +43,8 @@ function App() {
   const [isPoweredOn, setIsPoweredOn] = useState<boolean>(true);
   // Recuerda el canal anterior para el botón "LAST" del control remoto
   const [previousChannel, setPreviousChannel] = useState<number>(1);
+  // Estado de pantalla completa de la ventana de la aplicación
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   // Temporada, episodio y punto de reanudación (segundos) determinados por la
   // programación real según la hora actual del dispositivo.
   const [currentSeason, setCurrentSeason] = useState<number>(1);
@@ -63,6 +65,16 @@ function App() {
   useEffect(() => {
     console.log('🔍 [App] Schedule Status changed to:', scheduleStatus);
   }, [scheduleStatus]);
+
+  // Sincronizar el estado de pantalla completa: leer el estado inicial y
+  // escuchar cambios externos (p.ej. si el usuario sale con Esc/F11 del SO)
+  useEffect(() => {
+    window.electronAPI.getFullscreenStatus()
+      .then(({ isFullscreen: current }) => setIsFullscreen(current))
+      .catch(() => {});
+
+    window.electronAPI.onFullscreenChanged((current) => setIsFullscreen(current));
+  }, []);
 
   // Mostrar/ocultar los botones de control (Channel Up/Down, Menu, TV Guide) con el teclado:
   // Enter o cualquier flecha los muestra; Escape los oculta.
@@ -349,6 +361,18 @@ function App() {
   const handleCRTFilterToggle = (): void => {
     const newSettings = settingsManager.toggleCRTFilter();
     setSettings(newSettings);
+  };
+
+  // Alterna la pantalla completa de la ventana de la aplicación
+  const handleToggleFullscreen = async (): Promise<void> => {
+    try {
+      const result = await window.electronAPI.toggleFullscreen();
+      if (result.success) {
+        setIsFullscreen(result.isFullscreen);
+      }
+    } catch (error) {
+      console.error('❌ [App] Error alternando pantalla completa:', error);
+    }
   };
 
   // ===== Handlers del control remoto simulado =====
@@ -653,6 +677,14 @@ function App() {
                   onClick={() => setRemoteVisible(prev => !prev)}
                 >
                   {settings.tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control Remoto'}
+                </button>
+                <button
+                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                  onClick={handleToggleFullscreen}
+                >
+                  {isFullscreen
+                    ? (settings.tvStyle === '90s' ? 'SALIR DE PANTALLA COMPLETA' : 'Salir de Pantalla Completa')
+                    : (settings.tvStyle === '90s' ? 'PANTALLA COMPLETA' : 'Pantalla Completa')}
                 </button>
                 <button
                   className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}

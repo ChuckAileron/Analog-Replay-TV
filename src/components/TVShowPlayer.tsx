@@ -1,7 +1,8 @@
 // Wrapper para adaptar TVShow a VideoStreamManager
-import { useState, useEffect, useCallback } from 'react';
-import type { TVShow } from '../types/show.types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { TVShow, TVSeason, TVEpisode } from '../types/show.types';
 import { getEpisodeFileNames } from '../utils/episodeFiles';
+import { groupEpisodesIntoBlocks, parseDurationToSeconds } from '../utils/episodeBlocks';
 import '../styles/loading-animations.css';
 
 interface TVShowPlayerProps {
@@ -14,6 +15,15 @@ interface TVShowPlayerProps {
   crtFilter?: boolean;
   volume?: number;  // 0-100
   muted?: boolean;
+}
+
+// Referencia mutable a la "lista de partes" del episodio actualmente en
+// reproducción (relevante para episodios multi-parte tipo "01a"+"01b", donde
+// ambos segmentos deben reproducirse en secuencia como si fueran un único
+// episodio).
+interface PartsPlaylist {
+  season: TVSeason;
+  parts: TVEpisode[];
 }
 
 export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
@@ -32,10 +42,148 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
   const [isTranscoding, setIsTranscoding] = useState(false);
   const [transcodingProgress, setTranscodingProgress] = useState<string>('');
   const [playbackStarting, setPlaybackStarting] = useState(false);
-  
+
+  // Lista de partes del episodio actual (1 elemento si es un episodio
+  // normal; 2-3 si es un episodio multi-parte tipo "01a"+"01b"+"01c").
+  const playlistRef = useRef<PartsPlaylist | null>(null);
+  // Función para limpiar el listener 'ended' actualmente adjunto al <video>
+  const endedListenerCleanupRef = useRef<(() => void) | null>(null);
+
   console.log('🎮 [TVShowPlayer] Show:', show?.name, '| Season:', seasonNumber);
 
-  // Función para reproducir el show usando VideoStreamManager
+  // Adjunta un listener 'ended' al elemento <video> inyectado por
+  // VideoStreamManager (vive en el mismo documento/renderer, ya que
+  // `executeJavaScript` corre en el mismo contexto de página) para avanzar
+  // automáticamente a la siguiente parte cuando un segmento termina.
+  const attachEndedListenerForAutoAdvance = useCallback((totalParts: number, partIndex: number, onEnded: () => void) => {
+    if (endedListenerCleanupRef.current) {
+      endedListenerCleanupRef.current();
+      endedListenerCleanupRef.current = null;
+    }
+
+    if (partIndex + 1 >= totalParts) return; // era la última parte, no hay nada que encadenar
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 40; // ~4s buscando el elemento de video recién creado
+
+    const tryAttach = () => {
+      if (cancelled) return;
+      const video = document.getElementById('vsm-main-video') as HTMLVideoElement | null;
+      if (video) {
+        const handleEnded = () => {
+          console.log('🔁 [TVShowPlayer] Parte finalizada, avanzando a la siguiente parte del episodio...');
+          onEnded();
+        };
+        video.addEventListener('ended', handleEnded);
+        endedListenerCleanupRef.current = () => {
+          video.removeEventListener('ended', handleEnded);
+        };
+        return;
+      }
+      attempts++;
+      if (attempts < maxAttempts) {
+        setTimeout(tryAttach, 100);
+      }
+    };
+
+    tryAttach();
+
+    // Envolver la limpieza para también cancelar la búsqueda si el
+    // componente cambia de episodio antes de que el <video> llegue a existir.
+    const cleanupBeforeFound = () => { cancelled = true; };
+    const previousCleanup = endedListenerCleanupRef.current;
+    endedListenerCleanupRef.current = () => {
+      cleanupBeforeFound();
+      if (previousCleanup) previousCleanup();
+    };
+  }, []);
+
+  // Reproduce una parte específica (por índice) del episodio actualmente
+  // resuelto en `playlistRef`. `localSeekSeconds` es el punto de inicio
+  // DENTRO de esa parte (no acumulado con las partes anteriores).
+  const playPart = useCallback(async (partIndex: number, localSeekSeconds: number) => {
+    const playlist = playlistRef.current;
+    if (!playlist || !playlist.parts[partIndex]) {
+      return;
+    }
+
+    const { season, parts } = playlist;
+    const part = parts[partIndex];
+
+    try {
+      setIsLoading(true);
+      setError('');
+      setIsTranscoding(false);
+      setTranscodingProgress('');
+      setPlaybackStarting(false);
+
+      const allPaths: string[] = [];
+      if (season.contentPath) allPaths.push(season.contentPath);
+      if (season.contentPaths) allPaths.push(...season.contentPaths);
+
+      const fileNames = getEpisodeFileNames(part);
+      const fullPath = (allPaths.length > 0 && fileNames.length > 0)
+        ? await window.electronAPI.resolveEpisodeFile(allPaths, fileNames, season.season)
+        : null;
+
+      if (!fullPath) {
+        console.warn(`⚠️ [TVShowPlayer] No se encontró el archivo de la parte ${partIndex + 1}/${parts.length}: ${part.title}`);
+        throw new Error('Este episodio no está disponible actualmente. Verifica que el archivo se encuentre en alguna de las carpetas configuradas.');
+      }
+
+      console.log(`📺 [TVShowPlayer] Reproduciendo parte ${partIndex + 1}/${parts.length}: ${part.title}`);
+      console.log(`📁 [TVShowPlayer] Archivo:`, fullPath);
+      console.log(`   - Seek local: ${localSeekSeconds}s`);
+
+      // Verificar si es un formato que necesita transcoding (todo lo que no
+      // sea nativamente reproducible por Chromium: mp4/webm/ogg/ogv)
+      const extension = fullPath.split('.').pop()?.toLowerCase();
+      const NATIVE_EXTENSIONS = ['mp4', 'webm', 'ogg', 'ogv'];
+      if (extension && !NATIVE_EXTENSIONS.includes(extension)) {
+        setIsTranscoding(true);
+        setTranscodingProgress('Iniciando conversión...');
+      }
+
+      if (!window.electronAPI?.testVideoStreamManager) {
+        throw new Error('VideoStreamManager API no disponible');
+      }
+
+      setPlaybackStarting(true);
+
+      await window.electronAPI.testVideoStreamManager({
+        filePath: fullPath,
+        seekTime: Math.max(0, Math.floor(localSeekSeconds)),
+        autoPlay: true,
+        crtFilter: crtFilter
+      });
+
+      console.log('✅ [TVShowPlayer] Reproducción iniciada exitosamente');
+      setIsLoading(false);
+      setIsTranscoding(false);
+
+      // Si el episodio tiene más de una parte, encadenar automáticamente la
+      // siguiente cuando esta termine (ej. "01a" -> "01b").
+      attachEndedListenerForAutoAdvance(parts.length, partIndex, () => {
+        playPart(partIndex + 1, 0);
+      });
+
+    } catch (error) {
+      console.error('❌ [TVShowPlayer] Error en reproducción:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setError(errorMessage);
+      setIsLoading(false);
+      setIsTranscoding(false);
+      setPlaybackStarting(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crtFilter, attachEndedListenerForAutoAdvance]);
+
+  // Función principal: resuelve qué episodio corresponde reproducir (con
+  // fallback a otro episodio disponible si el programado no tiene archivo),
+  // arma la lista de partes si es un episodio multi-segmento, y comienza la
+  // reproducción desde la parte y el segundo local que correspondan según
+  // `seekTimeSeconds`.
   const playShow = useCallback(async () => {
     if (!show) {
       setError('No hay show seleccionado');
@@ -51,13 +199,12 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       setPlaybackStarting(false);
 
       console.log('🎬 [TVShowPlayer] Iniciando reproducción:', show.name);
-      
-      // LOGS DETALLADOS PARA DEBUG
       console.log('🎭 [TVShowPlayer] DETALLES DE REPRODUCCIÓN:');
       console.log(`   - Show: ${show.name}`);
       console.log(`   - Show ID: ${show.id}`);
       console.log(`   - Canales asignados: [${show.channel.join(', ')}]`);
       console.log(`   - Temporada solicitada: ${seasonNumber}`);
+      console.log(`   - Temporada/episodio solicitados por programación: T${seasonNumber}E${episodeNumber ?? '(primero)'}`);
 
       // Encontrar la temporada solicitada (la que indica la programación real)
       const requestedSeason = show.seasons.find(s => s.season === seasonNumber) || show.seasons[0];
@@ -71,11 +218,9 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       // tenga un archivo disponible, en vez de detener la reproducción con un
       // error. Esto evita quedarse "atascado" cuando solo algunas temporadas
       // tienen su carpeta de contenido configurada.
-      console.log(`   - Temporada/episodio solicitados por programación: T${seasonNumber}E${episodeNumber ?? '(primero)'}`);
-
       const MAX_ATTEMPTS = 80; // límite de seguridad para no iterar catálogos enormes
       let attempts = 0;
-      let resolved: { season: typeof requestedSeason; episode: typeof requestedSeason.episodes[number]; fullPath: string } | null = null;
+      let resolved: { season: TVSeason; episode: TVEpisode; fullPath: string } | null = null;
 
       // Orden de temporadas a probar: primero la solicitada, luego el resto
       const orderedSeasons = [
@@ -121,7 +266,7 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
         throw new Error('Este episodio no está disponible actualmente. Verifica que el archivo se encuentre en alguna de las carpetas configuradas.');
       }
 
-      const { season, episode, fullPath } = resolved;
+      const { season, episode } = resolved;
       // Si no se especificó un episodio concreto (sin datos de programación),
       // no se considera "fallback" simplemente por no coincidir con `undefined`.
       const usedFallback = season !== requestedSeason || (episodeNumber !== undefined && episode.episode !== episodeNumber);
@@ -130,41 +275,47 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       console.log(`   - Temporada usada: ${season.season} (año: ${season.year})${usedFallback ? ' [FALLBACK: el episodio programado no estaba disponible]' : ''}`);
       console.log(`   - Episodio: ${episode.episode} - ${episode.title}`);
       console.log(`   - Duración: ${episode.duration}`);
-      console.log(`   - Archivo: ${getEpisodeFileNames(episode).join(', ')}`);
-      console.log(`   - Seek time (según programación): ${usedFallback ? 0 : seekTimeSeconds}s`);
-      console.log('📁 [TVShowPlayer] Archivo encontrado en:', fullPath);
 
-      // Si tuvimos que usar un episodio distinto al programado (fallback), no
-      // tiene sentido aplicar el seekTime calculado para el episodio original.
-      const effectiveSeekTime = usedFallback ? 0 : seekTimeSeconds;
-
-      // Verificar si es un formato que necesita transcoding (todo lo que no
-      // sea nativamente reproducible por Chromium: mp4/webm/ogg/ogv)
-      const extension = fullPath.split('.').pop()?.toLowerCase();
-      const NATIVE_EXTENSIONS = ['mp4', 'webm', 'ogg', 'ogv'];
-      if (extension && !NATIVE_EXTENSIONS.includes(extension)) {
-        setIsTranscoding(true);
-        setTranscodingProgress('Iniciando conversión...');
+      // Determinar si el episodio resuelto forma parte de un bloque
+      // multi-segmento (ej. "01a"+"01b" son la misma "episodio" real). Solo
+      // se arma la secuencia cuando NO hubo fallback, para no complicar el
+      // camino de sustitución de episodios no disponibles.
+      let parts: TVEpisode[] = [episode];
+      if (!usedFallback) {
+        const blocks = groupEpisodesIntoBlocks(season.episodes);
+        const ownerBlock = blocks.find(block => block.parts.some(p => p.episode === episode.episode));
+        if (ownerBlock && ownerBlock.parts.length > 1) {
+          parts = ownerBlock.parts;
+          console.log(`   - Episodio multi-parte detectado: ${parts.length} segmentos (${parts.map(p => p.title).join(' / ')})`);
+        }
       }
 
-      // Usar VideoStreamManager a través de la API de Electron
-      if (!(window as any).electronAPI?.testVideoStreamManager) {
-        throw new Error('VideoStreamManager API no disponible');
+      playlistRef.current = { season, parts };
+
+      // Determinar en qué parte (y con qué desplazamiento local) cae el
+      // seekTime acumulado calculado por la programación real.
+      let startPartIndex = 0;
+      let localSeek = 0;
+
+      if (!usedFallback) {
+        if (parts.length > 1) {
+          let remaining = Math.max(0, seekTimeSeconds);
+          for (let i = 0; i < parts.length; i++) {
+            const partDuration = parseDurationToSeconds(parts[i].duration);
+            if (remaining < partDuration || i === parts.length - 1) {
+              startPartIndex = i;
+              localSeek = remaining;
+              break;
+            }
+            remaining -= partDuration;
+          }
+        } else {
+          localSeek = seekTimeSeconds;
+        }
       }
+      // Si hubo fallback, se reproduce desde el inicio (localSeek = 0, startPartIndex = 0)
 
-      // Marcar que la reproducción está iniciando
-      setPlaybackStarting(true);
-
-      await (window as any).electronAPI.testVideoStreamManager({
-        filePath: fullPath,
-        seekTime: Math.max(0, Math.floor(effectiveSeekTime)),
-        autoPlay: true,
-        crtFilter: crtFilter  // Pasar la configuración CRT
-      });
-
-      console.log('✅ [TVShowPlayer] Reproducción iniciada exitosamente');
-      setIsLoading(false);
-      setIsTranscoding(false);
+      await playPart(startPartIndex, localSeek);
 
     } catch (error) {
       console.error('❌ [TVShowPlayer] Error en reproducción:', error);
@@ -179,7 +330,7 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     // en cada actualización periódica del progreso (solo se usa como valor
     // inicial al arrancar un episodio nuevo).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, seasonNumber, episodeNumber]);
+  }, [show, seasonNumber, episodeNumber, playPart]);
 
   // Efecto para limpiar y reproducir cuando cambien las props principales
   useEffect(() => {
@@ -189,22 +340,39 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     setIsTranscoding(false);
     setTranscodingProgress('');
     setPlaybackStarting(false);
-    
-    // Limpiar video anterior si existe
-    if ((window as any).electronAPI?.stopVideoStreamManager) {
-      (window as any).electronAPI.stopVideoStreamManager().catch(console.error);
+
+    // Cancelar cualquier listener de auto-avance de parte pendiente
+    if (endedListenerCleanupRef.current) {
+      endedListenerCleanupRef.current();
+      endedListenerCleanupRef.current = null;
     }
-    
+    playlistRef.current = null;
+
+    // Limpiar video anterior si existe
+    if (window.electronAPI?.stopVideoStreamManager) {
+      window.electronAPI.stopVideoStreamManager().catch(console.error);
+    }
+
     // Dar un momento para la limpieza y luego reproducir
     const timer = setTimeout(() => {
       playShow();
     }, 100);
-    
+
     return () => clearTimeout(timer);
     // Solo reiniciar la reproducción cuando cambie el show, la temporada o el
     // episodio (no en cada actualización de `seekTimeSeconds`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, seasonNumber, episodeNumber]);
+
+  // Limpiar el listener de auto-avance al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (endedListenerCleanupRef.current) {
+        endedListenerCleanupRef.current();
+        endedListenerCleanupRef.current = null;
+      }
+    };
+  }, []);
 
   // Efecto separado para manejar solo el cambio de filtro CRT sin reiniciar video
   useEffect(() => {

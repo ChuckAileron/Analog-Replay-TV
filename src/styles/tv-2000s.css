@@ -36,12 +36,13 @@
   margin: 0;
 }
 
-/* Pantalla de TV 2000s - RESPONSIVE MEJORADO */
+/* Pantalla de TV 2000s - RESPONSIVE MEJORADO
+   Sin tope fijo en píxeles: escala con el viewport (vw/vh), por lo que crece
+   correctamente al activar pantalla completa, siempre conservando la
+   proporción de aspecto elegida (16:9 o 4:3). */
 .tv-container.style-00s .tv-screen {
-  width: min(90vw, calc(90vh - 120px) * 16/9, 1000px);
-  height: min(90vh - 120px, 90vw * 9/16, 600px);
-  max-width: 1000px;
-  max-height: 600px;
+  width: min(90vw, calc(90vh - 120px) * 16/9);
+  height: min(90vh - 120px, 90vw * 9/16);
   min-width: 320px;
   min-height: 240px;
   border: 15px solid;
@@ -65,13 +66,13 @@
 /* Pantalla 4:3 responsive */
 .tv-container.style-00s .tv-screen.aspect-4-3 {
   aspect-ratio: 4/3 !important;
-  width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
+  width: min(90vw, calc(90vh - 120px) * 4/3) !important;
   /* La regla base ya define un "height" explícito calculado en base a 16:9;
      como CSS no recalcula aspect-ratio cuando width y height están ambos
      definidos explícitamente, hay que sobreescribir también el height
      con la fórmula equivalente en proporción 4:3 para que el marco
      realmente cambie de forma. */
-  height: min(90vh - 120px, 90vw * 3/4, 600px) !important;
+  height: min(90vh - 120px, 90vw * 3/4) !important;
 }
 
 /* Display de canal estilo 2000s */
@@ -306,11 +307,6 @@
 
 /* Desktop and larger screens */
 @media (min-width: 1200px) {
-  .tv-container.style-00s .tv-screen {
-    max-width: 1200px;
-    max-height: 700px;
-  }
-  
   .tv-container.style-00s .channel-display {
     font-size: 28px;
     top: 25px;
@@ -329,13 +325,6 @@
   }
 }
 
-/* Ultra-wide screens */
-@media (min-width: 1600px) {
-  .tv-container.style-00s .tv-screen {
-    max-width: 1400px;
-    max-height: 800px;
-  }
-}
 
 /* High screens (vertical orientation) */
 @media (max-aspect-ratio: 4/3) {

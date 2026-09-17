@@ -333,8 +333,62 @@ export class ScheduleServiceMain {
   }
 
   /**
+   * Analiza el título de un episodio buscando el patrón "<número><letra?>"
+   * al inicio (ej. "01a: Se Busca Ayuda", "01b - La Aspiradora"). Muchas
+   * series clásicas publican cada episodio real como 2-3 segmentos cortos
+   * (a, b, c) que en conjunto forman UN solo episodio de televisión.
+   * Retorna null si el título no comienza con un número reconocible.
+   */
+  private parseEpisodeBlockInfo(title: string | undefined): { group: number; part: string | null } | null {
+    if (!title) return null;
+    const match = title.trim().match(/^(\d+)\s*([a-zA-Z])?(?=[\s:.\-]|$)/);
+    if (!match) return null;
+    return {
+      group: parseInt(match[1], 10),
+      part: match[2] ? match[2].toLowerCase() : null
+    };
+  }
+
+  /** Elimina el código de bloque inicial del título (ej. "01a: X" -> "X"). */
+  private stripEpisodeBlockCode(title: string): string {
+    return title.replace(/^\d+[a-zA-Z]?[\s:.\-]*\s*/, '').trim() || title;
+  }
+
+  /**
+   * Agrupa episodios CONSECUTIVOS que comparten el mismo número de bloque y
+   * tienen letra de segmento (a/b/c...) en una sola entrada "aplanada", cuya
+   * duración es la SUMA de todos los segmentos. Esto asegura que, por
+   * ejemplo, "01a"+"01b"+"01c" cuenten como UN solo episodio a efectos de
+   * la programación (un solo avance diario, un solo bloque de horario),
+   * en vez de tres episodios independientes.
+   */
+  private groupEpisodesIntoBlocks(episodes: RealEpisode[]): RealEpisode[][] {
+    const blocks: RealEpisode[][] = [];
+    let currentGroup: number | null = null;
+    let currentBlock: RealEpisode[] = [];
+
+    for (const episode of episodes) {
+      const info = this.parseEpisodeBlockInfo(episode.title);
+      const groupNumber = info ? info.group : episode.episode;
+      const hasPart = info?.part != null;
+
+      if (currentBlock.length > 0 && hasPart && currentGroup === groupNumber) {
+        currentBlock.push(episode);
+      } else {
+        currentBlock = [episode];
+        blocks.push(currentBlock);
+        currentGroup = groupNumber;
+      }
+    }
+
+    return blocks;
+  }
+
+  /**
    * Aplana todos los episodios de un show (todas sus temporadas) en una
-   * lista simple, preservando referencia a temporada/episodio real.
+   * lista simple, preservando referencia a temporada/episodio real. Los
+   * episodios multi-parte (ej. "01a"+"01b") se combinan en una sola entrada
+   * cuya duración es la suma de sus partes.
    */
   private flattenShowEpisodes(show: RealShow): FlatEpisode[] {
     const flat: FlatEpisode[] = [];
@@ -343,13 +397,28 @@ export class ScheduleServiceMain {
       // Solo incluir temporadas cuya carpeta de contenido exista realmente en disco
       if (!this.seasonHasRealContent(season)) continue;
 
-      for (const episode of season.episodes) {
+      const blocks = this.groupEpisodesIntoBlocks(season.episodes);
+
+      for (const block of blocks) {
+        const firstPart = block[0];
+        const totalDuration = block.reduce(
+          (sum, part) => sum + this.parseDurationToSeconds(part.duration),
+          0
+        );
+        const combinedTitle = block.length > 1
+          ? block.map(part => this.stripEpisodeBlockCode(part.title)).join(' / ')
+          : firstPart.title;
+
         flat.push({
           show,
           season: season.season,
-          episode: episode.episode,
-          episodeTitle: episode.title,
-          durationSeconds: this.parseDurationToSeconds(episode.duration)
+          // Se usa el número RAW del PRIMER segmento como identificador del
+          // episodio (compatibilidad con `season.episodes.find(e => e.episode === X)`
+          // que usa el reproductor); el reproductor luego reconstruye las
+          // partes restantes a partir del título.
+          episode: firstPart.episode,
+          episodeTitle: combinedTitle,
+          durationSeconds: totalDuration
         });
       }
     }

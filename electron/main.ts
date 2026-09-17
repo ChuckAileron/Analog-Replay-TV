@@ -53,7 +53,13 @@ if (!app.isReady()) {
   
   // Soporte específico para video
   app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,UseChromeOSDirectVideoDecoder,VaapiVideoEncoder');
-  app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+  // NOTA DE RENDIMIENTO: NO deshabilitar VizDisplayCompositor. Es el
+  // compositor moderno acelerado por GPU de Chromium; deshabilitarlo fuerza
+  // una ruta de composición legada mucho menos eficiente para superficies
+  // grandes (como un <video> con filtros CSS en pantalla completa), lo cual
+  // era la causa real del lag reportado en pantalla completa (no el filtro
+  // CRT en sí). Mantenerlo habilitado es clave para que `filter`+`transform`
+  // se compongan correctamente vía GPU sin caídas de framerate.
   
   // Decodificación de video acelerada
   app.commandLine.appendSwitch('enable-accelerated-video-decode');
@@ -67,7 +73,12 @@ if (!app.isReady()) {
   
   // Configuración adicional para video
   app.commandLine.appendSwitch('enable-unsafe-webgpu'); // Para WebGL acceleration
-  app.commandLine.appendSwitch('use-gl', 'desktop'); // Usar OpenGL desktop
+  // NOTA DE RENDIMIENTO: NO forzar 'use-gl=desktop' en Windows. Chromium
+  // selecciona automáticamente el backend ANGLE sobre Direct3D 11, que en
+  // Windows es significativamente más rápido y estable para composición
+  // GPU (filtros CSS, transforms, video) que el driver OpenGL de escritorio.
+  // Forzarlo a 'desktop' degradaba el rendimiento de composición, sobre
+  // todo con superficies grandes como el video en pantalla completa.
   app.commandLine.appendSwitch('enable-webgl');
   app.commandLine.appendSwitch('enable-webgl2');
   
@@ -250,7 +261,8 @@ function createWindow(): BrowserWindow {
       // Mejorar compatibilidad con protocolos personalizados
       additionalArguments: [
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor',
+        // NOTA DE RENDIMIENTO: no deshabilitar VizDisplayCompositor aquí
+        // tampoco (ver comentario junto a app.commandLine más arriba).
         '--enable-media-stream',
         '--allow-file-access-from-files',
         '--disable-site-isolation-trials',
@@ -337,6 +349,15 @@ function createWindow(): BrowserWindow {
 
   // Configurar manager de reproductores nativos
   nativePlayerManager.setWindow(mainWindow);
+
+  // Notificar al renderer cuando el estado de pantalla completa cambie
+  // (incluye cambios externos, no solo los disparados desde la UI)
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow.webContents.send('fullscreen-changed', true);
+  });
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow.webContents.send('fullscreen-changed', false);
+  });
   
   return mainWindow;
 }
@@ -1211,6 +1232,37 @@ ipcMain.handle('stop-videostream-manager', async () => {
   } catch (error) {
     console.error('❌ [Main] Error deteniendo VideoStreamManager:', error);
     return { success: false, error: String(error) };
+  }
+});
+
+// Handler para alternar pantalla completa de la ventana principal
+ipcMain.handle('toggle-fullscreen', async () => {
+  try {
+    const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      throw new Error('Ventana principal no disponible');
+    }
+
+    const newState = !mainWindow.isFullScreen();
+    mainWindow.setFullScreen(newState);
+
+    console.log(`🖥️ [Main] Pantalla completa: ${newState ? 'activada' : 'desactivada'}`);
+
+    return { success: true, isFullscreen: newState };
+  } catch (error) {
+    console.error('❌ [Main] Error alternando pantalla completa:', error);
+    return { success: false, error: String(error), isFullscreen: false };
+  }
+});
+
+// Handler para consultar el estado actual de pantalla completa
+ipcMain.handle('get-fullscreen-status', async () => {
+  try {
+    const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    return { isFullscreen: mainWindow ? mainWindow.isFullScreen() : false };
+  } catch (error) {
+    console.error('❌ [Main] Error consultando estado de pantalla completa:', error);
+    return { isFullscreen: false };
   }
 });
 

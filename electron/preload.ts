@@ -577,6 +577,35 @@ try {
         }
       },
 
+      // ===== PANTALLA COMPLETA =====
+
+      toggleFullscreen: async () => {
+        console.log('Toggling fullscreen');
+        try {
+          const result = await ipcRenderer.invoke('toggle-fullscreen');
+          console.log('Toggle fullscreen result:', result);
+          return result;
+        } catch (error) {
+          console.error('Error in toggleFullscreen:', error);
+          return { success: false, isFullscreen: false };
+        }
+      },
+
+      getFullscreenStatus: async () => {
+        try {
+          const result = await ipcRenderer.invoke('get-fullscreen-status');
+          return result;
+        } catch (error) {
+          console.error('Error in getFullscreenStatus:', error);
+          return { isFullscreen: false };
+        }
+      },
+
+      onFullscreenChanged: (callback: (isFullscreen: boolean) => void) => {
+        ipcRenderer.removeAllListeners('fullscreen-changed');
+        ipcRenderer.on('fullscreen-changed', (_event, isFullscreen: boolean) => callback(isFullscreen));
+      },
+
       // ===== FIN VIDEOSTREAMMANAGER API =====
 
       // ===== VIDEO CONVERSIONS QUEUE API =====

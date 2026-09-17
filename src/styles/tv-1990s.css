@@ -24,12 +24,13 @@
   margin: 0;
 }
 
-/* Pantalla de TV 90s - RESPONSIVE MEJORADO */
+/* Pantalla de TV 90s - RESPONSIVE MEJORADO
+   Sin tope fijo en píxeles: escala con el viewport (vw/vh), por lo que crece
+   correctamente al activar pantalla completa, siempre conservando la
+   proporción de aspecto elegida (16:9 o 4:3). */
 .tv-container.style-90s .tv-screen {
-  width: min(90vw, calc(90vh - 120px) * 16/9, 1000px);
-  height: min(90vh - 120px, 90vw * 9/16, 600px);
-  max-width: 1000px;
-  max-height: 600px;
+  width: min(90vw, calc(90vh - 120px) * 16/9);
+  height: min(90vh - 120px, 90vw * 9/16);
   min-width: 320px;
   min-height: 240px;
   background-color: var(--tv-screen-color);
@@ -49,13 +50,13 @@
 /* Pantalla 4:3 responsive */
 .tv-container.style-90s .tv-screen.aspect-4-3 {
   aspect-ratio: 4/3 !important;
-  width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
+  width: min(90vw, calc(90vh - 120px) * 4/3) !important;
   /* La regla base ya define un "height" explícito calculado en base a 16:9;
      como CSS no recalcula aspect-ratio cuando width y height están ambos
      definidos explícitamente, hay que sobreescribir también el height
      con la fórmula equivalente en proporción 4:3 para que el marco
      realmente cambie de forma. */
-  height: min(90vh - 120px, 90vw * 3/4, 600px) !important;
+  height: min(90vh - 120px, 90vw * 3/4) !important;
 }
 
 /* Display de canal estilo 90s */
@@ -278,7 +279,15 @@
 
 /* ===== FILTROS CRT PARA VIDEOS EN ESTILO 90's ===== */
 
-/* Aplicar efectos CRT a todos los elementos video en estilo 90s - SIN FLICKERING */
+/* Aplicar efectos CRT a todos los elementos video en estilo 90s - SIN FLICKERING
+   Nota de rendimiento: se evita `transform: perspective()/rotateX()` sobre el
+   propio <video>, ya que combinar una distorsión 3D con `filter` obliga al
+   compositor a re-rasterizar la textura de video completa en cada frame con
+   una matriz de perspectiva; a tamaños grandes (pantalla completa) esto causa
+   caídas de framerate notables. Se mantiene el filtro de color, el resplandor
+   y las líneas de escaneo (mucho más económicos), y se promueve el elemento a
+   su propia capa de composición con `will-change`/`translateZ` para que el
+   filtro se aplique de forma eficiente vía GPU. */
 .tv-container.style-90s video.crt-filter {
   /* Filtros CSS combinados para simular CRT */
   filter: 
@@ -297,11 +306,13 @@
     inset 0 0 60px rgba(0, 255, 0, 0.05),
     0 0 20px rgba(0, 0, 0, 0.8);
   
-  /* Ligera distorsión para simular tubo CRT */
-  transform: perspective(1000px) rotateX(0.5deg);
+  /* Promover a capa de composición propia para que el filtro se procese
+     eficientemente en GPU sin re-rasterizar el resto de la escena */
+  will-change: filter;
+  transform: translateZ(0);
   
   /* Transición suave al aplicar efectos */
-  transition: all 0.3s ease;
+  transition: filter 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Overlay para líneas de escaneo CRT - solo cuando el filtro esté activado */
@@ -357,12 +368,55 @@
   }
 }
 
-/* Efecto de curvatura más pronunciada para pantallas grandes */
+/* Curvatura de bordes ligeramente mayor en pantallas grandes (sin transform
+   3D adicional, por rendimiento; ver nota arriba) */
 @media (min-width: 1200px) {
   .tv-container.style-90s video.crt-filter {
     border-radius: 12px;
-    transform: perspective(1200px) rotateX(1deg);
   }
+  .tv-container.style-90s canvas.crt-filter-canvas {
+    border-radius: 12px;
+  }
+}
+
+/* ===== Filtro CRT vía <canvas> (color ya horneado en los píxeles) =====
+   Mismo efecto visual que .crt-filter (resplandor + líneas de escaneo),
+   pero SIN la propiedad `filter` de CSS: el tinte de color ya se aplicó al
+   dibujar cada frame sobre el canvas (ver VideoStreamManager.ts), por lo que
+   agregar el filtro también por CSS aquí duplicaría el efecto y reintroduciría
+   el costo de rendimiento que este enfoque busca evitar. */
+.tv-container.style-90s canvas.crt-filter-canvas {
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 30px rgba(0, 255, 0, 0.1),
+    inset 0 0 60px rgba(0, 255, 0, 0.05),
+    inset 0 0 100px rgba(0, 255, 0, 0.02),
+    0 0 20px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 255, 0, 0.02);
+  will-change: transform;
+  transform: translateZ(0);
+  transition: box-shadow 0.3s ease;
+}
+
+.tv-container.style-90s canvas.crt-filter-canvas::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 255, 0, 0.03) 1px,
+    rgba(0, 255, 0, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation: scanlinesCRT90s 0.2s linear infinite;
 }
 
 /* Efecto de envejecimiento del tubo CRT */
@@ -434,11 +488,6 @@
 
 /* Desktop and larger screens */
 @media (min-width: 1200px) {
-  .tv-container.style-90s .tv-screen {
-    max-width: 1200px;
-    max-height: 700px;
-  }
-  
   .tv-container.style-90s .channel-display {
     font-size: 28px;
     top: 25px;
@@ -457,13 +506,6 @@
   }
 }
 
-/* Ultra-wide screens */
-@media (min-width: 1600px) {
-  .tv-container.style-90s .tv-screen {
-    max-width: 1400px;
-    max-height: 800px;
-  }
-}
 
 /* High screens (vertical orientation) */
 @media (max-aspect-ratio: 4/3) {

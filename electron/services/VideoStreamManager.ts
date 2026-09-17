@@ -312,6 +312,66 @@ export class VideoStreamManager {
           videoContainer.innerHTML = '';
           console.log('🗑️ Contenedor limpiado completamente');
           
+          // ===== "Stage" de renderizado a resolución base fija =====
+          // El filtro CRT (y su resplandor/líneas de escaneo) se calcula sobre
+          // un elemento de tamaño FIJO y moderado (no importa si la ventana
+          // está en pantalla completa o no), y luego ese elemento completo se
+          // escala hacia arriba con \`transform: scale()\`. Escalar una capa ya
+          // rasterizada es una operación de composición (GPU) prácticamente
+          // gratuita, mientras que recalcular un filtro CSS sobre millones de
+          // píxeles adicionales (pantalla completa) es costoso y causaba el
+          // lag reportado. Esto mantiene el filtro igual de nítido/consistente
+          // sin importar el tamaño real de la pantalla de TV.
+          videoContainer.style.position = 'relative';
+          videoContainer.style.overflow = 'hidden';
+          
+          const stage = document.createElement('div');
+          stage.id = 'vsm-crt-stage';
+          stage.style.position = 'absolute';
+          stage.style.top = '0';
+          stage.style.left = '0';
+          stage.style.transformOrigin = 'top left';
+          
+          const BASE_STAGE_HEIGHT = 540; // resolución base donde se calcula el filtro CRT
+          // Se guarda en el scope externo (no dentro de updateStageScale) para
+          // poder usarla también al crear el <canvas> del filtro CRT más abajo.
+          let currentBaseWidth = Math.round(BASE_STAGE_HEIGHT * (16 / 9)); // valor inicial razonable
+          
+          const updateStageScale = () => {
+            const rect = videoContainer.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) return;
+            const aspect = rect.width / rect.height;
+            currentBaseWidth = Math.round(BASE_STAGE_HEIGHT * aspect);
+            stage.style.width = currentBaseWidth + 'px';
+            stage.style.height = BASE_STAGE_HEIGHT + 'px';
+            const scale = rect.height / BASE_STAGE_HEIGHT;
+            stage.style.transform = 'scale(' + scale + ')';
+          };
+          
+          updateStageScale();
+          
+          // Si ya existía un observer de una reproducción anterior, desconectarlo
+          if (window.VSMPlayer.stageResizeObserver) {
+            try { window.VSMPlayer.stageResizeObserver.disconnect(); } catch (e) {}
+          }
+          const stageResizeObserver = new ResizeObserver(() => updateStageScale());
+          stageResizeObserver.observe(videoContainer);
+          window.VSMPlayer.stageResizeObserver = stageResizeObserver;
+          
+          // Si existía un bucle de dibujo CRT (canvas) de una reproducción
+          // anterior, cancelarlo para no acumular loops en paralelo.
+          if (window.VSMPlayer.crtRafHandle != null && window.VSMPlayer.crtVideoRef) {
+            try {
+              if (window.VSMPlayer.crtUsesVFC && typeof window.VSMPlayer.crtVideoRef.cancelVideoFrameCallback === 'function') {
+                window.VSMPlayer.crtVideoRef.cancelVideoFrameCallback(window.VSMPlayer.crtRafHandle);
+              } else {
+                cancelAnimationFrame(window.VSMPlayer.crtRafHandle);
+              }
+            } catch (e) {}
+          }
+          window.VSMPlayer.crtRafHandle = null;
+          window.VSMPlayer.crtVideoRef = null;
+          
           const videoElement = document.createElement('video');
           videoElement.id = 'vsm-main-video';
           
@@ -369,19 +429,83 @@ export class VideoStreamManager {
           videoElement.style.margin = '0';
           videoElement.style.objectFit = 'contain';
           
-          // Aplicar filtro CRT si está activado
-          if (${crtFilter}) {
-            videoElement.classList.add('crt-filter');
-            console.log('🎨 [VideoStreamManager] Filtro CRT aplicado');
-          }
-          
           // Forzar renderizado
           videoElement.load();
           
           // Almacenar referencia en namespace
           window.VSMPlayer.currentVideo = videoElement;
           
-          videoContainer.appendChild(videoElement);
+          stage.appendChild(videoElement);
+          videoContainer.appendChild(stage);
+          
+          // ===== Filtro CRT vía <canvas> (horneado en píxeles, no CSS) =====
+          // En vez de aplicar el filtro de color con la propiedad CSS \`filter\`
+          // sobre el <video> visible, lo cual Chromium puede re-rasterizar a la
+          // resolución de PANTALLA (no la del "stage" base) cuando detecta un
+          // \`transform: scale()\` ancestro —anulando la optimización anterior y
+          // causando el lag reportado—, se dibuja cada frame del video ya
+          // filtrado sobre un <canvas> de resolución FIJA y pequeña mediante
+          // \`ctx.filter\` (Canvas 2D soporta la misma sintaxis que CSS filter).
+          // El canvas resultante es un bitmap ya renderizado que la GPU solo
+          // necesita estirar como una textura normal, sin volver a calcular el
+          // filtro sin importar cuán grande se muestre (pantalla completa
+          // incluida). El <video> original se mantiene en el DOM (oculto) para
+          // que el decodificador de hardware siga funcionando con normalidad.
+          if (${crtFilter}) {
+            try {
+              videoElement.style.opacity = '0';
+              videoElement.style.pointerEvents = 'none';
+              
+              const crtCanvas = document.createElement('canvas');
+              crtCanvas.id = 'vsm-crt-canvas';
+              crtCanvas.width = currentBaseWidth;
+              crtCanvas.height = BASE_STAGE_HEIGHT;
+              crtCanvas.style.position = 'absolute';
+              crtCanvas.style.top = '0';
+              crtCanvas.style.left = '0';
+              crtCanvas.style.width = '100%';
+              crtCanvas.style.height = '100%';
+              crtCanvas.style.backgroundColor = '#000';
+              crtCanvas.classList.add('crt-filter-canvas');
+              stage.appendChild(crtCanvas);
+              
+              const ctx = crtCanvas.getContext('2d');
+              const CRT_CANVAS_FILTER = 'contrast(1.2) brightness(0.95) saturate(1.3) sepia(0.05) hue-rotate(5deg)';
+              const usesVFC = typeof videoElement.requestVideoFrameCallback === 'function';
+              
+              const scheduleNextFrame = () => {
+                if (usesVFC) {
+                  window.VSMPlayer.crtRafHandle = videoElement.requestVideoFrameCallback(drawCrtFrame);
+                } else {
+                  window.VSMPlayer.crtRafHandle = requestAnimationFrame(drawCrtFrame);
+                }
+              };
+              
+              const drawCrtFrame = () => {
+                if (ctx && videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
+                  ctx.filter = CRT_CANVAS_FILTER;
+                  try {
+                    ctx.drawImage(videoElement, 0, 0, crtCanvas.width, crtCanvas.height);
+                  } catch (drawError) {
+                    // Ignorar frames fallidos puntuales (ej. durante un seek)
+                  }
+                }
+                scheduleNextFrame();
+              };
+              
+              window.VSMPlayer.crtVideoRef = videoElement;
+              window.VSMPlayer.crtUsesVFC = usesVFC;
+              scheduleNextFrame();
+              
+              console.log('🎨 [VideoStreamManager] Filtro CRT aplicado vía canvas (' + (usesVFC ? 'requestVideoFrameCallback' : 'requestAnimationFrame') + ')');
+            } catch (crtError) {
+              // Si algo falla creando el canvas (ej. contexto 2D no disponible),
+              // usar el filtro CSS directo sobre el video como respaldo.
+              console.warn('⚠️ [VideoStreamManager] No se pudo inicializar el canvas CRT, usando filtro CSS directo:', crtError);
+              videoElement.style.opacity = '1';
+              videoElement.classList.add('crt-filter');
+            }
+          }
           
           // Verificar si el elemento está visible
           console.log('🔍 Video element info:', JSON.stringify({
