@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import type { Channel } from '../../types/tv.types';
 import type { TVShow } from '../../types/show.types';
 import { readConfig, writeConfig } from './channelsStorage';
@@ -65,6 +66,13 @@ export const channelManager = {
           console.log('Initializing channels...');
           const config = await readConfig();
           channels = config.channels;
+
+          const backfilled = channels.some(ch => !ch.uuid);
+          if (backfilled) {
+            channels = channels.map(ch => ch.uuid ? ch : { ...ch, uuid: uuidv4() });
+            await saveToFile(channels);
+          }
+
           isInitialized = true;
           console.log('Channels initialized:', channels);
         }
@@ -289,7 +297,8 @@ export const channelManager = {
   addChannel: async (channelData: Omit<Channel, 'id'>): Promise<Channel> => {
     const newChannel: Channel = {
       ...channelData,
-      id: Math.max(0, ...channels.map(ch => typeof ch.id === 'number' ? ch.id : 0)) + 1
+      id: Math.max(0, ...channels.map(ch => typeof ch.id === 'number' ? ch.id : 0)) + 1,
+      uuid: uuidv4()
     };
     channels.push(newChannel);
 
@@ -322,7 +331,8 @@ export const channelManager = {
     if (index === -1) return null;
 
     const oldChannel = { ...channels[index] };
-    channels[index] = { ...oldChannel, ...updates };
+    const normalized = oldChannel.uuid ? oldChannel : { ...oldChannel, uuid: uuidv4() };
+    channels[index] = { ...normalized, ...updates };
     
     console.log('Updated channel:', channels[index]);
 

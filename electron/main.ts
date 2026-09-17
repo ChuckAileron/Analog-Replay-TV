@@ -27,6 +27,9 @@ const nativePlayerManager = NativeVideoPlayerManager.getInstance();
 // Instancia global del VideoStreamManager
 let videoStreamManager: VideoStreamManager | null = null;
 
+// Instancia de la ventana de configuración (consola de administración)
+let adminWindow: BrowserWindow | null = null;
+
 // Prevenir múltiples instancias de la aplicación
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -163,13 +166,23 @@ ipcMain.handle('open-external', async (_, filePath) => {
 });
 
 app.whenReady().then(async () => {
-  // Inicializar ScheduleService
+  // Modo "consola de configuración": se abre SOLO la ventana de administración
+  // (electron/scripts "npm run admin"), sin reproductor ni motor de video.
+  const isAdminLaunch = process.env.ADMIN_WINDOW === '1' || process.env.ADMIN_WINDOW === 'true';
+
+  // Inicializar ScheduleService (necesario también para la consola de configuración)
   try {
     const scheduleService = ScheduleServiceMain.getInstance();
     console.log('✅ [Main] ScheduleServiceMain inicializado correctamente');
     console.log('🔍 [Main] Estado inicial del schedule:', await scheduleService.initialize());
   } catch (error) {
     console.error('❌ Error inicializando ScheduleServiceMain:', error);
+  }
+
+  if (isAdminLaunch) {
+    console.log('🖥️ [Main] Modo consola de configuración (ADMIN_WINDOW=1)');
+    createAdminWindow();
+    return;
   }
 
   // Inicializar motor de video
@@ -385,9 +398,88 @@ function createWindow(): BrowserWindow {
   return mainWindow;
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Note: Already handled in the app.whenReady() above
+// Crea (o reutiliza) la ventana de configuración: una app de escritorio aparte,
+// con marco y barra de título nativos, desde la que se administran canales,
+// programas y la programación reutilizando la misma UI del renderer React.
+function createAdminWindow(): BrowserWindow | null {
+  if (adminWindow && !adminWindow.isDestroyed()) {
+    adminWindow.focus();
+    return adminWindow;
+  }
+
+  const openDevTools = !!process.env.VITE_DEV_SERVER_URL ||
+    process.env.OPEN_DEVTOOLS === '1' ||
+    process.env.OPEN_DEVTOOLS === 'true';
+
+  const win = new BrowserWindow({
+    width: 1180,
+    height: 800,
+    minWidth: 820,
+    minHeight: 560,
+    center: true,
+    show: false,
+    title: 'AnalogReplayTV — Configuración',
+    frame: true,
+    autoHideMenuBar: true,
+    backgroundColor: '#141820',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, '../dist-electron/preload.js'),
+      sandbox: false,
+      spellcheck: false,
+      webSecurity: false,
+      backgroundThrottling: false,
+      experimentalFeatures: true,
+      additionalArguments: [
+        '--disable-web-security',
+        '--allow-file-access-from-files',
+      ],
+    },
+  });
+
+  adminWindow = win;
+
+  // Sin menú de aplicación: la ventana solo muestra el marco y la barra de
+  // título nativa (la barra "File/Edit/View..." no aparece ni con Alt).
+  Menu.setApplicationMenu(null);
+
+  win.on('closed', () => {
+    adminWindow = null;
+  });
+
+  const useDevServer = !!process.env.VITE_DEV_SERVER_URL;
+  if (useDevServer) {
+    console.log('🖥️ [Main] Consola de configuración desde dev server');
+    win.loadURL(`${process.env.VITE_DEV_SERVER_URL}/admin.html`);
+  } else {
+    console.log('🖥️ [Main] Consola de configuración desde build local');
+    win.loadFile(path.join(__dirname, '../dist/admin.html'));
+  }
+
+  if (openDevTools) {
+    console.log('🔧 [Main] Opening DevTools para la consola de configuración...');
+    win.webContents.openDevTools({ mode: 'detach' });
+  }
+
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
+  });
+
+  return win;
+}
+
+// IPC para abrir la consola de configuración desde la ventana de la TV.
+ipcMain.handle('open-admin-window', async () => {
+  try {
+    const win = createAdminWindow();
+    return { success: !!win };
+  } catch (error) {
+    console.error('❌ [Main] Error abriendo la consola de configuración:', error);
+    return { success: false, error: String(error) };
+  }
+});
 
 // Lista de extensiones de video soportadas (soporte extendido: los formatos
 // que no son reproducibles nativamente por Chromium se convierten

@@ -29,7 +29,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - **Episodios multiparte como un solo programa**: los archivos de episodio que comparten un código de bloque en su título (patrón `<número><letra>`, por ejemplo "01a: ...", "01b: ...", "01c: ...", que corresponden al mismo episodio real dividido en varias partes) se detectan automáticamente y se agrupan en un solo bloque etiquetado como un único episodio: la programación calcula su duración combinada (todas las partes cuentan como un solo programa dentro del bloque de 30 minutos) y el reproductor las encadena en secuencia automáticamente, incluyendo reanudar en la parte correcta si la transmisión cae a mitad del bloque. Los episodios independientes sin código de letra (como especiales sueltos) siguen tratándose como bloques de una sola parte.
 - **Avance automático de episodios**: mientras se permanece en un canal, la aplicación revisa periódicamente si la programación avanzó a un nuevo episodio o bloque y actualiza la reproducción automáticamente, sin que el usuario tenga que volver a cambiar de canal.
 - **Mezcla de shows por canal**: cuando varios programas comparten el mismo canal, se alternan entre sí (round-robin) en vez de transmitir todos los episodios de uno antes de pasar al siguiente, simulando una parrilla más variada.
-- **Filtrado de programación por año de emisión**: cada show puede configurarse con años de transmisión específicos o marcarse como "hasta la fecha" para que aparezca siempre sin importar el año elegido.
+- **Filtrado de programación por década de emisión**: cada show puede configurarse con años de transmisión específicos o marcarse como "hasta la fecha" para que aparezca siempre sin importar el año elegido. La validación es **por década**: si el año de transmisión del show cae en la misma década que el año de la programación seleccionado, el show se incluye (ej. un show con emisión en 1996 aparece en una programación de 1999).
 - **Reproducción resiliente ante archivos faltantes**: si el episodio programado no se encuentra en ninguna carpeta configurada, la aplicación busca automáticamente otro episodio disponible del mismo show en vez de detenerse con un error; los mensajes de error, cuando ocurren, se muestran de forma discreta dentro del propio reproductor (nunca como ventanas emergentes intrusivas).
 - **Múltiples carpetas de contenido por temporada**: es posible agregar más de una carpeta de contenido para una misma temporada (por ejemplo, un disco duro externo con otro puerto o una copia de respaldo). Al agregar una carpeta nueva, la aplicación intenta emparejar automáticamente los archivos existentes en ella con los episodios ya configurados (por nombre exacto, nombre similar, o código de episodio), y reproduce el que efectivamente exista sin pedir intervención manual.
 - **Control remoto simulado**: un panel con botones de encendido/apagado, silencio, canal arriba/abajo, volumen arriba/abajo, menú, guía, teclado numérico para saltar directamente a un canal, y botón de último canal ("LAST"). Es completamente navegable con el mouse o con el teclado (flechas para moverse entre botones, Enter para seleccionar).
@@ -39,6 +39,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - **Ajustes visuales en vivo**: cambio entre estilo 90s/2000s, relación de aspecto 4:3/16:9 (con el marco de la TV cambiando de forma correctamente), filtro CRT, y control de volumen — todo aplicado sin interrumpir la reproducción en curso.
 - **Resetear programación**: desde el menú de configuración es posible borrar toda la programación generada y volver a elegir un año de transmisión desde cero, con confirmación previa para evitar borrados accidentales.
 - **Gestión completa de shows y canales**: alta, edición e importación de shows (con temporadas, episodios, canales asignados, años de emisión, y carpetas de contenido) y canales, todo desde el menú de configuración dentro de la propia aplicación.
+- **Consola de configuración dedicada (app de escritorio)**: además del menú de configuración de la TV, existe una **aplicación de escritorio separada** (`npm run admin` o botón "Configuración" en la TV) con estética de app nativa — barra superior, barra lateral de navegación, paneles y botón **"Volver"** con historial para regresar a pantallas anteriores. Desde ahí se administran canales, programas y la programación (generar/regenerar un año o resetearla por completo) reutilizando los mismos componentes de configuración de la TV.
 - **Conversión automática de video cuando es necesario**: si el archivo de un episodio no es compatible de forma nativa con el reproductor, la aplicación lo detecta y lo convierte automáticamente con FFmpeg antes de reproducirlo.
 
 ---
@@ -108,6 +109,16 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - Programación generada persistida en la carpeta de datos de usuario de Electron (no en el código fuente), compatible con builds empaquetadas.
 - Inicialización al arrancar la aplicación para recuperar estado previo.
 
+### 8. Consola de configuración (app de escritorio separada)
+
+- **Ventana propia de escritorio**: se abre en una ventana de Electron independiente con marco y barra de título nativos, sin interferir con la experiencia de la TV (que puede seguir funcionando en paralelo).
+- **Estética de aplicación de escritorio**: barra superior con título, fecha y breadcrumb; barra lateral de navegación (Inicio, Canales, Programas, Programación); paneles y botones de acción con estilo de app de escritorio.
+- **Navegación con botón "Volver"**: se mantiene un historial apilado de pantallas; cada pantalla (o navegación lateral) permite regresar a la pantalla anterior con el botón **"← Volver"** o presionando el item de la pantalla previa en la barra lateral.
+- **Pantalla de inicio (dashboard)**: resumen con conteo de canales (habilitados/total), programas, episodios y estado de la programación (año principal, meses generados, última generación), con accesos rápidos a cada sección.
+- **Canales y Programas**: reutilizan los componentes `ChannelConfig` y `ShowConfig` de la TV (alta, edición, eliminación e importación) dentro del nuevo shell de escritorio.
+- **Programación**: muestra el estado y detalle de la programación generada, permite **generar/regenerar el año** (reutilizando el asistente de selección de década/año) y **resetear la programación completa** con confirmación previa.
+- **Lanzamiento**: se abre de forma independiente con `npm run admin`, o desde la TV con el botón "Configuración" (IPC `open-admin-window`, ventana reutilizable si ya está abierta).
+
 ---
 
 ## Tecnologías y stack
@@ -155,7 +166,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 
 El proyecto está estructurado en varias capas:
 
-- Frontend de la interfaz: componentes React en src/
+- Frontend de la interfaz: componentes React en src/ (incluida la consola de configuración en src/admin/)
 - Lógica de dominio: servicios, hooks y managers para canales, shows y guía
 - Proceso principal de Electron: electron/
 - Procesado y análisis de video: electron/services/
@@ -183,6 +194,8 @@ AnalogReplayTV/
 │   └── types/
 ├── src/
 │   ├── App.tsx
+│   ├── admin/
+│   │   └── main.tsx  (raíz React de la consola de configuración)
 │   ├── components/
 │   │   ├── RemoteControl.tsx
 │   │   ├── AnalogReplayFiller.tsx
@@ -190,6 +203,10 @@ AnalogReplayTV/
 │   │   ├── TVGuide.tsx
 │   │   ├── ShowConfig.tsx
 │   │   ├── ChannelConfig.tsx
+│   │   ├── admin/
+│   │   │   ├── AdminApp.tsx
+│   │   │   ├── AdminHomeScreen.tsx
+│   │   │   └── AdminScheduleScreen.tsx
 │   │   └── ...
 │   ├── config/
 │   ├── features/
@@ -213,6 +230,7 @@ AnalogReplayTV/
 ├── vite.config.ts
 ├── electron-builder.json
 ├── index.html
+├── admin.html  (entrada Vite de la consola de configuración)
 ├── README.md
 └── ...
 ```
@@ -321,6 +339,16 @@ npm run desktop:debug
 Igual que `npm run desktop`, pero abriendo DevTools sobre el build final, útil para depurar el renderizado de producción.
 
 ```bash
+npm run admin
+```
+Compila y lanza la **consola de configuración en su propia ventana de escritorio** (marco nativo, sin DevTools): es la app dedicada para administrar canales, programas y la programación (generar/regenerar o resetear). También se puede abrir desde la TV con el botón "Configuración".
+
+```bash
+npm run admin:debug
+```
+Igual que `npm run admin`, pero abriendo DevTools sobre la consola de configuración para depurar su renderizado.
+
+```bash
 npm run electron:build
 ```
 Genera el paquete final de la aplicación de escritorio.
@@ -366,6 +394,30 @@ Este modo está pensado para levantar la aplicación como un producto terminado 
 - La ventana usa un **marco nativo** (`frame: true`) con su barra de título, por lo que se puede **arrastrar, mover y redimensionar** como cualquier ventana del sistema operativo.
 - **No se abre DevTools**, evitando el inspector de desarrollo en el uso normal.
 - Se activa con la variable de entorno `DESKTOP_WINDOW=1`; si además se define `OPEN_DEVTOOLS=1` se fuerza la apertura del inspector sobre el build final (lo que hace exactamente el script `npm run desktop:debug`).
+
+---
+
+## Consola de configuración (app de escritorio adicional)
+
+El proyecto incluye una **segunda aplicación de escritorio** dedicada a la administración, con estética y navegación de app nativa (barra superior, barra lateral, paneles y botón **"← Volver"** para regresar a pantallas anteriores). Reutiliza los mismos componentes de configuración de la TV.
+
+### Cómo abrirla
+
+- **Standalone**: `npm run admin` (o `npm run admin:debug` para depurar).
+- **Desde la TV**: botón **"Configuración"** en la barra de controles (visible al presionar Enter/flechas). Si la ventana ya está abierta, se enfoca en lugar de crear una nueva (IPC `open-admin-window`).
+
+### Qué permite hacer
+
+- **Inicio**: resumen general — canales (habilitados/total), programas, episodios y estado de la programación (año principal, meses generados, última generación) — con accesos rápidos.
+- **Canales**: crear, editar, eliminar e importar canales (reutiliza `ChannelConfig`).
+- **Programas**: crear, editar, eliminar e importar shows con temporadas, episodios, canales y años de emisión (reutiliza `ShowConfig`).
+- **Programación**: consultar el estado de la programación generada, **generar/regenerar el año** (asistente de década/año reutilizando `ScheduleSetup`) y **resetear la programación completa** con confirmación previa.
+
+### Detalles técnicos
+
+- Comparte el mismo `preload` y las mismas APIs IPC de la TV (canales, shows, programación, selectores de archivo/carpeta), por lo que la gestión es idéntica a la del menú de configuración de la TV.
+- Es una segunda entrada de Vite (`admin.html` → `src/admin/main.tsx`) compilada junto a la app principal.
+- En el proceso principal (`electron/main.ts`) se crea con `frame: true` (ventana nativa movible) y se activa el modo exclusivo con `ADMIN_WINDOW=1` (no se inicializan reproductor ni motor de video).
 
 ---
 

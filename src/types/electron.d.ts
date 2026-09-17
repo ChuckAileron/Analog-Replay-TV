@@ -95,6 +95,9 @@ declare global {
     toggleFullscreen: () => Promise<{ success: boolean; isFullscreen: boolean; error?: string }>;
     getFullscreenStatus: () => Promise<{ isFullscreen: boolean }>;
     onFullscreenChanged: (callback: (isFullscreen: boolean) => void) => void;
+
+    // Consola de configuración (ventana de escritorio aparte)
+    openAdminWindow: () => Promise<{ success: boolean; error?: string }>;
     
     // Asset API
     getLocalFilePath: (virtualPath: string) => Promise<string>;

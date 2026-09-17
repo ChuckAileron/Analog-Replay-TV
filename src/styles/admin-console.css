@@ -1,0 +1,692 @@
+/*
+ * Consola de configuración (app de escritorio) — AnalogReplayTV
+ * Estilo sobrio tipo "app de escritorio": barra superior, barra lateral,
+ * paneles de contenido. Reutiliza los componentes ChannelConfig/ShowConfig,
+ * que ya son oscuros, así que esta paleta define las variables que ellos
+ * consumen (--channel-text-color, --danger-color, etc.).
+ */
+.admin-console {
+  /* Variables compartidas con los componentes de configuración reutilizados */
+  --channel-text-color: #74e0a5;
+  --text-color: #dbe4f0;
+  --border-color: #3a4252;
+  --menu-border-color: #3a4252;
+  --button-bg: #262d3d;
+  --button-hover-bg: #303950;
+  --button-active-bg: #2563eb;
+  --danger-color: #f87171;
+  --danger-color-hover: #fca5a5;
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color: #e5e7eb;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(88, 193, 240, 0.08), transparent 60%),
+    linear-gradient(180deg, #151a24 0%, #10141d 100%);
+}
+
+/* ===== Barra superior ===== */
+.admin-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 10px 18px;
+  background: rgba(22, 27, 38, 0.95);
+  border-bottom: 1px solid #2a3140;
+  user-select: none;
+}
+
+.admin-titlebar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-brand-logo {
+  font-size: 18px;
+}
+
+.admin-brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #eef1f7;
+}
+
+.admin-brand-separator {
+  color: #4b5563;
+}
+
+.admin-brand-sub {
+  font-size: 13px;
+  color: #9aa3b5;
+}
+
+.admin-back-button {
+  margin-left: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #bfe6fb;
+  background: rgba(88, 193, 240, 0.12);
+  border: 1px solid rgba(88, 193, 240, 0.35);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-back-button:hover {
+  background: rgba(88, 193, 240, 0.22);
+  border-color: rgba(88, 193, 240, 0.6);
+}
+
+.admin-titlebar-breadcrumb {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-titlebar-date {
+  font-size: 12px;
+  color: #9aa3b5;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* ===== Cuerpo: barra lateral + contenido ===== */
+.admin-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 216px;
+  flex-shrink: 0;
+  padding: 14px 12px;
+  background: rgba(15, 18, 26, 0.9);
+  border-right: 1px solid #2a3140;
+  overflow-y: auto;
+}
+
+.admin-sidebar-label {
+  padding: 4px 12px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6b7280;
+}
+
+.admin-nav-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #cbd2de;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-nav-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-nav-button.active {
+  color: #7fd4ff;
+  background: rgba(88, 193, 240, 0.14);
+  border-color: rgba(88, 193, 240, 0.35);
+}
+
+.admin-nav-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+}
+
+.admin-nav-label {
+  white-space: nowrap;
+}
+
+.admin-sidebar-spacer {
+  flex: 1;
+}
+
+/* ===== Contenido ===== */
+.admin-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 20px 26px 32px;
+}
+
+.admin-content-header {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a3140;
+}
+
+.admin-content-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #eef1f7;
+}
+
+.admin-content-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #9aa3b5;
+}
+
+/* ===== Paneles y estadísticas ===== */
+.admin-panel {
+  background: rgba(26, 31, 44, 0.92);
+  border: 1px solid #2a3140;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.admin-panel h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #dbe4f0;
+}
+
+.admin-panel-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9aa3b5;
+}
+
+.admin-danger-panel {
+  border-color: rgba(220, 38, 38, 0.45);
+}
+
+.admin-error-panel {
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.admin-loading {
+  margin: 0;
+  font-style: italic;
+  color: #9aa3b5;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 980px) {
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  padding: 16px;
+  text-align: left;
+  background: rgba(26, 31, 44, 0.92);
+  border: 1px solid #2a3140;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.admin-stat:hover {
+  border-color: rgba(88, 193, 240, 0.55);
+  transform: translateY(-1px);
+}
+
+.admin-stat-icon {
+  font-size: 20px;
+}
+
+.admin-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #74e0a5;
+}
+
+.admin-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9aa3b5;
+}
+
+.admin-stat-warning .admin-stat-value {
+  color: #fbbf24;
+}
+
+.admin-summary-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-summary-list li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.admin-summary-list li:last-child {
+  border-bottom: none;
+}
+
+.admin-summary-key {
+  flex: 0 0 150px;
+  font-size: 13px;
+  color: #9aa3b5;
+}
+
+.admin-summary-value {
+  font-size: 14px;
+  color: #e5e7eb;
+}
+
+/* ===== Botones de acción ===== */
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.admin-button-primary {
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-button-primary:hover {
+  background: #2f6ff2;
+  border-color: #2f6ff2;
+}
+
+.admin-button-secondary {
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #cdd3de;
+  background: transparent;
+  border: 1px solid #3a4252;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #4b5563;
+}
+
+.admin-button-danger {
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f87171;
+  background: transparent;
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-button-danger:hover {
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.admin-button-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Mensajes ===== */
+.admin-message {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.admin-message.ok {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+  border-left: 4px solid #22c55e;
+}
+
+.admin-message.error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border-left: 4px solid #ef4444;
+}
+
+/* ===== Estado de programación ===== */
+.admin-schedule-status-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.admin-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 999px;
+}
+
+.admin-status-badge.ok {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.admin-status-badge.warn {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.admin-schedule-empty-text {
+  margin: 0;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.admin-empty-schedule p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9aa3b5;
+}
+
+/* ===== Programación del día (grid por canal) ===== */
+.admin-day-schedule-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.admin-day-picker {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.admin-day-picker label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9aa3b5;
+}
+
+.admin-day-picker select {
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #e5e7eb;
+  background-color: #12151d;
+  border: 1px solid #3a4252;
+  border-radius: 8px;
+}
+
+.admin-schedule-day-title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: #cbd5e1;
+}
+
+.admin-day-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid #2a3140;
+  border-radius: 10px;
+  background: rgba(18, 21, 29, 0.8);
+}
+
+.admin-day-grid {
+  display: grid;
+  grid-template-columns: 180px repeat(48, minmax(72px, 1fr));
+  min-width: max-content;
+}
+
+.admin-day-grid-header-row,
+.admin-day-grid-row {
+  display: contents;
+}
+
+.admin-grid-channel-head,
+.admin-grid-time-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: center;
+  color: #9aa3b5;
+  background: rgba(26, 31, 44, 0.98);
+  border-right: 1px solid #2a3140;
+  border-bottom: 1px solid #2a3140;
+}
+
+.admin-grid-channel-head {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  z-index: 3;
+  padding-left: 12px;
+}
+
+.admin-grid-channel-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(26, 31, 44, 0.98);
+  border-right: 1px solid #2a3140;
+  border-bottom: 1px solid #2a3140;
+}
+
+.admin-grid-channel-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7fd4ff;
+  min-width: 18px;
+}
+
+.admin-grid-channel-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e5e7eb;
+  white-space: nowrap;
+}
+
+.admin-grid-slot {
+  padding: 8px 6px;
+  font-size: 11px;
+  line-height: 1.25;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.admin-grid-slot.show {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.admin-grid-slot.filler {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.admin-grid-slot.empty {
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-day-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.admin-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9aa3b5;
+}
+
+.admin-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-legend-swatch.show {
+  background: rgba(34, 197, 94, 0.35);
+}
+
+.admin-legend-swatch.filler {
+  background: rgba(59, 130, 246, 0.35);
+}
+
+.admin-legend-swatch.empty {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ===== Scrollbar (Chromium/Electron) ===== */
+.admin-content::-webkit-scrollbar,
+.admin-sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-content::-webkit-scrollbar-track,
+.admin-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-content::-webkit-scrollbar-thumb,
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: #2e3545;
+  border-radius: 6px;
+  border: 2px solid #151a24;
+}
+
+.admin-content::-webkit-scrollbar-thumb:hover,
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #3b4355;
+}
+
+/* ===== Ajustes para los componentes de configuración reutilizados ===== */
+.admin-content .channel-config,
+.admin-content .show-config {
+  max-width: 960px;
+  margin: 0;
+  padding: 0;
+  color: #dbe4f0;
+}
+
+.admin-content .channel-config h2,
+.admin-content .show-config h2 {
+  display: none; /* El título ya lo muestra el encabezado del contenido */
+}
+
+.admin-content .channel-form,
+.admin-content .show-form,
+.admin-content .season-section,
+.admin-content .import-view,
+.admin-content .channels-list,
+.admin-content .shows-list,
+.admin-content .form-group input,
+.admin-content .form-group textarea {
+  color: #dbe4f0;
+}
+
+.admin-content .form-group input,
+.admin-content .form-group textarea {
+  background-color: #12151d;
+  border-color: #3a4252;
+  color: #e5e7eb;
+}
+
+.admin-content .show-form input,
+.admin-content .show-form textarea {
+  background-color: #12151d;
+  border-color: #3a4252;
+}
+
+.admin-content input:focus,
+.admin-content textarea:focus {
+  outline: 2px solid rgba(88, 193, 240, 0.5);
+  border-color: rgba(88, 193, 240, 0.6);
+}

@@ -731,6 +731,18 @@ try {
 
       // ===== FIN RENDERER EVENTS API =====
 
+      // ===== APP / VENTANAS =====
+      // Abre la consola de configuración en su propia ventana de escritorio
+      openAdminWindow: async () => {
+        try {
+          const result = await ipcRenderer.invoke('open-admin-window');
+          return result ?? { success: true };
+        } catch (error) {
+          console.error('Error openAdminWindow:', error);
+          return { success: false, error: String(error) };
+        }
+      },
+
       // ===== FIN MOTOR DE VIDEO =====
     }
   );

@@ -176,7 +176,6 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       setIsTranscoding(false);
       setPlaybackStarting(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crtFilter, attachEndedListenerForAutoAdvance]);
 
   // Función principal: resuelve qué episodio corresponde reproducir (con
@@ -329,7 +328,6 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     // deliberadamente de las dependencias para no reiniciar la reproducción
     // en cada actualización periódica del progreso (solo se usa como valor
     // inicial al arrancar un episodio nuevo).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, seasonNumber, episodeNumber, playPart]);
 
   // Efecto para limpiar y reproducir cuando cambien las props principales
@@ -361,7 +359,6 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     return () => clearTimeout(timer);
     // Solo reiniciar la reproducción cuando cambie el show, la temporada o el
     // episodio (no en cada actualización de `seekTimeSeconds`).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, seasonNumber, episodeNumber]);
 
   // Limpiar el listener de auto-avance al desmontar el componente

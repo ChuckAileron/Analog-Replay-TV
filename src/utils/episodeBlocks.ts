@@ -24,7 +24,7 @@ export interface EpisodeBlockInfo {
  */
 export function parseEpisodeBlockInfo(title: string | undefined | null): EpisodeBlockInfo | null {
   if (!title) return null;
-  const match = title.trim().match(/^(\d+)\s*([a-zA-Z])?(?=[\s:.\-]|$)/);
+  const match = title.trim().match(/^(\d+)\s*([a-zA-Z])?(?=[\s:.-]|$)/);
   if (!match) return null;
   return {
     group: parseInt(match[1], 10),
@@ -37,7 +37,7 @@ export function parseEpisodeBlockInfo(title: string | undefined | null): Episode
  * -> "Se Busca Ayuda"), dejando solo el nombre descriptivo del episodio/segmento.
  */
 export function stripEpisodeBlockCode(title: string): string {
-  return title.replace(/^\d+[a-zA-Z]?[\s:.\-]*\s*/, '').trim() || title;
+  return title.replace(/^\d+[a-zA-Z]?[\s:.-]*\s*/, '').trim() || title;
 }
 
 export interface EpisodeBlock<T> {

@@ -128,7 +128,6 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
           handleDigitPress(id.replace('num', ''));
         }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPoweredOn, onPowerToggle, onMuteToggle, onGuideToggle, onMenuToggle, onChannelUp, onChannelDown, onVolumeUp, onVolumeDown, handleOk, handleClearOrLast, handleDigitPress]);
 
   // Navegación por teclado: flechas mueven el foco, Enter activa el botón enfocado,

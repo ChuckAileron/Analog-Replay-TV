@@ -30,11 +30,7 @@ export const TVGuide: React.FC<TVGuideProps> = ({
     error,
     goToDate,
     goToToday,
-    refreshData,
-    navigateUp,
-    navigateDown,
-    navigateLeft,
-    navigateRight
+    refreshData
   } = useTVGuide();
 
   // Estados para navegación por celdas

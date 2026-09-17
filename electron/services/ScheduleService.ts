@@ -297,14 +297,18 @@ export class ScheduleServiceMain {
   /**
    * Determina si un show es elegible para transmitirse en un año determinado.
    * - Si `airUntilToDate` es true, siempre es elegible.
-   * - Si `airYears` tiene valores, es elegible si el año solicitado está incluido.
+   * - Si `airYears` tiene valores, es elegible si **al menos uno** de esos años
+   *   cae en la misma década que el año de la programación solicitado (ej. un
+   *   show con airYears [1996] se incluye en la programación de 1999, ya que
+   *   ambos pertenecen a la década de los 90).
    * - Si no tiene ninguno de los dos configurado, se considera elegible para
    *   cualquier año (comportamiento retrocompatible para shows sin configurar).
    */
   private isShowEligibleForYear(show: RealShow, year: number): boolean {
     if (show.airUntilToDate) return true;
     if (show.airYears && show.airYears.length > 0) {
-      return show.airYears.includes(year);
+      const targetDecade = Math.floor(year / 10);
+      return show.airYears.some((airYear) => Math.floor(airYear / 10) === targetDecade);
     }
     return true; // Sin configuración: siempre disponible
   }
@@ -341,7 +345,7 @@ export class ScheduleServiceMain {
    */
   private parseEpisodeBlockInfo(title: string | undefined): { group: number; part: string | null } | null {
     if (!title) return null;
-    const match = title.trim().match(/^(\d+)\s*([a-zA-Z])?(?=[\s:.\-]|$)/);
+    const match = title.trim().match(/^(\d+)\s*([a-zA-Z])?(?=[\s:.-]|$)/);
     if (!match) return null;
     return {
       group: parseInt(match[1], 10),
@@ -351,7 +355,7 @@ export class ScheduleServiceMain {
 
   /** Elimina el código de bloque inicial del título (ej. "01a: X" -> "X"). */
   private stripEpisodeBlockCode(title: string): string {
-    return title.replace(/^\d+[a-zA-Z]?[\s:.\-]*\s*/, '').trim() || title;
+    return title.replace(/^\d+[a-zA-Z]?[\s:.-]*\s*/, '').trim() || title;
   }
 
   /**
@@ -553,7 +557,7 @@ export class ScheduleServiceMain {
 
       entries.push({
         id: uuidv4(),
-        showId: flatEpisode.show.uuid || String(flatEpisode.show.id),
+        showId: flatEpisode.show.uuid || (flatEpisode.show.id != null ? String(flatEpisode.show.id) : flatEpisode.show.name),
         showName: flatEpisode.show.name,
         season: flatEpisode.season,
         episode: flatEpisode.episode,

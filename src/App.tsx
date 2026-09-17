@@ -213,8 +213,22 @@ function App() {
         return fallback;
       }
 
-      const channelId = channelInfo.uuid || channelInfo.id.toString();
-      const scheduleEntry = await window.electronAPI.schedule.getCurrentScheduleEntry(channelId);
+      // La programación persistida puede usar el UUID actual, el ID numérico
+      // legacy o el nombre del canal. Probarlos en ese orden mantiene válidas
+      // las programaciones generadas antes de asignar un UUID al canal.
+      const channelIdentifiers = [
+        channelInfo.uuid,
+        String(channelInfo.id),
+        channelInfo.name
+      ].filter((identifier, index, identifiers): identifier is string =>
+        !!identifier && identifiers.indexOf(identifier) === index
+      );
+
+      let scheduleEntry = null;
+      for (const channelIdentifier of channelIdentifiers) {
+        scheduleEntry = await window.electronAPI.schedule.getCurrentScheduleEntry(channelIdentifier);
+        if (scheduleEntry) break;
+      }
 
       if (!scheduleEntry) {
         console.log(`ℹ️ [App] No hay programación actual para el canal ${channelNumber}`);
@@ -337,11 +351,9 @@ function App() {
       } catch (error) {
         console.warn('⚠️ [App] Error en sondeo periódico de programación:', error);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleStatus, isPoweredOn, currentChannel]);
 
   const toggleGuide = (): void => {
@@ -664,6 +676,12 @@ function App() {
                   onClick={() => setIsMenuOpen(prev => !prev)}
                 >
                   MENU
+                </button>
+                <button
+                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                  onClick={() => window.electronAPI.openAdminWindow()}
+                >
+                  {settings.tvStyle === '90s' ? 'CONFIGURACIÓN' : 'Configuración'}
                 </button>
                 <button
                   className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
