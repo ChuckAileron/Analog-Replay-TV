@@ -5,6 +5,17 @@ export interface TVShow {
   seasons:        TVSeason[];
   airYears?:      number[];   // Años en los que se transmitió el programa
   airUntilToDate?: boolean;   // Si es true, siempre aparece en la programación independientemente del año
+  /**
+   * Controla cómo se repite el episodio del show a lo largo del día en la
+   * programación generada. Opciones mutuamente excluyentes:
+   * - 'daily-repeat' (por defecto): el mismo episodio se transmite en todos
+   *   los turnos del show durante el día; recién al día siguiente pasa al
+   *   siguiente episodio ("un episodio por día").
+   * - 'once-per-day': el show aparece una única vez en el día (un solo
+   *   turno); también avanza al siguiente episodio al día siguiente
+   *   ("emitir episodio solo una vez al día").
+   */
+  episodeAiringMode?: 'daily-repeat' | 'once-per-day';
 }
 
 export interface TVSeason {

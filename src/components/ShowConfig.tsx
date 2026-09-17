@@ -27,7 +27,8 @@ const DEFAULT_SHOW: ShowFormData = {
     contentPaths: []
   }],
   airYears: [],
-  airUntilToDate: false
+  airUntilToDate: false,
+  episodeAiringMode: 'daily-repeat'
 };
 
 function ShowConfig() {
@@ -414,6 +415,33 @@ function ShowConfig() {
         </div>
       </div>
 
+      {/* Modo de repetición diaria del episodio (opciones excluyentes) */}
+      <div className="form-group">
+        <label>Repetición de episodios:</label>
+        <div className="airing-mode-section">
+          <label className="checkbox-label airing-mode-option">
+            <input
+              type="radio"
+              name="episodeAiringMode"
+              checked={(formData.episodeAiringMode || 'daily-repeat') === 'daily-repeat'}
+              onChange={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'daily-repeat' }))}
+            />
+            <span>Un episodio por día</span>
+            <span className="checkbox-hint">(se repite todo el día, cambia al día siguiente)</span>
+          </label>
+          <label className="checkbox-label airing-mode-option">
+            <input
+              type="radio"
+              name="episodeAiringMode"
+              checked={formData.episodeAiringMode === 'once-per-day'}
+              onChange={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'once-per-day' }))}
+            />
+            <span>Emitir episodio solo una vez al día</span>
+            <span className="checkbox-hint">(no se repite, cambia al día siguiente)</span>
+          </label>
+        </div>
+      </div>
+
       {/* Temporadas */}
       {formData.seasons.map((season, seasonIndex) => (
         <div key={seasonIndex} className="season-section">
@@ -654,6 +682,7 @@ function ShowConfig() {
                     ...show,
                     airYears: show.airYears || [],
                     airUntilToDate: show.airUntilToDate || false,
+                    episodeAiringMode: show.episodeAiringMode || 'daily-repeat',
                     seasons: show.seasons.map(s => ({
                       ...s,
                       contentPaths: s.contentPaths || []

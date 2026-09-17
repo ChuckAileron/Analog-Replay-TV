@@ -72,6 +72,21 @@ interface RealShow {
   seasons: RealSeason[];
   airYears?: number[];
   airUntilToDate?: boolean;
+  // Controla cómo se repite el episodio de un show a lo largo del día:
+  // - 'daily-repeat' (default): el mismo episodio se transmite en TODOS los
+  //   turnos del show durante el día; solo avanza al siguiente episodio al
+  //   comenzar el día siguiente.
+  // - 'once-per-day': el show aparece una única vez en el día (un solo turno);
+  //   igualmente avanza al siguiente episodio al día siguiente.
+  episodeAiringMode?: 'daily-repeat' | 'once-per-day';
+}
+
+// Estado de emisión de un show durante la generación de la programación anual
+interface ShowAiringState {
+  show: RealShow;
+  episodes: FlatEpisode[];
+  pointer: number; // índice del episodio "de hoy" dentro de `episodes`
+  mode: 'daily-repeat' | 'once-per-day';
 }
 
 // Episodio aplanado con referencia a su show, usado para armar la rotación
@@ -295,6 +310,29 @@ export class ScheduleServiceMain {
   }
 
   /**
+   * Verifica si al menos una de las carpetas de contenido configuradas para
+   * una temporada existe REALMENTE en disco (no solo que el campo no esté
+   * vacío). Esto evita programar episodios cuya carpeta configurada es
+   * inválida u obsoleta, lo cual causaría que el reproductor tenga que
+   * sustituir silenciosamente el episodio por otro disponible (generando
+   * una discrepancia entre lo que muestra la guía y lo que realmente se
+   * reproduce, además de perder el punto de reanudación calculado).
+   */
+  private seasonHasRealContent(season: RealSeason): boolean {
+    const candidatePaths = [season.contentPath, ...(season.contentPaths || [])].filter(
+      (p): p is string => !!p
+    );
+
+    return candidatePaths.some((candidatePath) => {
+      try {
+        return fs.existsSync(candidatePath) && fs.statSync(candidatePath).isDirectory();
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  /**
    * Aplana todos los episodios de un show (todas sus temporadas) en una
    * lista simple, preservando referencia a temporada/episodio real.
    */
@@ -302,9 +340,8 @@ export class ScheduleServiceMain {
     const flat: FlatEpisode[] = [];
     for (const season of show.seasons) {
       if (!season.episodes || season.episodes.length === 0) continue;
-      // Solo incluir temporadas que tengan al menos una carpeta de contenido configurada
-      const hasContent = !!season.contentPath || (season.contentPaths && season.contentPaths.length > 0);
-      if (!hasContent) continue;
+      // Solo incluir temporadas cuya carpeta de contenido exista realmente en disco
+      if (!this.seasonHasRealContent(season)) continue;
 
       for (const episode of season.episodes) {
         flat.push({
@@ -320,62 +357,90 @@ export class ScheduleServiceMain {
   }
 
   /**
-   * Construye una rotación "round-robin" de episodios para un canal, mezclando
-   * los shows elegibles entre sí (un episodio de cada show por turno) en vez
-   * de agotar cada show completo antes de pasar al siguiente.
+   * Clave de calendario (año-mes-día en hora local) usada para detectar
+   * cuándo el cursor de generación cruza a un nuevo día.
    */
-  private buildChannelRotation(shows: RealShow[]): FlatEpisode[] {
-    const perShowEpisodes = shows
-      .map(show => this.flattenShowEpisodes(show))
-      .filter(episodes => episodes.length > 0);
+  private dayKey(date: Date): string {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
 
-    if (perShowEpisodes.length === 0) return [];
+  /**
+   * Medianoche local del día siguiente al de la fecha dada.
+   */
+  private startOfNextDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1, 0, 0, 0, 0);
+  }
 
-    const rotation: FlatEpisode[] = [];
-    const pointers = new Array(perShowEpisodes.length).fill(0);
-    const totalEpisodes = perShowEpisodes.reduce((sum, eps) => sum + eps.length, 0);
-
-    while (rotation.length < totalEpisodes) {
-      for (let i = 0; i < perShowEpisodes.length; i++) {
-        const episodes = perShowEpisodes[i];
-        if (pointers[i] < episodes.length) {
-          rotation.push(episodes[pointers[i]]);
-          pointers[i]++;
-        }
-      }
-    }
-
-    return rotation;
+  /**
+   * Crea una entrada de relleno ("AnalogReplayTV") entre dos instantes dados.
+   */
+  private buildFillerEntry(channelIdentifier: string, channelName: string, start: Date, end: Date): ScheduleEntry {
+    return {
+      id: uuidv4(),
+      showId: 'analog-replay-tv-filler',
+      showName: 'AnalogReplayTV',
+      season: 0,
+      episode: 0,
+      episodeTitle: 'Identificación de estación',
+      channelId: channelIdentifier,
+      channelName,
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+      duration: `${Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000))} min`,
+      type: 'filler'
+    };
   }
 
   /**
    * Genera la programación completa de un canal para todo el año, anclando
    * el inicio en el 1 de enero 00:00:00 y avanzando un cursor de tiempo en
-   * bloques de 30 minutos ("slots"). Cada episodio ocupa el número de slots
-   * necesario para cubrir su duración real (redondeando hacia arriba); si el
-   * episodio dura menos que el slot (o que el último slot que ocupa), el
-   * tiempo restante se llena con una entrada de tipo 'filler' que representa
-   * el logo animado de "AnalogReplayTV" hasta llegar al siguiente slot de 30
-   * minutos. Esto asegura que todos los episodios comiencen siempre en un
-   * horario "en punto" o "y media", como una parrilla de TV real.
+   * bloques de 30 minutos ("slots").
+   *
+   * Cada show mantiene el MISMO episodio durante todo el día (puede repetirse
+   * en varios de sus turnos, si está en modo 'daily-repeat'), y solo avanza
+   * al siguiente episodio de su catálogo al comenzar el día siguiente. Los
+   * shows en modo 'once-per-day' aparecen una única vez por día.
+   *
+   * Dentro de cada día, los shows disponibles se turnan entre sí en
+   * round-robin: un show en modo 'daily-repeat' vuelve al final de la cola
+   * después de cada turno (para repetirse más tarde ese mismo día con el
+   * mismo episodio); uno en modo 'once-per-day' no vuelve a la cola.
+   *
+   * Cada episodio ocupa el número de slots de 30 min necesario para cubrir
+   * su duración real (redondeando hacia arriba); si dura menos que su
+   * slot, el tiempo restante se llena con una entrada de tipo 'filler'
+   * (logo animado de "AnalogReplayTV") hasta el siguiente slot de 30 min.
+   * Esto asegura que todos los episodios comiencen siempre en un horario
+   * "en punto" o "y media", como una parrilla de TV real.
    */
   private buildChannelYearEntries(channel: RealChannel, shows: RealShow[], year: number): ScheduleEntry[] {
     const eligibleShows = shows.filter((show) =>
       this.isShowAssignedToChannel(show, channel) && this.isShowEligibleForYear(show, year)
     );
 
-    const rotation = this.buildChannelRotation(eligibleShows);
-    if (rotation.length === 0) return [];
+    const showStates: ShowAiringState[] = eligibleShows
+      .map((show): ShowAiringState => ({
+        show,
+        episodes: this.flattenShowEpisodes(show),
+        pointer: 0,
+        mode: show.episodeAiringMode === 'once-per-day' ? 'once-per-day' : 'daily-repeat'
+      }))
+      .filter((state) => state.episodes.length > 0);
+
+    if (showStates.length === 0) return [];
 
     const SLOT_SECONDS = 30 * 60; // 30 minutos
+    const channelIdentifier = channel.uuid || String(channel.id);
 
     const entries: ScheduleEntry[] = [];
     const yearStart = new Date(year, 0, 1, 0, 0, 0, 0);
     const yearEnd = new Date(year + 1, 0, 1, 0, 0, 0, 0);
 
     let cursor = new Date(yearStart);
-    let rotationIndex = 0;
-    const channelIdentifier = channel.uuid || String(channel.id);
+    let currentDayKey = this.dayKey(cursor);
+    // Cola de turnos del día actual: se reinicia con todos los shows cada vez
+    // que el cursor cruza a un nuevo día.
+    let queue: ShowAiringState[] = [...showStates];
 
     // Límite de seguridad para evitar loops infinitos si algo sale mal
     const maxIterations = 500000;
@@ -383,8 +448,31 @@ export class ScheduleServiceMain {
 
     while (cursor < yearEnd && iterations < maxIterations) {
       iterations++;
-      const flatEpisode = rotation[rotationIndex % rotation.length];
-      rotationIndex++;
+
+      // Detectar cambio de día: avanzar el episodio "de hoy" de cada show
+      // (una sola vez, sin importar cuántas veces se repitió ayer) y
+      // reiniciar la cola de turnos para el nuevo día.
+      const cursorDayKey = this.dayKey(cursor);
+      if (cursorDayKey !== currentDayKey) {
+        for (const state of showStates) {
+          state.pointer = (state.pointer + 1) % state.episodes.length;
+        }
+        queue = [...showStates];
+        currentDayKey = cursorDayKey;
+      }
+
+      if (queue.length === 0) {
+        // Todos los shows disponibles ya cumplieron su única aparición de hoy
+        // (modo 'once-per-day') y ninguno queda para repetir: rellenar el
+        // resto del día con el logo de identificación de estación.
+        const dayEnd = this.startOfNextDay(cursor);
+        entries.push(this.buildFillerEntry(channelIdentifier, channel.name, cursor, dayEnd));
+        cursor = dayEnd;
+        continue;
+      }
+
+      const state = queue.shift()!;
+      const flatEpisode = state.episodes[state.pointer % state.episodes.length];
 
       // El episodio ocupa la cantidad de slots de 30 min necesaria para cubrir
       // su duración real (mínimo 1 slot), redondeando hacia arriba.
@@ -413,23 +501,15 @@ export class ScheduleServiceMain {
       // rellenar el tiempo restante con el logo animado de "AnalogReplayTV".
       const slotEnd = new Date(cursor.getTime() + totalSlotSeconds * 1000);
       if (slotEnd.getTime() > showEnd.getTime()) {
-        entries.push({
-          id: uuidv4(),
-          showId: 'analog-replay-tv-filler',
-          showName: 'AnalogReplayTV',
-          season: 0,
-          episode: 0,
-          episodeTitle: 'Identificación de estación',
-          channelId: channelIdentifier,
-          channelName: channel.name,
-          startTime: showEnd.toISOString(),
-          endTime: slotEnd.toISOString(),
-          duration: `${Math.round((slotEnd.getTime() - showEnd.getTime()) / 60000)} min`,
-          type: 'filler'
-        });
+        entries.push(this.buildFillerEntry(channelIdentifier, channel.name, showEnd, slotEnd));
       }
 
       cursor = slotEnd;
+
+      if (state.mode === 'daily-repeat') {
+        queue.push(state); // vuelve al final de la cola para repetirse hoy
+      }
+      // 'once-per-day': no se vuelve a agregar; ya cumplió su única aparición de hoy
     }
 
     return entries;

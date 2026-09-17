@@ -277,6 +277,60 @@
   color: var(--channel-text-color);
 }
 
+/* Modo de repetición diaria de episodios (opciones excluyentes) */
+.airing-mode-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group .airing-mode-option,
+.airing-mode-option {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  gap: 8px;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  padding: 6px 10px;
+  border: 1px solid rgba(100, 150, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.airing-mode-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #88aaff;
+}
+
+.airing-mode-option span:first-of-type {
+  font-size: 0.9em;
+  color: #cce0ff;
+}
+
+.airing-mode-option .checkbox-hint {
+  display: inline;
+  margin-left: 4px;
+}
+
+.style-90s .airing-mode-option {
+  border-color: rgba(51, 255, 51, 0.25);
+}
+
+.style-90s .airing-mode-option input[type="radio"] {
+  accent-color: #33ff33;
+}
+
+.style-90s .airing-mode-option span:first-of-type {
+  color: var(--channel-text-color);
+}
+
 /* Años de transmisión en el listado */
 .show-air-years {
   display: flex;
