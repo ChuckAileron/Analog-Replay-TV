@@ -21,6 +21,7 @@ import './styles/menu-90s.css';
 import './styles/menu-00s.css';
 import './styles/menu.css';
 import './styles/channel-display.css';
+import './styles/volume-display.css';
 import './styles/controls-00s.css';
 import './styles/loading-animations.css';
 
@@ -39,12 +40,22 @@ function App() {
   const [controlsVisible, setControlsVisible] = useState<boolean>(false);
   // Controla la visibilidad del panel de control remoto simulado
   const [remoteVisible, setRemoteVisible] = useState<boolean>(false);
+  // Indicador temporal en pantalla al cambiar el volumen desde el control remoto.
+  const [volumeDisplay, setVolumeDisplay] = useState<number | null>(null);
+  const [volumeDisplayKey, setVolumeDisplayKey] = useState<number>(0);
+  const volumeDisplayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Estado de encendido/apagado de la TV (simulado por el control remoto)
   const [isPoweredOn, setIsPoweredOn] = useState<boolean>(true);
   // Recuerda el canal anterior para el botón "LAST" del control remoto
   const [previousChannel, setPreviousChannel] = useState<number>(1);
   // Estado de pantalla completa de la ventana de la aplicación
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  useEffect(() => () => {
+    if (volumeDisplayTimeoutRef.current) {
+      clearTimeout(volumeDisplayTimeoutRef.current);
+    }
+  }, []);
   // Temporada, episodio y punto de reanudación (segundos) determinados por la
   // programación real según la hora actual del dispositivo.
   const [currentSeason, setCurrentSeason] = useState<number>(1);
@@ -389,11 +400,25 @@ function App() {
 
   // ===== Handlers del control remoto simulado =====
 
+  const showVolumeDisplay = (volume: number): void => {
+    if (volumeDisplayTimeoutRef.current) {
+      clearTimeout(volumeDisplayTimeoutRef.current);
+    }
+
+    setVolumeDisplay(volume);
+    setVolumeDisplayKey(prev => prev + 1);
+    volumeDisplayTimeoutRef.current = setTimeout(() => {
+      setVolumeDisplay(null);
+      volumeDisplayTimeoutRef.current = null;
+    }, 1800);
+  };
+
   const handleVolumeUp = (): void => {
     const current = settingsManager.getCurrentSettings();
     const newVolume = Math.min(100, current.volume + 10);
     const newSettings = settingsManager.updateSettings({ volume: newVolume, isMuted: false });
     setSettings(newSettings);
+    showVolumeDisplay(newVolume);
   };
 
   const handleVolumeDown = (): void => {
@@ -401,6 +426,7 @@ function App() {
     const newVolume = Math.max(0, current.volume - 10);
     const newSettings = settingsManager.updateSettings({ volume: newVolume });
     setSettings(newSettings);
+    showVolumeDisplay(newVolume);
   };
 
   const handleMuteToggle = (): void => {
@@ -587,6 +613,18 @@ function App() {
                     </>
                   );
                 })()}
+              </div>
+            )}
+
+            {volumeDisplay !== null && (
+              <div key={volumeDisplayKey} className="volume-display" role="status" aria-live="polite">
+                <div className="volume-display-header">
+                  <span>{settings.tvStyle === '90s' ? 'VOL' : 'Volumen'}</span>
+                  <strong>{volumeDisplay}</strong>
+                </div>
+                <div className="volume-display-track" aria-hidden="true">
+                  <span style={{ width: `${volumeDisplay}%` }} />
+                </div>
               </div>
             )}
 

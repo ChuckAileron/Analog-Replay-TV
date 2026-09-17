@@ -1,0 +1,113 @@
+.volume-display {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 1250;
+  width: 150px;
+  padding: 10px 12px;
+  pointer-events: none;
+  animation: volume-display-in 180ms ease-out, volume-display-out 260ms ease-in 1.54s forwards;
+}
+
+.volume-display-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.volume-display-header span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.volume-display-header strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.volume-display-track {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.volume-display-track span {
+  display: block;
+  height: 100%;
+  transition: width 120ms ease-out;
+}
+
+.style-90s .volume-display {
+  font-family: "Courier New", monospace;
+  color: #48ff68;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #32db4e;
+  border-radius: 2px;
+  box-shadow: 0 0 9px rgba(51, 255, 82, 0.38), inset 0 0 10px rgba(51, 255, 82, 0.08);
+  text-shadow: 0 0 5px rgba(72, 255, 104, 0.8);
+}
+
+.style-90s .volume-display-track {
+  background: rgba(72, 255, 104, 0.16);
+  border: 1px solid rgba(72, 255, 104, 0.6);
+}
+
+.style-90s .volume-display-track span {
+  background: #48ff68;
+  box-shadow: 0 0 6px rgba(72, 255, 104, 0.8);
+}
+
+.style-00s .volume-display {
+  font-family: Arial, sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(12, 54, 112, 0.94), rgba(5, 28, 72, 0.94));
+  border: 1px solid rgba(130, 199, 255, 0.7);
+  border-radius: 7px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 255, 255, 0.16);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.style-00s .volume-display-track {
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 3px;
+}
+
+.style-00s .volume-display-track span {
+  background: linear-gradient(90deg, #46b7ff, #d6f1ff);
+}
+
+@keyframes volume-display-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes volume-display-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 560px) {
+  .volume-display {
+    top: 14px;
+    right: 14px;
+    width: 132px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .volume-display {
+    animation: volume-display-out 1ms linear 1.79s forwards;
+  }
+}

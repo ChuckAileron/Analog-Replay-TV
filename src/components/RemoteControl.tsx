@@ -20,10 +20,10 @@ interface RemoteControlProps {
 
 const FOCUS_ORDER = [
   'power', 'mute', 'guide', 'menu',
-  'chDown', 'chUp', 'last',
+  'chUp', 'chDown', 'last',
   'num1', 'num2', 'num3', 'num4', 'num5',
   'num6', 'num7', 'num8', 'num9', 'num0', 'ok',
-  'volDown', 'volUp'
+  'volUp', 'volDown'
 ];
 
 function moveFocus(currentId: string, direction: 'up' | 'down' | 'left' | 'right'): string {
@@ -220,8 +220,8 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
           <section className="remote-group remote-channel-group" aria-label="Controles de canal">
             <span className="remote-group-label">Canal</span>
             <div className="remote-button-grid remote-channel-buttons">
-              {renderButton('chDown', labels.chDown)}
               {renderButton('chUp', labels.chUp)}
+              {renderButton('chDown', labels.chDown)}
               {renderButton('last', labels.last, 'last-btn', digitBuffer ? 'Borrar canal ingresado' : 'Volver al canal anterior')}
             </div>
           </section>
@@ -239,8 +239,8 @@ export const RemoteControl: React.FC<RemoteControlProps> = ({
           <section className="remote-group remote-volume-group" aria-label="Controles de volumen">
             <span className="remote-group-label">Volumen</span>
             <div className="remote-button-grid remote-volume-buttons">
-              {renderButton('volDown', labels.volDown)}
               {renderButton('volUp', labels.volUp)}
+              {renderButton('volDown', labels.volDown)}
             </div>
           </section>
         </div>
