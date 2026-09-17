@@ -26,6 +26,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - **Selección de año de transmisión inicial**: la primera vez que se abre la app, se elige una década y un año; a partir de ahí se genera automáticamente la programación de todos los canales para ese año completo.
 - **Cambio de canal realista**: al subir/bajar de canal, la app siempre muestra el show y episodio que "está en emisión ahora mismo" según la hora real del dispositivo y la programación generada — no siempre el mismo episodio desde el principio, sino el punto exacto (minuto y segundo) donde debería estar la transmisión en ese momento.
 - **Programación alineada a bloques de 30 minutos**: cada episodio comienza siempre en horario "en punto" o "y media", como una parrilla de TV real. Si un episodio dura menos de 30 minutos, el tiempo restante se llena con una pantalla animada de identificación de estación ("AnalogReplayTV") con estilo acorde a la época elegida (90s o 2000s), en lugar de dejar un vacío o cortar abruptamente. Este espacio será usado a futuro para comerciales.
+- **Episodios multiparte como un solo programa**: los archivos de episodio que comparten un código de bloque en su título (patrón `<número><letra>`, por ejemplo "01a: ...", "01b: ...", "01c: ...", que corresponden al mismo episodio real dividido en varias partes) se detectan automáticamente y se agrupan en un solo bloque etiquetado como un único episodio: la programación calcula su duración combinada (todas las partes cuentan como un solo programa dentro del bloque de 30 minutos) y el reproductor las encadena en secuencia automáticamente, incluyendo reanudar en la parte correcta si la transmisión cae a mitad del bloque. Los episodios independientes sin código de letra (como especiales sueltos) siguen tratándose como bloques de una sola parte.
 - **Avance automático de episodios**: mientras se permanece en un canal, la aplicación revisa periódicamente si la programación avanzó a un nuevo episodio o bloque y actualiza la reproducción automáticamente, sin que el usuario tenga que volver a cambiar de canal.
 - **Mezcla de shows por canal**: cuando varios programas comparten el mismo canal, se alternan entre sí (round-robin) en vez de transmitir todos los episodios de uno antes de pasar al siguiente, simulando una parrilla más variada.
 - **Filtrado de programación por año de emisión**: cada show puede configurarse con años de transmisión específicos o marcarse como "hasta la fecha" para que aparezca siempre sin importar el año elegido.
@@ -50,6 +51,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - Cambio de canal con comportamiento similar a una TV analógica.
 - Visualización de información del canal y del contenido en reproducción.
 - Controles de volumen, estilo visual, relación de aspecto (4:3/16:9) y filtros CRT.
+- **Filtro CRT optimizado para rendimiento**: el tinte de color del filtro CRT se "hornea" sobre un canvas de resolución fija y pequeña (en vez de aplicar la propiedad CSS `filter` sobre el video), de modo que la GPU solo estira el bitmap ya procesado al mostrarlo en pantalla completa; esto evita que Chromium re-rasterice el filtro a la resolución de pantalla (la causa del lag) sin sacrificar el efecto visual, que incluye resplandor del fósforo y líneas de escaneo animadas.
 - Menús y componentes con estética retro adaptada al diseño.
 - Botones de control (canal, menú, guía) ocultos por defecto, mostrados/ocultados con el teclado (flechas/Enter/Escape) o con un botón dedicado.
 - Control remoto simulado con navegación completa por teclado o mouse (encendido/apagado, silencio, canal, volumen, menú, guía, acceso numérico directo a canal, último canal).
@@ -63,6 +65,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - Fallback y adaptaciones según el formato del archivo.
 - Manejo de contenido con transiciones y visualización de estado de reproducción.
 - Reanudación de episodios en el punto exacto (seek time) que corresponde según la hora real y la programación generada.
+- Reproducción en secuencia de episodios multiparte: cuando el episodio programado pertenece a un bloque con varias partes ("01a/01b/01c"), el reproductor arma automáticamente la lista de todas sus partes, inicia en la parte y desplazamiento correctos según el seek time acumulado, y encadena cada parte al terminar la anterior (listener de fin de reproducción sobre el propio elemento de video).
 - Resolución de episodios tolerante: prueba múltiples nombres de archivo candidatos y múltiples carpetas de contenido (incluyendo subcarpetas de temporada) antes de reportar un episodio como no disponible; si el episodio programado no existe, reproduce otro episodio disponible del mismo show como respaldo.
 
 ### 3. Conversión automática de video con FFmpeg
@@ -83,6 +86,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 ### 5. Sistema de shows y programación
 
 - Definición de shows, temporadas y episodios, con soporte para múltiples nombres de archivo candidatos por episodio (`fileNames`), útil cuando el mismo episodio existe en más de una carpeta con nombres distintos.
+- Agrupación automática de archivos multiparte en bloques individuales: los archivos cuyo nombre comienza con un código de grupo y letra (patrón `<número><letra>`) se agrupan como un solo episodio real antes de generar la programación, de forma que cada bloque (todas sus partes) cuente como un solo programa en la parrilla y tenga la duración combinada de todas sus partes, sin importar cuántos archivos de contenido haya por cada bloque.
 - Soporte para múltiples carpetas de contenido por temporada, con emparejamiento automático de archivos al agregar una carpeta nueva.
 - Configuración de años de transmisión por show (`airYears`) o marca "hasta la fecha" (`airUntilToDate`) para controlar en qué años aparece un show en la programación generada.
 - Generación de programación real y anual: se lee el catálogo real de shows/canales configurados, se filtra por año de emisión, y se arma una rotación mezclada (round-robin) de episodios por canal.
@@ -194,7 +198,8 @@ AnalogReplayTV/
 │   ├── styles/
 │   ├── types/
 │   └── utils/
-│       └── episodeFiles.ts
+│       ├── episodeFiles.ts
+│       └── episodeBlocks.ts
 ├── docs/
 │   ├── COMMERCIAL_SYSTEM.md
 │   ├── SCHEDULE_SYSTEM.md

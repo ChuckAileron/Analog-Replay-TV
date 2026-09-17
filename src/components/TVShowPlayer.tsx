@@ -301,12 +301,12 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
         if (parts.length > 1) {
           let remaining = Math.max(0, seekTimeSeconds);
           for (let i = 0; i < parts.length; i++) {
-            const partDuration = parseDurationToSeconds(parts[i].duration);
-            if (remaining < partDuration || i === parts.length - 1) {
-              startPartIndex = i;
-              localSeek = remaining;
-              break;
-            }
+    const partDuration = parseDurationToSeconds(parts[i].duration);
+    if (remaining < partDuration || i === parts.length - 1) {
+      startPartIndex = i;
+      localSeek = Math.min(remaining, partDuration);
+      break;
+    }
             remaining -= partDuration;
           }
         } else {

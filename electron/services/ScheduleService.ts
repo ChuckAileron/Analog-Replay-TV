@@ -372,7 +372,7 @@ export class ScheduleServiceMain {
       const groupNumber = info ? info.group : episode.episode;
       const hasPart = info?.part != null;
 
-      if (currentBlock.length > 0 && hasPart && currentGroup === groupNumber) {
+      if (currentBlock.length > 0 && hasPart && currentBlock.some(ep => this.parseEpisodeBlockInfo(ep.title)?.part != null) && currentGroup === groupNumber) {
         currentBlock.push(episode);
       } else {
         currentBlock = [episode];

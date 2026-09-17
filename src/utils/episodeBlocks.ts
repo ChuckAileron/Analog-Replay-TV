@@ -66,7 +66,7 @@ export function groupEpisodesIntoBlocks<T extends { episode: number; title: stri
     const groupNumber = info ? info.group : ep.episode;
     const hasPart = info?.part != null;
 
-    if (currentBlock && hasPart && currentBlock.groupNumber === groupNumber) {
+    if (currentBlock && hasPart && currentBlock.parts.some(p => parseEpisodeBlockInfo(p.title)?.part != null) && currentBlock.groupNumber === groupNumber) {
       currentBlock.parts.push(ep);
     } else {
       currentBlock = { groupNumber, parts: [ep] };
@@ -82,10 +82,10 @@ export function groupEpisodesIntoBlocks<T extends { episode: number; title: stri
  * Retorna 0 si el formato es inválido.
  */
 export function parseDurationToSeconds(duration: string | undefined): number {
-  if (!duration) return 0;
+  if (!duration) return 300; // Default 5min, same as ScheduleService
   const parts = duration.split(':').map(p => parseInt(p, 10));
-  if (parts.some(p => isNaN(p))) return 0;
+  if (parts.some(p => isNaN(p))) return 300;
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  return 0;
+  return 300;
 }
