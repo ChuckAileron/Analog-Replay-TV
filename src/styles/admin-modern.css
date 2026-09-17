@@ -1,0 +1,922 @@
+/* Modern admin skin. Everything is scoped to avoid changing the TV renderer. */
+.admin-console {
+  --admin-bg: #0c1017;
+  --admin-surface: #141a24;
+  --admin-surface-raised: #19212d;
+  --admin-surface-soft: #101620;
+  --admin-border: #293342;
+  --admin-border-strong: #3a475a;
+  --admin-text: #e8edf5;
+  --admin-muted: #8f9bad;
+  --admin-accent: #4cc9b0;
+  --admin-accent-strong: #2fb89d;
+  --admin-accent-soft: rgba(76, 201, 176, 0.12);
+  --admin-danger: #ff7a86;
+  --admin-warning: #f6c76a;
+  --admin-radius: 12px;
+  --admin-shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
+
+  --channel-text-color: var(--admin-text);
+  --text-color: var(--admin-text);
+  --border-color: var(--admin-border);
+  --menu-border-color: var(--admin-border);
+  --button-bg: var(--admin-surface-raised);
+  --button-hover-bg: #202b39;
+  --button-active-bg: var(--admin-accent-strong);
+  --danger-color: var(--admin-danger);
+  --danger-color-hover: #ff9ba4;
+  --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  color: var(--admin-text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(76, 201, 176, 0.08), transparent 26rem),
+    var(--admin-bg);
+}
+
+.admin-console button {
+  font-family: inherit;
+}
+
+.admin-console .admin-titlebar {
+  min-height: 58px;
+  padding: 0 22px;
+  gap: 18px;
+  background: rgba(12, 16, 23, 0.92);
+  border-bottom-color: var(--admin-border);
+  backdrop-filter: blur(16px);
+}
+
+.admin-console .admin-titlebar-brand {
+  gap: 9px;
+}
+
+.admin-console .admin-brand-logo {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  overflow: hidden;
+  font-size: 16px;
+  background: var(--admin-accent-soft);
+  border: 1px solid rgba(76, 201, 176, 0.28);
+  border-radius: 9px;
+}
+
+.admin-console .admin-brand-name {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.admin-console .admin-brand-separator {
+  color: var(--admin-border-strong);
+}
+
+.admin-console .admin-brand-sub,
+.admin-console .admin-titlebar-date,
+.admin-console .admin-titlebar-breadcrumb {
+  color: var(--admin-muted);
+}
+
+.admin-console .admin-back-button {
+  margin-left: 0;
+  padding: 7px 11px;
+  color: var(--admin-text);
+  background: var(--admin-surface-raised);
+  border-color: var(--admin-border);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.admin-console .admin-back-button:hover {
+  background: #202936;
+  border-color: var(--admin-border-strong);
+}
+
+.admin-console .admin-sidebar {
+  width: 224px;
+  padding: 18px 12px;
+  gap: 5px;
+  background: rgba(13, 18, 26, 0.76);
+  border-right-color: var(--admin-border);
+}
+
+.admin-console .admin-sidebar-label {
+  padding: 3px 12px 10px;
+  color: #6f7b8d;
+  letter-spacing: 0.12em;
+}
+
+.admin-console .admin-nav-button {
+  min-height: 42px;
+  padding: 9px 12px;
+  color: #b6c0ce;
+  border-radius: 9px;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.admin-console .admin-nav-button:hover {
+  color: var(--admin-text);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: transparent;
+}
+
+.admin-console .admin-nav-button.active {
+  color: #b8f3e7;
+  background: var(--admin-accent-soft);
+  border-color: rgba(76, 201, 176, 0.22);
+}
+
+.admin-console .admin-nav-icon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  font-size: 14px;
+  filter: saturate(0.65);
+}
+
+.admin-console .admin-content {
+  padding: 28px clamp(22px, 3.2vw, 46px) 48px;
+  scrollbar-gutter: stable;
+}
+
+.admin-console .admin-content-header {
+  max-width: 1100px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom-color: var(--admin-border);
+}
+
+.admin-console .admin-content-header h2 {
+  font-size: clamp(22px, 2.3vw, 30px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--admin-text);
+}
+
+.admin-console .admin-content-header p {
+  max-width: 62ch;
+  margin-top: 7px;
+  font-size: 14px;
+  color: var(--admin-muted);
+}
+
+.admin-console .admin-home,
+.admin-console .admin-schedule,
+.admin-console .channel-config,
+.admin-console .show-config {
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* Dashboard */
+.admin-console .admin-panel,
+.admin-console .admin-stat {
+  background: linear-gradient(145deg, rgba(25, 33, 45, 0.94), rgba(19, 25, 35, 0.94));
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.admin-console .admin-panel {
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.admin-console .admin-panel h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: var(--admin-text);
+}
+
+.admin-console .admin-panel-hint,
+.admin-console .admin-loading,
+.admin-console .admin-empty-schedule p {
+  color: var(--admin-muted);
+}
+
+.admin-console .admin-stats {
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-console .admin-stat {
+  position: relative;
+  min-height: 136px;
+  padding: 18px;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.admin-console .admin-stat::after {
+  position: absolute;
+  right: -22px;
+  bottom: -28px;
+  width: 84px;
+  height: 84px;
+  content: "";
+  background: var(--admin-accent-soft);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.admin-console .admin-stat:hover {
+  background: linear-gradient(145deg, #1b2531, #151c27);
+  border-color: rgba(76, 201, 176, 0.42);
+  transform: translateY(-2px);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-console .admin-stat-icon {
+  margin-bottom: auto;
+  font-size: 19px;
+  filter: saturate(0.7);
+}
+
+.admin-console .admin-stat-value {
+  position: relative;
+  z-index: 1;
+  color: var(--admin-accent);
+  letter-spacing: -0.04em;
+}
+
+.admin-console .admin-stat-label {
+  position: relative;
+  z-index: 1;
+  color: var(--admin-muted);
+}
+
+.admin-console .admin-stat-warning .admin-stat-value {
+  color: var(--admin-warning);
+}
+
+.admin-console .admin-summary-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.admin-console .admin-summary-key {
+  color: var(--admin-muted);
+}
+
+.admin-console .admin-summary-value {
+  color: var(--admin-text);
+}
+
+/* Shared controls adapted for admin */
+.admin-console .admin-button-primary,
+.admin-console .admin-button-secondary,
+.admin-console .admin-button-danger,
+.admin-console .config-button,
+.admin-console .back-button,
+.admin-console .cancel-button,
+.admin-console .generate-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-transform: none;
+  color: var(--admin-text);
+  background: var(--admin-surface-raised);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.admin-console .admin-button-primary,
+.admin-console .form-actions .config-button:first-child,
+.admin-console .config-actions .config-button:first-child,
+.admin-console .generate-button {
+  color: #061713;
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+}
+
+.admin-console .admin-button-primary:hover,
+.admin-console .form-actions .config-button:first-child:hover,
+.admin-console .config-actions .config-button:first-child:hover,
+.admin-console .generate-button:hover:not(:disabled) {
+  color: #04120f;
+  background: #65d8c1;
+  border-color: #65d8c1;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.admin-console .admin-button-secondary:hover,
+.admin-console .config-button:hover,
+.admin-console .back-button:hover:not(:disabled),
+.admin-console .cancel-button:hover:not(:disabled) {
+  color: var(--admin-text);
+  background: #222c3a;
+  border-color: #526074;
+  box-shadow: none;
+  transform: none;
+}
+
+.admin-console .admin-button-danger,
+.admin-console .delete-button {
+  color: var(--admin-danger);
+  background: rgba(255, 122, 134, 0.06);
+  border-color: rgba(255, 122, 134, 0.4);
+}
+
+.admin-console .admin-button-danger:hover,
+.admin-console .delete-button:hover {
+  color: #ff9ba4;
+  background: rgba(255, 122, 134, 0.12);
+  border-color: rgba(255, 122, 134, 0.65);
+  box-shadow: none;
+}
+
+.admin-console button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Channel and show lists */
+.admin-console .config-actions {
+  justify-content: flex-start;
+  margin: 0 0 20px;
+}
+
+.admin-console .channels-list,
+.admin-console .shows-list {
+  margin-top: 0;
+}
+
+.admin-console .channels-list > h3,
+.admin-console .shows-list > h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--admin-muted);
+}
+
+.admin-console .channel-item,
+.admin-console .show-item {
+  padding: 17px 18px;
+  margin-bottom: 10px;
+  gap: 18px;
+  color: var(--admin-text);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.admin-console .channel-item:hover,
+.admin-console .show-item:hover {
+  background: #171f2a;
+  border-color: var(--admin-border-strong);
+}
+
+.admin-console .channel-list-header,
+.admin-console .show-list-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin: 0 0 8px;
+  border: 0;
+}
+
+.admin-console .channel-list-number {
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ce8da;
+  background: var(--admin-accent-soft);
+  border-radius: 6px;
+}
+
+.admin-console .channel-list-name,
+.admin-console .show-list-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-text);
+  text-shadow: none;
+}
+
+.admin-console .channel-list-description {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.admin-console .show-list-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-console .show-channels,
+.admin-console .show-air-years,
+.admin-console .show-seasons {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.admin-console .detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-muted);
+  text-shadow: none;
+}
+
+.admin-console .channel-tags,
+.admin-console .air-year-tags,
+.admin-console .season-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-console .channel-tag-small,
+.admin-console .year-tag-small,
+.admin-console .season-info,
+.admin-console .until-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #c9d4e2;
+  background: #202936;
+  border: 1px solid #303c4d;
+  border-radius: 999px;
+  text-shadow: none;
+}
+
+.admin-console .season-number {
+  font-weight: 750;
+  color: #9ce8da;
+}
+
+.admin-console .season-year,
+.admin-console .episode-count {
+  color: var(--admin-muted);
+}
+
+.admin-console .until-date-badge {
+  color: #9ce8da;
+  background: var(--admin-accent-soft);
+  border-color: rgba(76, 201, 176, 0.24);
+}
+
+.admin-console .channel-actions,
+.admin-console .show-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Forms */
+.admin-console .channel-form,
+.admin-console .show-form,
+.admin-console .import-view {
+  padding: 22px;
+  margin: 0;
+  color: var(--admin-text);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+}
+
+.admin-console .form-group {
+  margin-bottom: 18px;
+}
+
+.admin-console .form-group label {
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 650;
+  color: #c3cddb;
+}
+
+.admin-console .form-group input,
+.admin-console .form-group textarea,
+.admin-console .form-group select,
+.admin-console .show-form input,
+.admin-console .show-form textarea,
+.admin-console .folder-select input,
+.admin-console .episodes-grid-row input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 11px;
+  color: var(--admin-text);
+  background: var(--admin-surface-soft);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.14);
+}
+
+.admin-console .form-group textarea {
+  min-height: 96px;
+}
+
+.admin-console .form-group input:hover,
+.admin-console .form-group textarea:hover,
+.admin-console .form-group select:hover,
+.admin-console .folder-select input:hover {
+  border-color: #526074;
+}
+
+.admin-console .form-group input:focus,
+.admin-console .form-group textarea:focus,
+.admin-console .form-group select:focus,
+.admin-console .folder-select input:focus,
+.admin-console .episodes-grid-row input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(76, 201, 176, 0.12);
+}
+
+.admin-console .season-section {
+  padding: 18px;
+  margin: 18px 0;
+  color: var(--admin-text);
+  background: var(--admin-surface-soft);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+}
+
+.admin-console .season-section h3 {
+  padding-bottom: 10px;
+  color: var(--admin-text);
+  border-bottom-color: var(--admin-border);
+}
+
+.admin-console .episode-item,
+.admin-console .additional-path-item {
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+  border-radius: 8px;
+}
+
+.admin-console .episodes-grid-header > span {
+  color: var(--admin-muted);
+  border-bottom-color: var(--admin-border);
+}
+
+.admin-console .airing-mode-button.active {
+  color: #b8f3e7;
+  background: var(--admin-accent-soft);
+  border-color: rgba(76, 201, 176, 0.48);
+  box-shadow: none;
+}
+
+.admin-console .year-tag {
+  color: #c9d4e2;
+  background: #202936;
+  border-color: #303c4d;
+}
+
+.admin-console .checkbox-label,
+.admin-console .until-date-label {
+  color: #c3cddb;
+}
+
+.admin-console input[type="checkbox"] {
+  accent-color: var(--admin-accent-strong);
+}
+
+.admin-console .form-actions {
+  justify-content: flex-end;
+  padding-top: 18px;
+  margin-top: 22px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-console .import-view {
+  text-align: left;
+}
+
+.admin-console .import-view p {
+  margin: 0 0 18px;
+  color: var(--admin-muted);
+}
+
+.admin-console .no-items-message,
+.admin-console .loading-message,
+.admin-console .error-message {
+  padding: 18px;
+  color: var(--admin-muted);
+  background: var(--admin-surface);
+  border: 1px dashed var(--admin-border-strong);
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Schedule setup dialog */
+.admin-console .schedule-setup-overlay {
+  padding: 24px;
+  background: rgba(5, 8, 12, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.admin-console .schedule-setup-container {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  padding: 26px;
+  color: var(--admin-text);
+  background: var(--admin-surface-raised);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+
+.admin-console .schedule-setup-header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.admin-console .schedule-setup-header h2,
+.admin-console .decade-selection h3,
+.admin-console .year-selection-header h3,
+.admin-console .selected-year-info h4,
+.admin-console .setup-info h3,
+.admin-console .year-selection label {
+  color: var(--admin-text);
+  text-shadow: none;
+}
+
+.admin-console .schedule-setup-header p,
+.admin-console .generation-progress p {
+  color: var(--admin-muted);
+}
+
+.admin-console .decade-button,
+.admin-console .year-button,
+.admin-console .year-selector {
+  color: var(--admin-text);
+  background: var(--admin-surface-soft);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 10px;
+}
+
+.admin-console .decade-button:hover:not(:disabled),
+.admin-console .year-button:hover:not(:disabled),
+.admin-console .year-selector:hover:not(:disabled) {
+  color: var(--admin-text);
+  background: #202b39;
+  border-color: var(--admin-accent);
+  box-shadow: none;
+}
+
+.admin-console .decade-button.current-decade,
+.admin-console .year-button.selected {
+  color: #b8f3e7;
+  background: var(--admin-accent-soft);
+  border-color: rgba(76, 201, 176, 0.55);
+  box-shadow: none;
+}
+
+.admin-console .year-button.current-year {
+  border-color: rgba(246, 199, 106, 0.6);
+}
+
+.admin-console .decade-years {
+  color: var(--admin-muted);
+}
+
+.admin-console .selected-year-info h4,
+.admin-console .setup-info {
+  background: var(--admin-surface-soft);
+  border-color: var(--admin-border);
+}
+
+.admin-console .setup-info li {
+  color: #c8d2df;
+}
+
+.admin-console .progress-bar {
+  background: #0d131c;
+}
+
+.admin-console .progress-fill {
+  background: linear-gradient(90deg, var(--admin-accent-strong), #7ce1cd, var(--admin-accent-strong));
+}
+
+/* Schedule grid */
+.admin-console .admin-day-grid-wrap {
+  border-color: var(--admin-border);
+  background: var(--admin-surface-soft);
+  scrollbar-color: #354154 transparent;
+  scrollbar-width: thin;
+}
+
+.admin-console .admin-grid-channel-head,
+.admin-console .admin-grid-time-head,
+.admin-console .admin-grid-channel-cell {
+  background: #19212d;
+  border-color: var(--admin-border);
+}
+
+.admin-console .admin-grid-channel-number {
+  color: var(--admin-accent);
+}
+
+.admin-console .admin-grid-slot.show {
+  color: #a3eadb;
+  background: rgba(76, 201, 176, 0.11);
+}
+
+.admin-console .admin-grid-slot.filler {
+  color: #a8c8ef;
+  background: rgba(91, 141, 201, 0.12);
+}
+
+.admin-console .admin-status-badge.ok {
+  color: #a3eadb;
+  background: var(--admin-accent-soft);
+  border-color: rgba(76, 201, 176, 0.35);
+}
+
+/* Responsive desktop window and narrow layouts */
+@media (max-width: 980px) {
+  .admin-console .admin-titlebar-date {
+    display: none;
+  }
+
+  .admin-console .admin-sidebar {
+    width: 78px;
+    align-items: stretch;
+  }
+
+  .admin-console .admin-sidebar-label,
+  .admin-console .admin-nav-label {
+    display: none;
+  }
+
+  .admin-console .admin-nav-button {
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .admin-console .admin-nav-icon {
+    width: 26px;
+  }
+
+  .admin-console .show-list-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-console .admin-titlebar {
+    min-height: 52px;
+    padding-inline: 14px;
+    gap: 10px;
+  }
+
+  .admin-console .admin-brand-sub,
+  .admin-console .admin-brand-separator,
+  .admin-console .admin-titlebar-breadcrumb {
+    display: none;
+  }
+
+  .admin-console .admin-back-button {
+    margin-left: auto;
+  }
+
+  .admin-console .admin-body {
+    flex-direction: column;
+  }
+
+  .admin-console .admin-sidebar {
+    order: 2;
+    width: 100%;
+    height: 64px;
+    padding: 8px;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    border-top: 1px solid var(--admin-border);
+    border-right: 0;
+  }
+
+  .admin-console .admin-sidebar-spacer,
+  .admin-console .admin-sidebar > .admin-nav-button:last-child {
+    display: none;
+  }
+
+  .admin-console .admin-sidebar .admin-nav-button {
+    flex: 1 0 54px;
+    min-height: 46px;
+  }
+
+  .admin-console .admin-content {
+    order: 1;
+    padding: 20px 16px 32px;
+  }
+
+  .admin-console .admin-content-header {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+  }
+
+  .admin-console .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-console .admin-stat {
+    min-height: 116px;
+  }
+
+  .admin-console .channel-item,
+  .admin-console .show-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-console .channel-actions,
+  .admin-console .show-actions {
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--admin-border);
+  }
+
+  .admin-console .show-list-details {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-console .folder-select,
+  .admin-console .input-with-button {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-console .episode-item {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-console .admin-summary-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .admin-console .admin-summary-key {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-console .admin-brand-name {
+    font-size: 13px;
+  }
+
+  .admin-console .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-console .admin-panel,
+  .admin-console .channel-form,
+  .admin-console .show-form,
+  .admin-console .import-view,
+  .admin-console .schedule-setup-container {
+    padding: 17px;
+  }
+
+  .admin-console .config-actions,
+  .admin-console .form-actions,
+  .admin-console .admin-actions,
+  .admin-console .setup-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-console .config-actions button,
+  .admin-console .form-actions button,
+  .admin-console .admin-actions button,
+  .admin-console .setup-actions button {
+    width: 100%;
+  }
+
+  .admin-console .episodes-grid {
+    grid-template-columns: 46px minmax(130px, 1fr) 72px;
+    overflow-x: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-console *,
+  .admin-console *::before,
+  .admin-console *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
