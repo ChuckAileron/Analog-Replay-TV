@@ -479,112 +479,18 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     };
   }, [isTranscoding]);
 
-  // Renderizar estado de carga
-  if (isLoading) {
-    const is90s = style === 'retro-90s';
-    
-    return (
-      <div 
-        className={`tv-show-player loading ${className} ${is90s ? 'loading-90s' : 'loading-00s'}`}
-      >
-        {is90s ? (
-          // Estilo 90s - SPINNER LIMPIO SIN CUADROS
-          <>
-            <div className="loading-90s-text">
-              {isTranscoding ? '🔄 CONVIRTIENDO VIDEO...' : '🔄 CARGANDO...'}
-            </div>
-            
-            {show && (
-              <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '15px', color: '#00ff00' }}>
-                {show.name} - Temporada {seasonNumber}
-              </div>
-            )}
-            
-            {/* SPINNER ESTILO 90s */}
-            <div className="loading-spinner-90s"></div>
-            
-            {isTranscoding && (
-              <div className="transcoding-progress-90s">
-                {transcodingProgress || 'Convirtiendo formato de video...'}
-              </div>
-            )}
-          </>
-        ) : (
-          // Estilo 2000s
-          <>
-            <div className="loading-00s-text">
-              {isTranscoding ? '🔄 Convirtiendo video...' : '🔄 Cargando...'}
-            </div>
-            
-            {show && (
-              <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '15px', color: '#00ccff' }}>
-                {show.name} - Temporada {seasonNumber}
-              </div>
-            )}
-            
-            <div className="loading-spinner-00s"></div>
-            
-            {isTranscoding && (
-              <div className="transcoding-progress-00s">
-                {transcodingProgress || 'Procesando formato de video...'}
-              </div>
-            )}
-            
-            {!isTranscoding && (
-              <div className="progress-bar-container">
-                <div className="progress-bar-00s"></div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
+  // La vista de TV mantiene el `#video-container` SIEMPRE montado: es el destino
+  // donde VideoStreamManager inyecta el <video> desde el proceso principal vía
+  // `executeJavaScript`. Los estados de carga y error se renderizan como overlays
+  // absolutos ENCIMA del contenedor (nunca reemplazándolo), de modo que el script
+  // inyectado siempre encuentre `#video-container` en cuanto arranca.
+  //
+  // ANTES: durante la carga/error el contenedor se desmontaba y el script del
+  // proceso principal (que espera `#video-container` con un poll de ~1s) fallaba:
+  // al encadenar episodios multi-parte (ej. Bob Esponja "20a" -> "20b") el nodo se
+  // volvía a montar cuando el poll ya había terminado y la pantalla quedaba en negro.
+  const is90s = style === 'retro-90s';
 
-  // Renderizar estado de error
-  if (error) {
-    return (
-      <div 
-        className={`tv-show-player error ${className}`}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#1a0000',
-          color: '#ff4444',
-          fontFamily: style === 'retro-90s' ? 'monospace' : 'sans-serif',
-          padding: '20px',
-          textAlign: 'center'
-        }}
-      >
-        <div style={{ fontSize: '24px', marginBottom: '16px' }}>
-          {style === 'retro-90s' ? '❌ ERROR' : '⚠️ Error'}
-        </div>
-        <div style={{ marginBottom: '16px' }}>
-          {error}
-        </div>
-        <button
-          onClick={playShow}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: style === 'retro-90s' ? '#333' : 'rgba(255,255,255,0.1)',
-            border: style === 'retro-90s' ? '1px solid #666' : '1px solid rgba(255,255,255,0.3)',
-            color: 'white',
-            cursor: 'pointer',
-            fontFamily: style === 'retro-90s' ? 'monospace' : 'inherit',
-            fontSize: '12px'
-          }}
-        >
-          {style === 'retro-90s' ? '[REINTENTAR]' : 'Reintentar'}
-        </button>
-      </div>
-    );
-  }
-
-  // Renderizar contenedor de video (el VideoStreamManager maneja la renderización del video)
   return (
     <div 
       className={`tv-show-player ${className}`}
@@ -604,15 +510,125 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: style === 'retro-90s' ? '#00ff00' : '#00ccff',
-          fontFamily: style === 'retro-90s' ? 'monospace' : 'sans-serif',
-          textShadow: style === 'retro-90s' ? '0 0 10px #00ff00' : '0 0 8px rgba(0, 204, 255, 0.6)'
+          color: is90s ? '#00ff00' : '#00ccff',
+          fontFamily: is90s ? 'monospace' : 'sans-serif',
+          textShadow: is90s ? '0 0 10px #00ff00' : '0 0 8px rgba(0, 204, 255, 0.6)'
         }}
       >
         <p className={playbackStarting ? 'starting-playback' : ''}>
-          {style === 'retro-90s' ? '📺 INICIANDO REPRODUCCION...' : '📺 Iniciando reproducción...'}
+          {is90s ? '📺 INICIANDO REPRODUCCION...' : '📺 Iniciando reproducción...'}
         </p>
       </div>
+
+      {/* Overlay de carga (encima del video-container, sin desmontarlo) */}
+      {isLoading && (
+        <div
+          className={is90s ? 'loading-90s' : 'loading-00s'}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10
+          }}
+        >
+          {is90s ? (
+            // Estilo 90s - SPINNER LIMPIO SIN CUADROS
+            <>
+              <div className="loading-90s-text">
+                {isTranscoding ? '🔄 CONVIRTIENDO VIDEO...' : '🔄 CARGANDO...'}
+              </div>
+              
+              {show && (
+                <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '15px', color: '#00ff00' }}>
+                  {show.name} - Temporada {seasonNumber}
+                </div>
+              )}
+              
+              {/* SPINNER ESTILO 90s */}
+              <div className="loading-spinner-90s"></div>
+              
+              {isTranscoding && (
+                <div className="transcoding-progress-90s">
+                  {transcodingProgress || 'Convirtiendo formato de video...'}
+                </div>
+              )}
+            </>
+          ) : (
+            // Estilo 2000s
+            <>
+              <div className="loading-00s-text">
+                {isTranscoding ? '🔄 Convirtiendo video...' : '🔄 Cargando...'}
+              </div>
+              
+              {show && (
+                <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '15px', color: '#00ccff' }}>
+                  {show.name} - Temporada {seasonNumber}
+                </div>
+              )}
+              
+              <div className="loading-spinner-00s"></div>
+              
+              {isTranscoding && (
+                <div className="transcoding-progress-00s">
+                  {transcodingProgress || 'Procesando formato de video...'}
+                </div>
+              )}
+              
+              {!isTranscoding && (
+                <div className="progress-bar-container">
+                  <div className="progress-bar-00s"></div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Overlay de error (encima del video-container, sin desmontarlo) */}
+      {!isLoading && error && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#1a0000',
+            color: '#ff4444',
+            fontFamily: is90s ? 'monospace' : 'sans-serif',
+            padding: '20px',
+            textAlign: 'center'
+          }}
+        >
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>
+            {is90s ? '❌ ERROR' : '⚠️ Error'}
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            {error}
+          </div>
+          <button
+            onClick={playShow}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: is90s ? '#333' : 'rgba(255,255,255,0.1)',
+              border: is90s ? '1px solid #666' : '1px solid rgba(255,255,255,0.3)',
+              color: 'white',
+              cursor: 'pointer',
+              fontFamily: is90s ? 'monospace' : 'inherit',
+              fontSize: '12px'
+            }}
+          >
+            {is90s ? '[REINTENTAR]' : 'Reintentar'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

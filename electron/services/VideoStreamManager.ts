@@ -252,37 +252,55 @@ export class VideoStreamManager {
             window.VSMPlayer = {};
           }
           
-          // Función para encontrar el container con retry
+          // Función para encontrar el container con retry.
+          // El TVShowPlayer mantiene SIEMPRE montado #video-container (los estados
+          // de carga/error son overlays encima), así que normalmente se resuelve en
+          // el primer intento. Los fallbacks protegen contra cualquier escenario
+          // donde el nodo aún no exista (renderizer ocupado, otro host distinto).
           const findVideoContainer = () => {
             return new Promise((resolve, reject) => {
               let attempts = 0;
-              const maxAttempts = 10;
+              const maxAttempts = 60; // ~6s de margen, muy por encima de cualquier re-render
               
               const tryFind = () => {
                 attempts++;
-                const videoContainer = document.getElementById('video-container');
                 
+                // 1ª opción: container estándar del TVShowPlayer
+                const videoContainer = document.getElementById('video-container');
                 if (videoContainer) {
                   console.log('📦 Container encontrado en intento:', attempts);
                   resolve(videoContainer);
                   return;
                 }
                 
-                if (attempts >= maxAttempts) {
-                  // Como último recurso, buscar cualquier elemento que pueda servir como container
+                // 2ª opción: ejecutar el fallback SOLO si la primera opción no
+                // apareció en los primeros intentos (evita resolver con un nodo
+                // distinto al contenedor real si el renderer tarda un instante).
+                if (attempts >= 3) {
                   const tvPlayer = document.querySelector('.tv-show-player');
                   if (tvPlayer) {
-                    console.log('📦 Usando tv-show-player como container fallback');
-                    tvPlayer.id = 'video-container-fallback';
+                    console.log('📦 Usando tv-show-player como container fallback (intento:', attempts + ')');
+                    if (!tvPlayer.id) tvPlayer.id = 'video-container-fallback';
                     resolve(tvPlayer);
                     return;
                   }
-                  
-                  reject(new Error(\`Container no encontrado después de \${maxAttempts} intentos\`));
+                }
+                
+                if (attempts >= maxAttempts) {
+                  // 3ª opción (último recurso): crear un contenedor válido para no
+                  // dejar la pantalla en negro en ningún caso.
+                  console.log('📦 Creando container de emergencia en body (intento:', attempts + ')');
+                  const fallbackContainer = document.createElement('div');
+                  fallbackContainer.id = 'video-container';
+                  fallbackContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;background:#000;';
+                  (document.body || document.documentElement).appendChild(fallbackContainer);
+                  resolve(fallbackContainer);
                   return;
                 }
                 
-                console.log(\`🔍 Intento \${attempts}/\${maxAttempts} - Buscando container...\`);
+                if (attempts <= 3 || attempts % 5 === 0) {
+                  console.log(\`🔍 Intento \${attempts}/\${maxAttempts} - Buscando container...\`);
+                }
                 setTimeout(tryFind, 100); // Esperar 100ms antes del siguiente intento
               };
               

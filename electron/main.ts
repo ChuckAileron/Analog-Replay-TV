@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, protocol, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, protocol, shell, Menu } from 'electron';
 import path from 'path';
 import os from 'os';
 import { promises as fs } from 'fs';
@@ -230,6 +230,17 @@ app.whenReady().then(async () => {
 });
 
 function createWindow(): BrowserWindow {
+  // Modo "ventana de escritorio": al ejecutar el build de producción con
+  // DESKTOP_WINDOW=1 se usa un marco nativo (la ventana se puede arrastrar y
+  // redimensionar como cualquier otra del escritorio) y NO se abre DevTools.
+  // En desarrollo (VITE_DEV_SERVER_URL) se conserva el comportamiento actual:
+  // ventana sin marco y DevTools abierto para debugging. OPEN_DEVTOOLS=1 fuerza
+  // el inspector también en modo escritorio (útil para depurar el build final).
+  const isDesktopWindow = process.env.DESKTOP_WINDOW === '1' || process.env.DESKTOP_WINDOW === 'true';
+  const shouldOpenDevTools = !!process.env.VITE_DEV_SERVER_URL ||
+    process.env.OPEN_DEVTOOLS === '1' ||
+    process.env.OPEN_DEVTOOLS === 'true';
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -238,6 +249,7 @@ function createWindow(): BrowserWindow {
     minHeight: 600,
     center: true,
     show: false, // Don't show until ready-to-show
+    title: isDesktopWindow ? 'AnalogReplayTV' : undefined,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -272,11 +284,19 @@ function createWindow(): BrowserWindow {
         '--disable-backgrounding-occluded-windows'
       ]
     },
-    frame: false, // Removes the default window frame
+    frame: isDesktopWindow, // Sin marco en dev; marco nativo (movible) en modo escritorio
+    autoHideMenuBar: isDesktopWindow, // Oculta la barra de menú (File/Edit/View...) en modo escritorio
     backgroundColor: '#000000', // Black background for TV effect
     resizable: true,
     fullscreenable: true,
   });
+
+  // En modo escritorio se elimina el menú de la aplicación por completo (la barra
+  // "File/Edit/View..." no aparece ni con Alt); solo queda la barra de título
+  // nativa para poder arrastrar la ventana como cualquier otra del escritorio.
+  if (isDesktopWindow) {
+    Menu.setApplicationMenu(null);
+  }
 
   // Set CSP
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -336,9 +356,12 @@ function createWindow(): BrowserWindow {
 
   console.log('🌐 [Main] Loading from:', useTestFile ? 'VideoStreamManager Test' : useLocalFiles ? 'Local files' : 'Dev server');
 
-  // Open the DevTools in development mode (always for debugging)
-  console.log('🔧 [Main] Opening DevTools for debugging...');
-  mainWindow.webContents.openDevTools();
+  // Open the DevTools only in desarrollo (o si OPEN_DEVTOOLS=1). En modo
+  // escritorio/producción NO se abren para no molestar al usuario final.
+  if (shouldOpenDevTools) {
+    console.log('🔧 [Main] Opening DevTools for debugging...');
+    mainWindow.webContents.openDevTools();
+  }
 
   // Show window when ready to prevent layout issues
   mainWindow.once('ready-to-show', () => {

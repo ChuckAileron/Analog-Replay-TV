@@ -65,7 +65,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - Fallback y adaptaciones según el formato del archivo.
 - Manejo de contenido con transiciones y visualización de estado de reproducción.
 - Reanudación de episodios en el punto exacto (seek time) que corresponde según la hora real y la programación generada.
-- Reproducción en secuencia de episodios multiparte: cuando el episodio programado pertenece a un bloque con varias partes ("01a/01b/01c"), el reproductor arma automáticamente la lista de todas sus partes, inicia en la parte y desplazamiento correctos según el seek time acumulado, y encadena cada parte al terminar la anterior (listener de fin de reproducción sobre el propio elemento de video).
+- Reproducción en secuencia de episodios multiparte: cuando el episodio programado pertenece a un bloque con varias partes ("01a/01b/01c"), el reproductor arma automáticamente la lista de todas sus partes, inicia en la parte y desplazamiento correctos según el seek time acumulado, y encadena cada parte al terminar la anterior (listener de fin de reproducción sobre el propio elemento de video). El contenedor del video permanece **siempre montado** durante las transiciones (los estados de carga/error se muestran como overlays superpuestos), de modo que el script del proceso principal siempre encuentra el destino del `<video>` y el encadenamiento entre partes nunca deja la pantalla en negro.
 - Resolución de episodios tolerante: prueba múltiples nombres de archivo candidatos y múltiples carpetas de contenido (incluyendo subcarpetas de temporada) antes de reportar un episodio como no disponible; si el episodio programado no existe, reproduce otro episodio disponible del mismo show como respaldo.
 
 ### 3. Conversión automática de video con FFmpeg
@@ -311,6 +311,16 @@ npm run electron:dev
 Ejecuta la app en modo desarrollo con Electron.
 
 ```bash
+npm run desktop
+```
+Compila y lanza el **build de producción en una ventana de escritorio**: se abre en una ventana con marco nativo (se puede mover y redimensionar como cualquier ventana del escritorio) y **sin el inspector DevTools**. Ideal para usar/verificar la app como un producto final sin el entorno de desarrollo.
+
+```bash
+npm run desktop:debug
+```
+Igual que `npm run desktop`, pero abriendo DevTools sobre el build final, útil para depurar el renderizado de producción.
+
+```bash
 npm run electron:build
 ```
 Genera el paquete final de la aplicación de escritorio.
@@ -340,7 +350,22 @@ O bien, para arrancar todo integrado en Electron:
 npm run electron:dev
 ```
 
-Esto permite trabajar con la UI y con el proceso principal de la aplicación en un entorno similar al final de producción.
+Esto permite trabajar con la UI y con el proceso principal de la aplicación en un entorno similar al final de producción. En este modo (presencia de `VITE_DEV_SERVER_URL`) la ventana se abre **sin marco** (estética de TV) y el inspector DevTools se abre automáticamente para el trabajo de depuración.
+
+---
+
+## Modo escritorio (ventana nativa)
+
+```bash
+npm run desktop
+```
+
+Este modo está pensado para levantar la aplicación como un producto terminado dentro del escritorio:
+
+- Carga el **build de producción** (React compilado en `dist/`), no el servidor de Vite.
+- La ventana usa un **marco nativo** (`frame: true`) con su barra de título, por lo que se puede **arrastrar, mover y redimensionar** como cualquier ventana del sistema operativo.
+- **No se abre DevTools**, evitando el inspector de desarrollo en el uso normal.
+- Se activa con la variable de entorno `DESKTOP_WINDOW=1`; si además se define `OPEN_DEVTOOLS=1` se fuerza la apertura del inspector sobre el build final (lo que hace exactamente el script `npm run desktop:debug`).
 
 ---
 

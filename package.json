@@ -1,7 +1,7 @@
 {
   "name": "analog-replay-tv",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "npm run electron:dev",
@@ -12,6 +12,8 @@
     "electron:dev": "npm run compile:electron && concurrently -k \"npm run dev:vite\" \"wait-on http://localhost:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 DEBUG=electron:* electron dist-electron/main.js\"",
     "electron:build": "npm run compile:electron && npm run build && electron-builder",
     "electron:start": "npm run compile:electron && cross-env DEBUG=electron:* electron dist-electron/main.js",
+    "desktop": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 electron dist-electron/main.js",
+    "desktop:debug": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 OPEN_DEVTOOLS=1 electron dist-electron/main.js",
     "compile:electron": "tsc -p electron/tsconfig.json",
     "install-ffmpeg": "pwsh -ExecutionPolicy Bypass -File scripts/install-ffmpeg.ps1",
     "check-ffmpeg": "ffmpeg -version || echo 'FFmpeg no está instalado. Ejecuta: npm run install-ffmpeg'",
