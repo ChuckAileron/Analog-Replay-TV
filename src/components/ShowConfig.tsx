@@ -419,27 +419,26 @@ function ShowConfig() {
       <div className="form-group">
         <label>Repetición de episodios:</label>
         <div className="airing-mode-section">
-          <label className="checkbox-label airing-mode-option">
-            <input
-              type="radio"
-              name="episodeAiringMode"
-              checked={(formData.episodeAiringMode || 'daily-repeat') === 'daily-repeat'}
-              onChange={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'daily-repeat' }))}
-            />
-            <span>Un episodio por día</span>
-            <span className="checkbox-hint">(se repite todo el día, cambia al día siguiente)</span>
-          </label>
-          <label className="checkbox-label airing-mode-option">
-            <input
-              type="radio"
-              name="episodeAiringMode"
-              checked={formData.episodeAiringMode === 'once-per-day'}
-              onChange={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'once-per-day' }))}
-            />
-            <span>Emitir episodio solo una vez al día</span>
-            <span className="checkbox-hint">(no se repite, cambia al día siguiente)</span>
-          </label>
+          <button
+            type="button"
+            className={`config-button airing-mode-button ${(formData.episodeAiringMode || 'daily-repeat') === 'daily-repeat' ? 'active' : ''}`}
+            onClick={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'daily-repeat' }))}
+          >
+            Un episodio por día
+          </button>
+          <button
+            type="button"
+            className={`config-button airing-mode-button ${formData.episodeAiringMode === 'once-per-day' ? 'active' : ''}`}
+            onClick={() => setFormData(prev => ({ ...prev, episodeAiringMode: 'once-per-day' }))}
+          >
+            Emitir episodio solo una vez al día
+          </button>
         </div>
+        <p className="airing-mode-hint">
+          {(formData.episodeAiringMode || 'daily-repeat') === 'daily-repeat'
+            ? 'El mismo episodio se repite todo el día; cambia al siguiente episodio al día siguiente.'
+            : 'El episodio se emite una sola vez ese día; cambia al siguiente episodio al día siguiente.'}
+        </p>
       </div>
 
       {/* Temporadas */}

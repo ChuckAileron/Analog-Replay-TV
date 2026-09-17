@@ -345,8 +345,17 @@ function createWindow(): BrowserWindow {
 // initialization and is ready to create browser windows.
 // Note: Already handled in the app.whenReady() above
 
-// Lista de extensiones de video soportadas
-const VIDEO_EXTENSIONS = ['.mp4', '.avi', '.mkv', '.mov', '.wmv'];
+// Lista de extensiones de video soportadas (soporte extendido: los formatos
+// que no son reproducibles nativamente por Chromium se convierten
+// automáticamente vía FFmpeg antes de reproducirse, ver VideoStreamManager.ts)
+const VIDEO_EXTENSIONS = [
+  '.webm', '.mkv', '.flv', '.vob', '.ogv', '.ogg', '.rrc', '.gifv', '.mng',
+  '.mov', '.avi', '.qt', '.wmv', '.yuv', '.rm', '.asf', '.amv', '.mp4',
+  '.m4p', '.m4v', '.mpg', '.mp2', '.mpeg', '.mpe', '.mpv', '.svi', '.3gp',
+  '.3g2', '.mxf', '.roq', '.nsv', '.f4v', '.f4p', '.f4a', '.f4b', '.mod'
+];
+// Mismas extensiones sin el punto, para usar en filtros de diálogos de selección de archivo
+const VIDEO_EXTENSIONS_NO_DOT = VIDEO_EXTENSIONS.map(ext => ext.slice(1));
 
 async function getVideoFiles(folderPath: string) {
   try {
@@ -760,7 +769,7 @@ ipcMain.handle('select-video-file', async () => {
       filters: [
         { 
           name: 'Video Files', 
-          extensions: ['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp', 'ogv'] 
+          extensions: VIDEO_EXTENSIONS_NO_DOT
         },
         { name: 'All Files', extensions: ['*'] }
       ],
@@ -1251,7 +1260,7 @@ ipcMain.handle('show-open-dialog', async () => {
       filters: [
         { 
           name: 'Video Files', 
-          extensions: ['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp', 'ogv'] 
+          extensions: VIDEO_EXTENSIONS_NO_DOT
         },
         { name: 'All Files', extensions: ['*'] }
       ],

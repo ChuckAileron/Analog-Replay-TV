@@ -138,9 +138,11 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       // tiene sentido aplicar el seekTime calculado para el episodio original.
       const effectiveSeekTime = usedFallback ? 0 : seekTimeSeconds;
 
-      // Verificar si es un formato que necesita transcoding
+      // Verificar si es un formato que necesita transcoding (todo lo que no
+      // sea nativamente reproducible por Chromium: mp4/webm/ogg/ogv)
       const extension = fullPath.split('.').pop()?.toLowerCase();
-      if (['mkv', 'avi', 'mov', 'mpg', 'mpeg', 'wmv'].includes(extension || '')) {
+      const NATIVE_EXTENSIONS = ['mp4', 'webm', 'ogg', 'ogv'];
+      if (extension && !NATIVE_EXTENSIONS.includes(extension)) {
         setIsTranscoding(true);
         setTranscodingProgress('Iniciando conversión...');
       }

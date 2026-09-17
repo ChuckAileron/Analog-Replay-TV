@@ -277,58 +277,33 @@
   color: var(--channel-text-color);
 }
 
-/* Modo de repetición diaria de episodios (opciones excluyentes) */
+/* Modo de repetición diaria de episodios (opciones excluyentes).
+   Reutiliza el estilo .config-button (el mismo usado en el resto del
+   formulario) para mantener consistencia visual, en vez de inputs nativos
+   tipo radio/checkbox que entran en conflicto con reglas globales de
+   formularios (.form-group input) y terminan deformados. */
 .airing-mode-section {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
 }
 
-.form-group .airing-mode-option,
-.airing-mode-option {
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
-  gap: 8px;
-  width: auto;
-  max-width: none;
-  margin: 0;
-  text-align: left;
-  padding: 6px 10px;
-  border: 1px solid rgba(100, 150, 255, 0.25);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.15);
+.airing-mode-button {
+  flex: 1 1 220px;
 }
 
-.airing-mode-option input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  cursor: pointer;
-  accent-color: #88aaff;
+.airing-mode-button.active {
+  background-color: #444;
+  border-color: var(--channel-text-color);
+  box-shadow: 0 0 10px var(--channel-text-color);
 }
 
-.airing-mode-option span:first-of-type {
-  font-size: 0.9em;
-  color: #cce0ff;
-}
-
-.airing-mode-option .checkbox-hint {
-  display: inline;
-  margin-left: 4px;
-}
-
-.style-90s .airing-mode-option {
-  border-color: rgba(51, 255, 51, 0.25);
-}
-
-.style-90s .airing-mode-option input[type="radio"] {
-  accent-color: #33ff33;
-}
-
-.style-90s .airing-mode-option span:first-of-type {
-  color: var(--channel-text-color);
+.airing-mode-hint {
+  margin: 8px 0 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+  line-height: 1.4;
 }
 
 /* Años de transmisión en el listado */

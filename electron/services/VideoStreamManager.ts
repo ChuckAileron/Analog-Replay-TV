@@ -79,9 +79,14 @@ export class VideoStreamManager {
     '.mp4', '.webm', '.ogg', '.ogv'
   ]);
 
-  // Formatos que requieren transcoding pero funcionan bien
+  // Formatos que requieren transcoding pero funcionan bien.
+  // Incluye soporte extendido para formatos legacy/exóticos (todos se
+  // convierten automáticamente vía FFmpeg antes de reproducirse).
   private readonly TRANSCODE_FORMATS = new Set([
-    '.mkv', '.avi', '.mov', '.m4v', '.3gp'
+    '.mkv', '.avi', '.mov', '.m4v', '.3gp',
+    '.rrc', '.gifv', '.mng', '.qt', '.yuv', '.rm', '.amv', '.m4p', '.mp2',
+    '.mpe', '.mpv', '.svi', '.3g2', '.mxf', '.roq', '.nsv',
+    '.f4v', '.f4p', '.f4a', '.f4b', '.mod'
   ]);
 
   // Formatos que solo funcionan con HTTP streaming (problemáticos)
