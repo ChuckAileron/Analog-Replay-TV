@@ -12,12 +12,12 @@
   background: var(--button-bg);
   color: var(--button-text);
   border: 1px solid var(--menu-border);
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   font-family: Arial, sans-serif;
-  font-size: 14px;
+  font-size: var(--button-font-size);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   min-width: 80px;
   text-align: center;
 }
@@ -44,12 +44,12 @@
   background: linear-gradient(to bottom, var(--button-bg), var(--button-hover));
   color: var(--button-text);
   border: 1px solid var(--menu-border);
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
+  font-size: var(--button-font-size);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 

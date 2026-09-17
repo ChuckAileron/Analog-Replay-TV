@@ -8,6 +8,7 @@ interface MenuBaseProps {
   onAspectRatioToggle: () => void;
   onStyleToggle: () => void;
   onCRTFilterToggle?: () => void;
+  onResetSchedule?: () => void;
   isMenuOpen: boolean;
   menuClassName: string;
   menuHeaderClassName?: string;
@@ -22,6 +23,7 @@ export const MenuBase: React.FC<MenuBaseProps> = ({
   onAspectRatioToggle,
   onStyleToggle,
   onCRTFilterToggle,
+  onResetSchedule,
   isMenuOpen,
   menuClassName,
   menuHeaderClassName = 'menu-header',
@@ -72,6 +74,14 @@ export const MenuBase: React.FC<MenuBaseProps> = ({
           {settings.tvStyle === '90s' && onCRTFilterToggle && (
             <button onClick={onCRTFilterToggle}>
               CRT FILTER: {settings.crtFilter ? 'ON' : 'OFF'}
+            </button>
+          )}
+          {onResetSchedule && (
+            <button
+              className="reset-schedule-button"
+              onClick={() => onResetSchedule()}
+            >
+              {settings.tvStyle === '90s' ? 'RESETEAR PROGRAMACIÓN' : 'Resetear Programación'}
             </button>
           )}
         </div>

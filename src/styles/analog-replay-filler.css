@@ -1,0 +1,176 @@
+/* Pantalla de relleno "AnalogReplayTV" (identificación de estación) */
+.analog-filler {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.analog-filler-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+}
+
+.analog-filler-logo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35em;
+}
+
+.analog-filler-word {
+  display: inline-block;
+}
+
+/* ===== Estilo 90s: CRT verde fosforescente ===== */
+.analog-filler-90s {
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.analog-filler-90s .analog-filler-word {
+  font-size: clamp(28px, 6vw, 56px);
+  font-weight: bold;
+  color: #33ff33;
+  text-shadow:
+    0 0 8px #33ff33,
+    0 0 16px #33ff33,
+    0 0 32px rgba(51, 255, 51, 0.6);
+  animation: analogFlicker90s 2.4s infinite ease-in-out;
+}
+
+.analog-filler-90s .analog-filler-word-1 { animation-delay: 0s; }
+.analog-filler-90s .analog-filler-word-2 { animation-delay: 0.15s; }
+.analog-filler-90s .analog-filler-word-3 { animation-delay: 0.3s; }
+
+.analog-filler-90s .analog-filler-subtitle {
+  font-size: clamp(12px, 2vw, 16px);
+  color: rgba(51, 255, 51, 0.8);
+  letter-spacing: 3px;
+  animation: analogBlink90s 1.2s infinite steps(1);
+}
+
+@keyframes analogFlicker90s {
+  0%, 92%, 100% { opacity: 1; }
+  93% { opacity: 0.4; }
+  94% { opacity: 1; }
+  96% { opacity: 0.6; }
+  97% { opacity: 1; }
+}
+
+@keyframes analogBlink90s {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+
+.analog-filler-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  animation: analogScanlineDrift 6s linear infinite;
+}
+
+@keyframes analogScanlineDrift {
+  from { background-position: 0 0; }
+  to { background-position: 0 100px; }
+}
+
+.analog-filler-90s .analog-filler-bars {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  height: 14px;
+}
+
+.analog-filler-90s .analog-filler-bars span {
+  flex: 1;
+  opacity: 0.7;
+}
+.analog-filler-90s .analog-filler-bars span:nth-child(1) { background: #ffffff; }
+.analog-filler-90s .analog-filler-bars span:nth-child(2) { background: #ffff33; }
+.analog-filler-90s .analog-filler-bars span:nth-child(3) { background: #33ffff; }
+.analog-filler-90s .analog-filler-bars span:nth-child(4) { background: #33ff33; }
+.analog-filler-90s .analog-filler-bars span:nth-child(5) { background: #ff33ff; }
+.analog-filler-90s .analog-filler-bars span:nth-child(6) { background: #ff3333; }
+.analog-filler-90s .analog-filler-bars span:nth-child(7) { background: #3333ff; }
+
+/* ===== Estilo 2000s: gradiente azul con brillo suave ===== */
+.analog-filler-00s {
+  background: linear-gradient(135deg, #001428, #000c1a 60%, #002244);
+  font-family: Arial, sans-serif;
+}
+
+.analog-filler-00s .analog-filler-word {
+  font-size: clamp(26px, 5.5vw, 52px);
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba(0, 204, 255, 0.9),
+    0 0 24px rgba(0, 128, 255, 0.6);
+  animation: analogPulse00s 3s infinite ease-in-out;
+}
+
+.analog-filler-00s .analog-filler-word-2 {
+  color: #00ccff;
+  animation-delay: 0.3s;
+}
+
+.analog-filler-00s .analog-filler-word-3 {
+  color: #66e0ff;
+  animation-delay: 0.6s;
+}
+
+.analog-filler-00s .analog-filler-subtitle {
+  font-size: clamp(12px, 2vw, 16px);
+  color: rgba(200, 230, 255, 0.85);
+  letter-spacing: 1.5px;
+  animation: analogFade00s 2.5s infinite ease-in-out;
+}
+
+@keyframes analogPulse00s {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes analogFade00s {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.analog-filler-00s .analog-filler-bars {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #003366, #0077cc, #00ccff, #0077cc, #003366);
+  background-size: 200% 100%;
+  animation: analogGradientShift00s 4s linear infinite;
+}
+
+.analog-filler-00s .analog-filler-bars span {
+  display: none;
+}
+
+@keyframes analogGradientShift00s {
+  from { background-position: 0% 0; }
+  to { background-position: 200% 0; }
+}

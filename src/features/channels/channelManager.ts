@@ -3,7 +3,7 @@ import type { TVShow } from '../../types/show.types';
 import { readConfig, writeConfig } from './channelsStorage';
 import { showManager } from '../shows/showManager';
 
-interface ChannelChangeResult {
+export interface ChannelChangeResult {
   channelNumber: number;
   channelInfo: Channel | null;
   show: TVShow | null;
@@ -27,6 +27,29 @@ async function saveToFile(channels: Channel[]): Promise<void> {
   };
 
   await writeConfig(config);
+}
+
+// Busca el show que corresponde a un canal (por uuid, id o nombre)
+async function findShowForChannel(channelInfo: Channel): Promise<TVShow | null> {
+  const shows = await showManager.getShows();
+
+  const matchingShow = shows.find((show: TVShow) =>
+    show.channel.some((ch: string) =>
+      ch === channelInfo.uuid ||
+      ch === String(channelInfo.id) ||
+      ch.toLowerCase() === channelInfo.name.toLowerCase()
+    )
+  );
+
+  if (!matchingShow) {
+    return null;
+  }
+
+  const hasEpisodes = matchingShow.seasons.some((season) =>
+    season.episodes && season.episodes.length > 0 && season.contentPath
+  );
+
+  return hasEpisodes ? matchingShow : null;
 }
 
 export const channelManager = {
@@ -210,6 +233,43 @@ export const channelManager = {
         channelInfo: null,
         show: null,
         error: `Error al cambiar canal: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+  },
+
+  // Salta directamente a un número de canal específico (usado por la guía de TV)
+  goToChannel: async (channelNumber: number): Promise<ChannelChangeResult> => {
+    try {
+      await Promise.all([
+        !isInitialized ? channelManager.initialize() : Promise.resolve(),
+        showManager.initialize()
+      ]);
+
+      const channelInfo = channelManager.getChannelInfo(channelNumber);
+      if (!channelInfo) {
+        return {
+          channelNumber,
+          channelInfo: null,
+          show: null,
+          error: `No se encontró información para el canal ${channelNumber}`
+        };
+      }
+
+      const show = await findShowForChannel(channelInfo);
+
+      return {
+        channelNumber,
+        channelInfo,
+        show,
+        error: undefined
+      };
+    } catch (error) {
+      console.error('❌ [channelManager] Error al ir al canal:', error);
+      return {
+        channelNumber,
+        channelInfo: null,
+        show: null,
+        error: `Error al ir al canal: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   },

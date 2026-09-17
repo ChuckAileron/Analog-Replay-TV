@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { TVShow } from '../types/show.types';
+import type { Channel } from '../types/tv.types';
 import { showManager } from '../features/shows/showManager';
+import { channelManager } from '../features/channels/channelManager';
+import { getEpisodeFileNames } from '../utils/episodeFiles';
 import '../styles/config-components.css';
 import '../styles/shows.css';
 import '../styles/loading-states.css';
@@ -19,29 +22,54 @@ const DEFAULT_SHOW: ShowFormData = {
       episode: 1,
       title: "",
       duration: "00:00"
-    }]
-  }]
+    }],
+    contentPath: '',
+    contentPaths: []
+  }],
+  airYears: [],
+  airUntilToDate: false
 };
 
 function ShowConfig() {
   const [shows, setShows] = useState<TVShow[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [currentView, setCurrentView] = useState<'list' | 'create' | 'edit' | 'import'>('list');
   const [formData, setFormData] = useState<ShowFormData>(DEFAULT_SHOW);
   const [channelInput, setChannelInput] = useState('');
+  const [airYearInput, setAirYearInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Resuelve un canal guardado en el show (puede ser id, uuid o nombre) al nombre visible del canal
+  const getChannelLabel = (ch: string): string => {
+    const match = channels.find((channel) =>
+      String(channel.id) === ch ||
+      channel.uuid === ch ||
+      channel.name.toLowerCase() === ch.toLowerCase()
+    );
+    return match ? match.name : ch;
+  };
+
   useEffect(() => {
     loadShows();
+    loadChannels();
   }, []);
+
+  const loadChannels = async () => {
+    try {
+      await channelManager.initialize();
+      const loadedChannels = await channelManager.getChannels();
+      setChannels(loadedChannels);
+    } catch (error) {
+      console.error('Error loading channels:', error);
+    }
+  };
 
   const loadShows = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Loading shows...');
       const loadedShows = await showManager.getShows();
-      console.log('Shows loaded:', loadedShows);
       setShows(loadedShows);
     } catch (error) {
       console.error('Error loading shows:', error);
@@ -64,8 +92,6 @@ function ShowConfig() {
       alert('Error al importar el show. Por favor, verifica el archivo e intenta de nuevo.');
     }
   };
-
-
 
   const handleDelete = async (show: TVShow) => {
     if (window.confirm(`¿Estás seguro de eliminar el show "${show.name}"?`)) {
@@ -90,7 +116,9 @@ function ShowConfig() {
             episode: 1,
             title: '',
             duration: '00:00'
-          }]
+          }],
+          contentPath: '',
+          contentPaths: []
         }
       ]
     }));
@@ -151,15 +179,87 @@ function ShowConfig() {
     });
   };
 
+  // Agrega una carpeta adicional a una temporada. Además de registrar la
+  // ruta, intenta emparejar cada episodio existente contra los archivos
+  // reales de la nueva carpeta (por nombre exacto, tolerante, o por código
+  // de episodio) y agrega el nombre de archivo encontrado a la lista de
+  // nombres candidatos (`fileNames`) de ese episodio, para que el reproductor
+  // pueda usarlo sin importar en cuál carpeta esté realmente el archivo.
+  const handleAddContentPath = async (seasonIndex: number) => {
+    try {
+      const folderPath = await window.electronAPI.selectFolder();
+      if (!folderPath) return;
+
+      const season = formData.seasons[seasonIndex];
+      const existingPaths = season.contentPaths || [];
+
+      // Evitar duplicados
+      if (season.contentPath === folderPath || existingPaths.includes(folderPath)) {
+        return;
+      }
+
+      // Intentar emparejar los episodios existentes con archivos de la nueva carpeta
+      let matches: Record<number, string | null> = {};
+      try {
+        const episodesPayload = season.episodes.map(ep => ({
+          episode: ep.episode,
+          fileNames: getEpisodeFileNames(ep)
+        }));
+        matches = await window.electronAPI.matchFolderEpisodes(folderPath, episodesPayload);
+      } catch (matchError) {
+        console.error('Error emparejando episodios con la nueva carpeta:', matchError);
+      }
+
+      setFormData(prev => {
+        const updatedSeasons = [...prev.seasons];
+        const currentSeason = updatedSeasons[seasonIndex];
+        const currentPaths = currentSeason.contentPaths || [];
+
+        const updatedEpisodes = currentSeason.episodes.map(ep => {
+          const matchedFileName = matches[ep.episode];
+          if (!matchedFileName) return ep;
+
+          const currentFileNames = getEpisodeFileNames(ep);
+          if (currentFileNames.includes(matchedFileName)) return ep;
+
+          return {
+            ...ep,
+            fileNames: [...currentFileNames, matchedFileName]
+          };
+        });
+
+        updatedSeasons[seasonIndex] = {
+          ...currentSeason,
+          contentPaths: [...currentPaths, folderPath],
+          episodes: updatedEpisodes
+        };
+
+        return { ...prev, seasons: updatedSeasons };
+      });
+    } catch (error) {
+      console.error('Error selecting additional folder:', error);
+    }
+  };
+
+  // Elimina una carpeta adicional de una temporada
+  const handleRemoveContentPath = (seasonIndex: number, pathIndex: number) => {
+    setFormData(prev => {
+      const updatedSeasons = [...prev.seasons];
+      const season = updatedSeasons[seasonIndex];
+      const newPaths = (season.contentPaths || []).filter((_, i) => i !== pathIndex);
+      updatedSeasons[seasonIndex] = { ...season, contentPaths: newPaths };
+      return { ...prev, seasons: updatedSeasons };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (currentView === 'edit') {
         await showManager.updateShow(formData.id, formData);
       } else {
-        // Al agregar un nuevo show, omitimos el id porque se generará automáticamente
         const { id: _unused, ...showData } = formData;
-        void _unused; // Silenciar warning
+        void _unused;
         await showManager.addShow(showData);
       }
       setCurrentView('list');
@@ -171,8 +271,29 @@ function ShowConfig() {
     }
   };
 
+  // Agrega un año de transmisión
+  const handleAddAirYear = () => {
+    const year = parseInt(airYearInput.trim());
+    if (!isNaN(year) && year >= 1900 && year <= 2100) {
+      const current = formData.airYears || [];
+      if (!current.includes(year)) {
+        setFormData(prev => ({ ...prev, airYears: [...current, year].sort((a, b) => a - b) }));
+      }
+      setAirYearInput('');
+    }
+  };
+
+  // Elimina un año de transmisión
+  const handleRemoveAirYear = (year: number) => {
+    setFormData(prev => ({
+      ...prev,
+      airYears: (prev.airYears || []).filter(y => y !== year)
+    }));
+  };
+
   const renderShowForm = () => (
     <form onSubmit={handleSubmit} className="show-form">
+      {/* Nombre */}
       <div className="form-group">
         <label htmlFor="name">Nombre del Show:</label>
         <input
@@ -185,8 +306,9 @@ function ShowConfig() {
         />
       </div>
 
+      {/* Canales */}
       <div className="form-group">
-        <label htmlFor="channel">Canales (nombres alternativos):</label>
+        <label htmlFor="channel">Canales:</label>
         <div className="input-with-button">
           <input
             type="text"
@@ -201,10 +323,7 @@ function ShowConfig() {
                 if (channelInput.trim()) {
                   const newChannel = channelInput.trim();
                   if (!formData.channel.includes(newChannel)) {
-                    setFormData(prev => ({
-                      ...prev,
-                      channel: [...prev.channel, newChannel]
-                    }));
+                    setFormData(prev => ({ ...prev, channel: [...prev.channel, newChannel] }));
                   }
                   setChannelInput('');
                 }
@@ -218,10 +337,7 @@ function ShowConfig() {
               if (channelInput.trim()) {
                 const newChannel = channelInput.trim();
                 if (!formData.channel.includes(newChannel)) {
-                  setFormData(prev => ({
-                    ...prev,
-                    channel: [...prev.channel, newChannel]
-                  }));
+                  setFormData(prev => ({ ...prev, channel: [...prev.channel, newChannel] }));
                 }
                 setChannelInput('');
               }
@@ -233,7 +349,7 @@ function ShowConfig() {
         <div className="channel-list">
           {formData.channel.map((ch, index) => (
             <div key={index} className="channel-tag">
-              {ch}
+              {getChannelLabel(ch)}
               <button
                 type="button"
                 onClick={() => {
@@ -250,8 +366,57 @@ function ShowConfig() {
         </div>
       </div>
 
+      {/* Años de transmisión */}
+      <div className="form-group">
+        <label>Años de transmisión:</label>
+        <div className="air-years-section">
+          {/* Fila 1: input + botón */}
+          <div className="input-with-button">
+            <input
+              type="number"
+              placeholder="Ej: 1999"
+              value={airYearInput}
+              min="1900"
+              max="2100"
+              onChange={(e) => setAirYearInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddAirYear();
+                }
+              }}
+            />
+            <button type="button" className="config-button" onClick={handleAddAirYear}>
+              Agregar Año
+            </button>
+          </div>
+          {/* Fila 2: checkbox */}
+          <label className="checkbox-label until-date-label">
+            <input
+              type="checkbox"
+              checked={formData.airUntilToDate || false}
+              onChange={(e) => setFormData(prev => ({ ...prev, airUntilToDate: e.target.checked }))}
+            />
+            <span>Hasta la fecha</span>
+            <span className="checkbox-hint">(siempre en programación)</span>
+          </label>
+          {/* Tags de años agregados */}
+          {(formData.airYears || []).length > 0 && (
+            <div className="air-years-list">
+              {(formData.airYears || []).map((year) => (
+                <div key={year} className="year-tag">
+                  {year}
+                  <button type="button" onClick={() => handleRemoveAirYear(year)}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Temporadas */}
       {formData.seasons.map((season, seasonIndex) => (
-          <div key={seasonIndex} className="season-section">
+        <div key={seasonIndex} className="season-section">
           <h3>Temporada {season.season}</h3>
           <div className="season-form">
             <div className="form-group">
@@ -264,6 +429,8 @@ function ShowConfig() {
                 max="2100"
               />
             </div>
+
+            {/* Carpeta principal */}
             <div className="form-group">
               <label>Carpeta de contenido:</label>
               <div className="folder-select">
@@ -280,14 +447,9 @@ function ShowConfig() {
                     try {
                       const folderPath = await window.electronAPI.selectFolder();
                       if (folderPath) {
-                        // Primero actualizamos la ruta de la carpeta
                         handleSeasonChange(seasonIndex, 'contentPath', folderPath);
-                        
-                        // Luego obtenemos la información de los videos
                         const videos = await window.electronAPI.getFolderVideos(folderPath);
-                        
                         if (videos && videos.length > 0) {
-                          // Actualizamos los episodios con la información de los videos
                           setFormData(prev => {
                             const updatedSeasons = [...prev.seasons];
                             updatedSeasons[seasonIndex] = {
@@ -296,7 +458,8 @@ function ShowConfig() {
                                 episode: video.episode,
                                 title: video.title,
                                 duration: video.duration,
-                                fileName: video.fileName
+                                fileName: video.fileName,
+                                fileNames: [video.fileName]
                               }))
                             };
                             return { ...prev, seasons: updatedSeasons };
@@ -315,39 +478,70 @@ function ShowConfig() {
                 </button>
               </div>
             </div>
-          </div>          <div className="episodes-list">
-            <h4>Episodios</h4>
-            {season.episodes.map((episode, episodeIndex) => (
-              <div key={episodeIndex} className="episode-item">
-                <div className="form-group">
-                  <label>Número:</label>
+
+            {/* Carpetas adicionales */}
+            <div className="form-group">
+              <label>Carpetas adicionales:</label>
+              <div className="additional-paths">
+                {(season.contentPaths || []).map((p, pathIndex) => (
+                  <div key={pathIndex} className="additional-path-item">
+                    <span className="additional-path-text" title={p}>{p}</span>
+                    <button
+                      type="button"
+                      className="remove-path-btn"
+                      onClick={() => handleRemoveContentPath(seasonIndex, pathIndex)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="config-button add-path-btn"
+                  onClick={() => handleAddContentPath(seasonIndex)}
+                >
+                  + Agregar Carpeta
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Episodios — grilla compacta */}
+          <div className="episodes-list">
+            <h4>Episodios ({season.episodes.length})</h4>
+            <div className="episodes-grid">
+              <div className="episodes-grid-header">
+                <span>#</span>
+                <span>Título</span>
+                <span>Duración</span>
+              </div>
+              {season.episodes.map((episode, episodeIndex) => (
+                <div key={episodeIndex} className="episodes-grid-row">
                   <input
                     type="number"
                     value={episode.episode}
                     onChange={(e) => handleEpisodeChange(seasonIndex, episodeIndex, 'episode', e.target.value)}
                     min="1"
+                    className="episode-num-input"
                   />
-                </div>
-                <div className="form-group">
-                  <label>Título:</label>
                   <input
                     type="text"
                     value={episode.title}
                     onChange={(e) => handleEpisodeChange(seasonIndex, episodeIndex, 'title', e.target.value)}
+                    className="episode-title-input"
+                    placeholder="Título del episodio"
                   />
-                </div>
-                <div className="form-group">
-                  <label>Duración:</label>
                   <input
                     type="text"
                     value={episode.duration}
                     onChange={(e) => handleEpisodeChange(seasonIndex, episodeIndex, 'duration', e.target.value)}
+                    className="episode-duration-input"
                     placeholder="00:00"
                   />
                 </div>
-              </div>
-            ))}
-            <button 
+              ))}
+            </div>
+            <button
               type="button"
               className="config-button"
               onClick={() => handleAddEpisode(seasonIndex)}
@@ -358,7 +552,7 @@ function ShowConfig() {
         </div>
       ))}
 
-      <button 
+      <button
         type="button"
         className="config-button"
         onClick={handleAddSeason}
@@ -414,6 +608,9 @@ function ShowConfig() {
             <div className="show-list-item-info">
               <div className="show-list-header">
                 <span className="show-list-title">{show.name}</span>
+                {show.airUntilToDate && (
+                  <span className="until-date-badge">Hasta la fecha</span>
+                )}
               </div>
               <div className="show-list-details">
                 <div className="show-channels">
@@ -421,11 +618,21 @@ function ShowConfig() {
                   <div className="channel-tags">
                     {show.channel.map((ch, idx) => (
                       <span key={idx} className="channel-tag-small">
-                        {ch}
+                        {getChannelLabel(ch)}
                       </span>
                     ))}
                   </div>
                 </div>
+                {(show.airYears && show.airYears.length > 0) && (
+                  <div className="show-air-years">
+                    <span className="detail-label">Transmisión:</span>
+                    <div className="air-year-tags">
+                      {show.airYears.map((year) => (
+                        <span key={year} className="year-tag-small">{year}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="show-seasons">
                   <span className="detail-label">Temporadas:</span>
                   <div className="season-summary">
@@ -443,7 +650,15 @@ function ShowConfig() {
             <div className="show-actions">
               <button
                 onClick={() => {
-                  setFormData(show);
+                  setFormData({
+                    ...show,
+                    airYears: show.airYears || [],
+                    airUntilToDate: show.airUntilToDate || false,
+                    seasons: show.seasons.map(s => ({
+                      ...s,
+                      contentPaths: s.contentPaths || []
+                    }))
+                  });
                   setCurrentView('edit');
                 }}
                 className="config-button"
@@ -479,7 +694,7 @@ function ShowConfig() {
   return (
     <div className="show-config">
       <h2>Configuración de Shows</h2>
-      
+
       {currentView === 'list' && renderShowsList()}
       {(currentView === 'create' || currentView === 'edit') && renderShowForm()}
       {currentView === 'import' && renderImportView()}

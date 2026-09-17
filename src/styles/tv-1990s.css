@@ -50,6 +50,12 @@
 .tv-container.style-90s .tv-screen.aspect-4-3 {
   aspect-ratio: 4/3 !important;
   width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
+  /* La regla base ya define un "height" explícito calculado en base a 16:9;
+     como CSS no recalcula aspect-ratio cuando width y height están ambos
+     definidos explícitamente, hay que sobreescribir también el height
+     con la fórmula equivalente en proporción 4:3 para que el marco
+     realmente cambie de forma. */
+  height: min(90vh - 120px, 90vw * 3/4, 600px) !important;
 }
 
 /* Display de canal estilo 90s */
@@ -175,12 +181,12 @@
   background-color: #333;
   color: #fff;
   border: 2px solid #666;
-  padding: clamp(6px, 1.5vh, 10px) clamp(12px, 3vw, 20px);
-  border-radius: 5px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: 'Courier New', Courier, monospace;
-  font-size: clamp(11px, 2vw, 14px);
-  transition: all 0.3s ease;
+  font-size: var(--button-font-size);
+  transition: all var(--transition-base);
   white-space: nowrap;
   min-width: fit-content;
 }

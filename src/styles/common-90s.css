@@ -7,6 +7,11 @@
   --button-hover-bg: #333;
   --button-active-bg: #33ff33;
   --font-family: "Digital-7", 'Courier New', Courier, monospace;
+  /* Alias compartidos con otras pantallas (config, tv-guide, etc.) que ya usan estos nombres */
+  --channel-text-color: var(--text-color);
+  --menu-border-color: var(--border-color);
+  --danger-color: #ff4444;
+  --danger-color-hover: #ff6666;
 }
 
 /* Contenedores principales */
@@ -28,23 +33,28 @@
   font-family: var(--font-family);
   text-shadow: 0 0 10px var(--text-color);
   text-transform: uppercase;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--text-color);
 }
+
+.style-90s h1 { font-size: var(--font-size-xl); }
+.style-90s h2 { font-size: var(--font-size-lg); }
+.style-90s h3 { font-size: var(--font-size-md); }
 
 /* Botones */
 .style-90s button:not(.tv-guide button) {
   background-color: var(--button-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  padding: 10px 15px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   font-family: var(--font-family);
-  font-size: 18px;
+  font-size: var(--button-font-size);
   cursor: pointer;
   text-shadow: 0 0 5px var(--text-color);
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .style-90s button:hover:not(.tv-guide button) {
@@ -64,9 +74,9 @@
   background: var(--button-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   font-family: var(--font-family);
-  font-size: 16px;
+  font-size: var(--font-size-base);
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 10px;

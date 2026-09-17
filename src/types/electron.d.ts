@@ -49,6 +49,7 @@ declare global {
       getScheduleEntryAt: (date: string, channelId?: string) => Promise<any>;
       getMonthSchedule: (year: number, month: number) => Promise<any>;
       generateYear: (year: number) => Promise<{ success: boolean; error?: string; generatedMonths?: number }>;
+      reset: () => Promise<{ success: boolean; error?: string }>;
     };
 
     // Channels API
@@ -82,6 +83,13 @@ declare global {
       duration: string;
       fileName: string;
     }>>;
+
+    // Resuelve la ruta real de un episodio buscando en múltiples carpetas.
+    // Retorna null (sin lanzar error) si no se encuentra en ninguna.
+    resolveEpisodeFile: (directories: string[], fileNames: string[], seasonNumber?: number) => Promise<string | null>;
+
+    // Empareja episodios existentes contra los archivos reales de una carpeta recién agregada
+    matchFolderEpisodes: (folderPath: string, episodes: Array<{ episode: number; fileNames: string[] }>) => Promise<Record<number, string | null>>;
     
     // Asset API
     getLocalFilePath: (virtualPath: string) => Promise<string>;

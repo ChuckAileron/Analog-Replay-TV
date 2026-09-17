@@ -11,6 +11,8 @@
   --button-text-shadow   : 0 0 5px rgba(0, 204, 255, 0.5);
   --screen-glow          : 0 0 30px rgba(0, 128, 255, 0.15);
   --metallic-border      : linear-gradient(45deg, #0a1f3d, #1a3f6d);
+  --danger-color         : #ff5566;
+  --danger-color-hover   : #ff7788;
 }
 
 /* Contenedor principal para estilo 2000s */
@@ -64,6 +66,12 @@
 .tv-container.style-00s .tv-screen.aspect-4-3 {
   aspect-ratio: 4/3 !important;
   width: min(90vw, calc(90vh - 120px) * 4/3, 800px) !important;
+  /* La regla base ya define un "height" explícito calculado en base a 16:9;
+     como CSS no recalcula aspect-ratio cuando width y height están ambos
+     definidos explícitamente, hay que sobreescribir también el height
+     con la fórmula equivalente en proporción 4:3 para que el marco
+     realmente cambie de forma. */
+  height: min(90vh - 120px, 90vw * 3/4, 600px) !important;
 }
 
 /* Display de canal estilo 2000s */
@@ -115,14 +123,14 @@
   background: var(--button-bg);
   border: 1px solid var(--button-border);
   color: var(--channel-text-color);
-  padding: clamp(6px, 1.5vh, 8px) clamp(12px, 3vw, 16px);
-  border-radius: 4px;
-  font-size: clamp(12px, 2vw, 14px);
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
+  font-size: var(--button-font-size);
   text-transform: none;
   font-family: Arial, sans-serif;
   letter-spacing: 0.5px;
   text-shadow: var(--button-text-shadow);
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   cursor: pointer;
   white-space: nowrap;
   min-width: fit-content;

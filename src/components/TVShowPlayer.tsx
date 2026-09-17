@@ -1,22 +1,31 @@
 // Wrapper para adaptar TVShow a VideoStreamManager
 import { useState, useEffect, useCallback } from 'react';
 import type { TVShow } from '../types/show.types';
+import { getEpisodeFileNames } from '../utils/episodeFiles';
 import '../styles/loading-animations.css';
 
 interface TVShowPlayerProps {
   show?: TVShow;
   seasonNumber?: number;
+  episodeNumber?: number;      // Episodio específico a reproducir (por defecto: el primero de la temporada)
+  seekTimeSeconds?: number;    // Segundos desde el inicio del episodio para reanudar la reproducción (según la programación real)
   style?: 'retro-90s' | 'retro-00s' | 'modern';
   className?: string;
   crtFilter?: boolean;
+  volume?: number;  // 0-100
+  muted?: boolean;
 }
 
 export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
   show,
   seasonNumber = 1,
+  episodeNumber,
+  seekTimeSeconds = 0,
   style = 'retro-90s',
   className = '',
-  crtFilter = false
+  crtFilter = false,
+  volume = 100,
+  muted = false
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -50,31 +59,84 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       console.log(`   - Canales asignados: [${show.channel.join(', ')}]`);
       console.log(`   - Temporada solicitada: ${seasonNumber}`);
 
-      // Encontrar la temporada
-      const season = show.seasons.find(s => s.season === seasonNumber) || show.seasons[0];
-      if (!season || !season.episodes.length) {
+      // Encontrar la temporada solicitada (la que indica la programación real)
+      const requestedSeason = show.seasons.find(s => s.season === seasonNumber) || show.seasons[0];
+      if (!requestedSeason || !requestedSeason.episodes.length) {
         throw new Error('No se encontraron episodios para esta temporada');
       }
 
-      // Usar el primer episodio
-      const episode = season.episodes[0];
-      const contentPath = season.contentPath;
-      const fileName = episode.fileName;
+      // Intentar resolver el episodio exacto indicado por la programación;
+      // si su carpeta de contenido no existe o no tiene el archivo, buscar
+      // CUALQUIER otro episodio del mismo show (en cualquier temporada) que sí
+      // tenga un archivo disponible, en vez de detener la reproducción con un
+      // error. Esto evita quedarse "atascado" cuando solo algunas temporadas
+      // tienen su carpeta de contenido configurada.
+      console.log(`   - Temporada/episodio solicitados por programación: T${seasonNumber}E${episodeNumber ?? '(primero)'}`);
 
-      console.log('📺 [TVShowPlayer] EPISODIO SELECCIONADO:');
-      console.log(`   - Temporada encontrada: ${season.season} (año: ${season.year})`);
-      console.log(`   - Episodio: ${episode.episode} - ${episode.title}`);
-      console.log(`   - Duración: ${episode.duration}`);
-      console.log(`   - Archivo: ${fileName}`);
-      console.log(`   - Ruta base: ${contentPath}`);
+      const MAX_ATTEMPTS = 80; // límite de seguridad para no iterar catálogos enormes
+      let attempts = 0;
+      let resolved: { season: typeof requestedSeason; episode: typeof requestedSeason.episodes[number]; fullPath: string } | null = null;
 
-      if (!contentPath || !fileName) {
-        throw new Error('Ruta de contenido o nombre de archivo no válido');
+      // Orden de temporadas a probar: primero la solicitada, luego el resto
+      const orderedSeasons = [
+        requestedSeason,
+        ...show.seasons.filter(s => s !== requestedSeason)
+      ];
+
+      for (const season of orderedSeasons) {
+        if (resolved || attempts >= MAX_ATTEMPTS) break;
+        if (!season.episodes || season.episodes.length === 0) continue;
+
+        const allPaths: string[] = [];
+        if (season.contentPath) allPaths.push(season.contentPath);
+        if (season.contentPaths) allPaths.push(...season.contentPaths);
+        if (allPaths.length === 0) continue; // Sin carpetas configuradas, saltar esta temporada
+
+        // Dentro de la temporada solicitada, probar primero el episodio exacto
+        const orderedEpisodes = (season === requestedSeason && episodeNumber !== undefined)
+          ? [
+              ...season.episodes.filter(e => e.episode === episodeNumber),
+              ...season.episodes.filter(e => e.episode !== episodeNumber)
+            ]
+          : season.episodes;
+
+        for (const candidateEpisode of orderedEpisodes) {
+          if (attempts >= MAX_ATTEMPTS) break;
+          const candidateFileNames = getEpisodeFileNames(candidateEpisode);
+          if (candidateFileNames.length === 0) continue;
+          attempts++;
+
+          const candidatePath = await window.electronAPI.resolveEpisodeFile(allPaths, candidateFileNames, season.season);
+          if (candidatePath) {
+            resolved = { season, episode: candidateEpisode, fullPath: candidatePath };
+            break;
+          }
+        }
       }
 
-      // Construir ruta completa
-      const fullPath = `${contentPath}\\${fileName}`;
-      console.log('📁 [TVShowPlayer] Ruta completa del video:', fullPath);
+      if (!resolved) {
+        console.warn('⚠️ [TVShowPlayer] No se encontró ningún episodio disponible para este show en ninguna carpeta configurada.');
+        // No mostramos el popup intrusivo de VideoStreamManager: usamos el estado
+        // de error propio del componente, que es más discreto y consistente con la UI.
+        throw new Error('Este episodio no está disponible actualmente. Verifica que el archivo se encuentre en alguna de las carpetas configuradas.');
+      }
+
+      const { season, episode, fullPath } = resolved;
+      // Si no se especificó un episodio concreto (sin datos de programación),
+      // no se considera "fallback" simplemente por no coincidir con `undefined`.
+      const usedFallback = season !== requestedSeason || (episodeNumber !== undefined && episode.episode !== episodeNumber);
+
+      console.log('📺 [TVShowPlayer] EPISODIO SELECCIONADO:');
+      console.log(`   - Temporada usada: ${season.season} (año: ${season.year})${usedFallback ? ' [FALLBACK: el episodio programado no estaba disponible]' : ''}`);
+      console.log(`   - Episodio: ${episode.episode} - ${episode.title}`);
+      console.log(`   - Duración: ${episode.duration}`);
+      console.log(`   - Archivo: ${getEpisodeFileNames(episode).join(', ')}`);
+      console.log(`   - Seek time (según programación): ${usedFallback ? 0 : seekTimeSeconds}s`);
+      console.log('📁 [TVShowPlayer] Archivo encontrado en:', fullPath);
+
+      // Si tuvimos que usar un episodio distinto al programado (fallback), no
+      // tiene sentido aplicar el seekTime calculado para el episodio original.
+      const effectiveSeekTime = usedFallback ? 0 : seekTimeSeconds;
 
       // Verificar si es un formato que necesita transcoding
       const extension = fullPath.split('.').pop()?.toLowerCase();
@@ -93,7 +155,7 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
 
       await (window as any).electronAPI.testVideoStreamManager({
         filePath: fullPath,
-        seekTime: 0,
+        seekTime: Math.max(0, Math.floor(effectiveSeekTime)),
         autoPlay: true,
         crtFilter: crtFilter  // Pasar la configuración CRT
       });
@@ -110,7 +172,12 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       setIsTranscoding(false);
       setPlaybackStarting(false);
     }
-  }, [show, seasonNumber]);
+    // Nota: `seekTimeSeconds` se lee dentro de la función pero se omite
+    // deliberadamente de las dependencias para no reiniciar la reproducción
+    // en cada actualización periódica del progreso (solo se usa como valor
+    // inicial al arrancar un episodio nuevo).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, seasonNumber, episodeNumber]);
 
   // Efecto para limpiar y reproducir cuando cambien las props principales
   useEffect(() => {
@@ -132,7 +199,10 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [show, seasonNumber]); // Solo reiniciar cuando cambien show o season
+    // Solo reiniciar la reproducción cuando cambie el show, la temporada o el
+    // episodio (no en cada actualización de `seekTimeSeconds`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, seasonNumber, episodeNumber]);
 
   // Efecto separado para manejar solo el cambio de filtro CRT sin reiniciar video
   useEffect(() => {
@@ -170,6 +240,37 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
       applyFilterToExistingVideo();
     }
   }, [crtFilter, isLoading, error]); // Solo cuando cambie el filtro CRT
+
+  // Efecto separado para aplicar volumen/mute al video existente sin reiniciar la reproducción
+  // (usado por el control remoto simulado y el ajuste de volumen del menú)
+  useEffect(() => {
+    const applyVolumeToExistingVideo = async () => {
+      try {
+        const clampedVolume = Math.max(0, Math.min(100, volume)) / 100;
+        const script = `
+          (() => {
+            const video = document.querySelector('#vsm-main-video');
+            if (video) {
+              video.volume = ${clampedVolume};
+              video.muted = ${muted};
+              return { success: true, hasVideo: true };
+            }
+            return { success: true, hasVideo: false };
+          })();
+        `;
+
+        if ((window as any).electronAPI?.executeScript) {
+          await (window as any).electronAPI.executeScript(script);
+        }
+      } catch {
+        console.log('🔊 [TVShowPlayer] No video element to apply volume to yet');
+      }
+    };
+
+    if (!isLoading && !error) {
+      applyVolumeToExistingVideo();
+    }
+  }, [volume, muted, isLoading, error]);
 
   // Escuchar eventos de progreso de transcodificación y completado
   useEffect(() => {

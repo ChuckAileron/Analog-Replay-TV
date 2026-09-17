@@ -20,11 +20,13 @@
   background-color: #333;
   color: var(--channel-text-color);
   border: 1px solid var(--channel-text-color);
-  padding: 10px 20px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
+  font-size: var(--button-font-size);
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .config-button:hover {
@@ -159,8 +161,8 @@
 .channel-tag {
   background-color: rgba(51, 255, 51, 0.1);
   border: 1px solid var(--channel-text-color);
-  border-radius: 4px;
-  padding: 5px 10px;
+  border-radius: var(--button-radius);
+  padding: var(--button-padding-y-sm) var(--button-padding-x-sm);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -169,10 +171,10 @@
 .channel-tag button {
   background: none;
   border: none;
-  color: #ff3333;
+  color: var(--danger-color);
   cursor: pointer;
   padding: 0;
-  font-size: 18px;
+  font-size: var(--font-size-md);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -180,7 +182,7 @@
 }
 
 .channel-tag button:hover {
-  color: #ff6666;
+  color: var(--danger-color-hover);
   background: none !important;
   box-shadow: none !important;
 }
@@ -235,12 +237,14 @@
 
 .edit-button,
 .delete-button {
-  padding: 5px 10px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   border: 1px solid var(--channel-text-color);
   background-color: transparent;
   color: var(--channel-text-color);
+  font-size: var(--button-font-size);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .edit-button:hover,
@@ -249,8 +253,8 @@
 }
 
 .delete-button {
-  border-color: #ff4444;
-  color: #ff4444;
+  border-color: var(--danger-color);
+  color: var(--danger-color);
 }
 
 .delete-button:hover {
@@ -276,11 +280,12 @@
   background-color: #333;
   color: var(--channel-text-color);
   border: 1px solid var(--channel-text-color);
-  padding: 10px 20px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .btn-primary:hover {
@@ -290,18 +295,19 @@
 
 .btn-danger {
   background-color: transparent;
-  color: #ff4444;
-  border: 1px solid #ff4444;
-  padding: 5px 10px;
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  padding: var(--button-padding-y-sm) var(--button-padding-x-sm);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.9em;
-  transition: all 0.3s ease;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-base);
 }
 
 .btn-danger:hover {
   background-color: rgba(255, 68, 68, 0.1);
-  box-shadow: 0 0 5px #ff4444;
+  box-shadow: 0 0 5px var(--danger-color);
 }
 
 .context-list {
@@ -347,11 +353,12 @@
   background-color: transparent;
   color: var(--channel-text-color);
   border: 1px solid var(--channel-text-color);
-  padding: 5px 10px;
+  padding: var(--button-padding-y-sm) var(--button-padding-x-sm);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.9em;
-  transition: all 0.3s ease;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-base);
 }
 
 .context-actions button:hover {
@@ -385,7 +392,8 @@
   background-color: #333;
   color: var(--channel-text-color);
   border: 1px solid var(--channel-text-color);
-  padding: 5px 15px;
+  padding: var(--button-padding-y-sm) var(--button-padding-x);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
 }
@@ -400,9 +408,9 @@
 .channel-tag {
   background-color: #444;
   color: var(--channel-text-color);
-  padding: 5px 10px;
-  border-radius: 3px;
-  font-size: 0.9em;
+  padding: var(--button-padding-y-sm) var(--button-padding-x-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -479,7 +487,8 @@
   background-color: #333;
   color: var(--channel-text-color);
   border: 1px solid var(--channel-text-color);
-  padding: 8px 15px;
+  padding: var(--button-padding-y-sm) var(--button-padding-x);
+  border-radius: var(--button-radius);
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;

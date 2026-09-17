@@ -16,7 +16,10 @@ export interface ScheduleEntry {
   startTime: string; // ISO
   endTime: string; // ISO
   duration?: string;
-  type: 'show' | 'commercial';
+  // 'filler': espacio de relleno (logo animado "AnalogReplayTV") que ocupa el
+  // tiempo restante de un slot de 30 minutos cuando el episodio dura menos.
+  // A futuro será reemplazado/complementado por comerciales reales.
+  type: 'show' | 'commercial' | 'filler';
 }
 
 export interface MonthlySchedule {
@@ -36,6 +39,50 @@ export interface ScheduleConfig {
   generatedMonths: string[];
 }
 
+// ===== Tipos mínimos para leer los JSON reales de shows/canales =====
+
+interface RealChannel {
+  id: number | string;
+  uuid?: string;
+  name: string;
+  number: number;
+  isEnabled?: boolean;
+}
+
+interface RealEpisode {
+  episode: number;
+  title: string;
+  duration: string; // "mm:ss" o "hh:mm:ss"
+  fileName?: string;
+}
+
+interface RealSeason {
+  season: number;
+  year: number;
+  episodes: RealEpisode[];
+  contentPath?: string;
+  contentPaths?: string[];
+}
+
+interface RealShow {
+  id: number | string;
+  uuid?: string;
+  name: string;
+  channel: string[];
+  seasons: RealSeason[];
+  airYears?: number[];
+  airUntilToDate?: boolean;
+}
+
+// Episodio aplanado con referencia a su show, usado para armar la rotación
+interface FlatEpisode {
+  show: RealShow;
+  season: number;
+  episode: number;
+  episodeTitle: string;
+  durationSeconds: number;
+}
+
 export class ScheduleServiceMain {
   private static instance: ScheduleServiceMain | null = null;
   private configPath: string;
@@ -45,7 +92,9 @@ export class ScheduleServiceMain {
   private constructor() {
     const userDataPath = app.getPath('userData');
     this.configPath = path.join(userDataPath, 'schedule-config.json');
-    this.schedulesPath = path.join(process.cwd(), 'src', 'config', 'schedules');
+    // Los datos generados viven en userData (no en el código fuente), para
+    // funcionar correctamente tanto en desarrollo como en builds empaquetadas.
+    this.schedulesPath = path.join(userDataPath, 'schedules');
     if (!fs.existsSync(this.schedulesPath)) fs.mkdirSync(this.schedulesPath, { recursive: true });
     this.setupIPC();
   }
@@ -55,11 +104,94 @@ export class ScheduleServiceMain {
     return this.instance;
   }
 
-  private setupIPC(): void {
-    ipcMain.handle('schedule:initialize', async () => {
-      await this.loadConfig();
-      return { success: true, config: this.config };
+  public async initialize(): Promise<'needs_year_selection' | 'ready'> {
+    await this.loadConfig();
+
+    if (!this.config || this.config.primaryYear === 0) {
+      return 'needs_year_selection';
+    }
+
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    if (!this.config.generatedMonths.includes(currentMonthKey)) {
+      await this.generateYear(this.config.primaryYear);
+    }
+
+    return 'ready';
+  }
+
+  public async setPrimaryYear(year: number): Promise<void> {
+    this.config = {
+      primaryYear: year,
+      secondaryYears: [],
+      lastGenerated: new Date().toISOString(),
+      currentYear: year,
+      generatedMonths: []
+    };
+
+    await this.saveConfig();
+    await this.generateYear(year);
+  }
+
+  public getCurrentConfig(): ScheduleConfig | null {
+    return this.config;
+  }
+
+  public async getCurrentScheduleEntry(channelId?: string): Promise<ScheduleEntry | null> {
+    const now = new Date();
+    return this.getScheduleEntryAt(now.toISOString(), channelId);
+  }
+
+  public async getScheduleEntryAt(date: string, channelId?: string): Promise<ScheduleEntry | null> {
+    const targetDate = new Date(date);
+    const monthSchedule = await this.getMonthSchedule(targetDate.getFullYear(), targetDate.getMonth() + 1);
+    if (!monthSchedule) return null;
+
+    const candidate = monthSchedule.entries.find((entry) => {
+      const start = new Date(entry.startTime);
+      const end = new Date(entry.endTime);
+      const matchesChannel = !channelId || entry.channelId === channelId;
+      return matchesChannel && targetDate >= start && targetDate < end;
     });
+
+    return candidate ?? null;
+  }
+
+  /**
+   * Borra la configuración de programación y todos los archivos generados,
+   * forzando que la aplicación vuelva a pedir la selección de año inicial.
+   */
+  public async resetSchedule(): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (fs.existsSync(this.configPath)) {
+        fs.unlinkSync(this.configPath);
+      }
+      if (fs.existsSync(this.schedulesPath)) {
+        fs.rmSync(this.schedulesPath, { recursive: true, force: true });
+      }
+      fs.mkdirSync(this.schedulesPath, { recursive: true });
+
+      this.config = {
+        primaryYear: 0,
+        secondaryYears: [],
+        lastGenerated: '',
+        currentYear: new Date().getFullYear(),
+        generatedMonths: []
+      };
+      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error reseteando la programación';
+      console.error('❌ [ScheduleService] Error en resetSchedule:', error);
+      return { success: false, error: message };
+    }
+  }
+
+  private async saveConfig(): Promise<void> {
+    if (!this.config) return;
+    fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
   }
 
   private async loadConfig(): Promise<void> {
@@ -68,7 +200,15 @@ export class ScheduleServiceMain {
       this.config = JSON.parse(content) as ScheduleConfig;
       return;
     }
-    this.config = { primaryYear: new Date().getFullYear(), secondaryYears: [], lastGenerated: '', currentYear: new Date().getFullYear(), generatedMonths: [] };
+
+    this.config = {
+      primaryYear: 0,
+      secondaryYears: [],
+      lastGenerated: '',
+      currentYear: new Date().getFullYear(),
+      generatedMonths: []
+    };
+
     fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
   }
 
@@ -77,12 +217,328 @@ export class ScheduleServiceMain {
     return months[Math.max(0, month - 1)] || 'unknown';
   }
 
+  // ===== Lectura de datos reales (shows/canales) desde el código fuente =====
+
+  private readRealChannels(): RealChannel[] {
+    try {
+      const configPath = path.join(process.cwd(), 'src/config/channels/channels.config.json');
+      if (!fs.existsSync(configPath)) return [];
+      const data = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(data);
+      return (parsed.channels || []).filter((ch: RealChannel) => ch.isEnabled !== false);
+    } catch (error) {
+      console.error('❌ [ScheduleService] Error leyendo canales reales:', error);
+      return [];
+    }
+  }
+
+  private readRealShows(): RealShow[] {
+    try {
+      const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
+      if (!fs.existsSync(configPath)) return [];
+      const data = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(data);
+      return parsed.shows || [];
+    } catch (error) {
+      console.error('❌ [ScheduleService] Error leyendo shows reales:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Convierte una duración en formato "mm:ss" o "hh:mm:ss" a segundos.
+   * Si el formato es inválido, retorna un valor por defecto razonable (5 minutos).
+   */
+  private parseDurationToSeconds(duration: string | undefined): number {
+    const DEFAULT_SECONDS = 5 * 60;
+    if (!duration) return DEFAULT_SECONDS;
+
+    const parts = duration.split(':').map(p => parseInt(p, 10));
+    if (parts.some(p => isNaN(p))) return DEFAULT_SECONDS;
+
+    if (parts.length === 2) {
+      const [minutes, seconds] = parts;
+      return minutes * 60 + seconds;
+    }
+    if (parts.length === 3) {
+      const [hours, minutes, seconds] = parts;
+      return hours * 3600 + minutes * 60 + seconds;
+    }
+    return DEFAULT_SECONDS;
+  }
+
+  /**
+   * Determina si un show está asignado a un canal específico, comparando
+   * por uuid, id (legacy) o nombre (case-insensitive).
+   */
+  private isShowAssignedToChannel(show: RealShow, channel: RealChannel): boolean {
+    return show.channel.some((ch) =>
+      ch === channel.uuid ||
+      ch === String(channel.id) ||
+      ch.toLowerCase() === channel.name.toLowerCase()
+    );
+  }
+
+  /**
+   * Determina si un show es elegible para transmitirse en un año determinado.
+   * - Si `airUntilToDate` es true, siempre es elegible.
+   * - Si `airYears` tiene valores, es elegible si el año solicitado está incluido.
+   * - Si no tiene ninguno de los dos configurado, se considera elegible para
+   *   cualquier año (comportamiento retrocompatible para shows sin configurar).
+   */
+  private isShowEligibleForYear(show: RealShow, year: number): boolean {
+    if (show.airUntilToDate) return true;
+    if (show.airYears && show.airYears.length > 0) {
+      return show.airYears.includes(year);
+    }
+    return true; // Sin configuración: siempre disponible
+  }
+
+  /**
+   * Aplana todos los episodios de un show (todas sus temporadas) en una
+   * lista simple, preservando referencia a temporada/episodio real.
+   */
+  private flattenShowEpisodes(show: RealShow): FlatEpisode[] {
+    const flat: FlatEpisode[] = [];
+    for (const season of show.seasons) {
+      if (!season.episodes || season.episodes.length === 0) continue;
+      // Solo incluir temporadas que tengan al menos una carpeta de contenido configurada
+      const hasContent = !!season.contentPath || (season.contentPaths && season.contentPaths.length > 0);
+      if (!hasContent) continue;
+
+      for (const episode of season.episodes) {
+        flat.push({
+          show,
+          season: season.season,
+          episode: episode.episode,
+          episodeTitle: episode.title,
+          durationSeconds: this.parseDurationToSeconds(episode.duration)
+        });
+      }
+    }
+    return flat;
+  }
+
+  /**
+   * Construye una rotación "round-robin" de episodios para un canal, mezclando
+   * los shows elegibles entre sí (un episodio de cada show por turno) en vez
+   * de agotar cada show completo antes de pasar al siguiente.
+   */
+  private buildChannelRotation(shows: RealShow[]): FlatEpisode[] {
+    const perShowEpisodes = shows
+      .map(show => this.flattenShowEpisodes(show))
+      .filter(episodes => episodes.length > 0);
+
+    if (perShowEpisodes.length === 0) return [];
+
+    const rotation: FlatEpisode[] = [];
+    const pointers = new Array(perShowEpisodes.length).fill(0);
+    const totalEpisodes = perShowEpisodes.reduce((sum, eps) => sum + eps.length, 0);
+
+    while (rotation.length < totalEpisodes) {
+      for (let i = 0; i < perShowEpisodes.length; i++) {
+        const episodes = perShowEpisodes[i];
+        if (pointers[i] < episodes.length) {
+          rotation.push(episodes[pointers[i]]);
+          pointers[i]++;
+        }
+      }
+    }
+
+    return rotation;
+  }
+
+  /**
+   * Genera la programación completa de un canal para todo el año, anclando
+   * el inicio en el 1 de enero 00:00:00 y avanzando un cursor de tiempo en
+   * bloques de 30 minutos ("slots"). Cada episodio ocupa el número de slots
+   * necesario para cubrir su duración real (redondeando hacia arriba); si el
+   * episodio dura menos que el slot (o que el último slot que ocupa), el
+   * tiempo restante se llena con una entrada de tipo 'filler' que representa
+   * el logo animado de "AnalogReplayTV" hasta llegar al siguiente slot de 30
+   * minutos. Esto asegura que todos los episodios comiencen siempre en un
+   * horario "en punto" o "y media", como una parrilla de TV real.
+   */
+  private buildChannelYearEntries(channel: RealChannel, shows: RealShow[], year: number): ScheduleEntry[] {
+    const eligibleShows = shows.filter((show) =>
+      this.isShowAssignedToChannel(show, channel) && this.isShowEligibleForYear(show, year)
+    );
+
+    const rotation = this.buildChannelRotation(eligibleShows);
+    if (rotation.length === 0) return [];
+
+    const SLOT_SECONDS = 30 * 60; // 30 minutos
+
+    const entries: ScheduleEntry[] = [];
+    const yearStart = new Date(year, 0, 1, 0, 0, 0, 0);
+    const yearEnd = new Date(year + 1, 0, 1, 0, 0, 0, 0);
+
+    let cursor = new Date(yearStart);
+    let rotationIndex = 0;
+    const channelIdentifier = channel.uuid || String(channel.id);
+
+    // Límite de seguridad para evitar loops infinitos si algo sale mal
+    const maxIterations = 500000;
+    let iterations = 0;
+
+    while (cursor < yearEnd && iterations < maxIterations) {
+      iterations++;
+      const flatEpisode = rotation[rotationIndex % rotation.length];
+      rotationIndex++;
+
+      // El episodio ocupa la cantidad de slots de 30 min necesaria para cubrir
+      // su duración real (mínimo 1 slot), redondeando hacia arriba.
+      const occupiedSlots = Math.max(1, Math.ceil(flatEpisode.durationSeconds / SLOT_SECONDS));
+      const totalSlotSeconds = occupiedSlots * SLOT_SECONDS;
+
+      const showStart = new Date(cursor);
+      const showEnd = new Date(cursor.getTime() + flatEpisode.durationSeconds * 1000);
+
+      entries.push({
+        id: uuidv4(),
+        showId: flatEpisode.show.uuid || String(flatEpisode.show.id),
+        showName: flatEpisode.show.name,
+        season: flatEpisode.season,
+        episode: flatEpisode.episode,
+        episodeTitle: flatEpisode.episodeTitle,
+        channelId: channelIdentifier,
+        channelName: channel.name,
+        startTime: showStart.toISOString(),
+        endTime: showEnd.toISOString(),
+        duration: `${Math.round(flatEpisode.durationSeconds / 60)} min`,
+        type: 'show'
+      });
+
+      // Si el episodio terminó antes de cubrir el/los slot(s) completos,
+      // rellenar el tiempo restante con el logo animado de "AnalogReplayTV".
+      const slotEnd = new Date(cursor.getTime() + totalSlotSeconds * 1000);
+      if (slotEnd.getTime() > showEnd.getTime()) {
+        entries.push({
+          id: uuidv4(),
+          showId: 'analog-replay-tv-filler',
+          showName: 'AnalogReplayTV',
+          season: 0,
+          episode: 0,
+          episodeTitle: 'Identificación de estación',
+          channelId: channelIdentifier,
+          channelName: channel.name,
+          startTime: showEnd.toISOString(),
+          endTime: slotEnd.toISOString(),
+          duration: `${Math.round((slotEnd.getTime() - showEnd.getTime()) / 60000)} min`,
+          type: 'filler'
+        });
+      }
+
+      cursor = slotEnd;
+    }
+
+    return entries;
+  }
+
+  public async generateYear(year: number): Promise<{ success: boolean; error?: string; generatedMonths?: number }> {
+    try {
+      const targetYear = Number.isFinite(year) ? year : new Date().getFullYear();
+
+      const channels = this.readRealChannels();
+      const shows = this.readRealShows();
+
+      // Generar todas las entradas del año para todos los canales de una sola vez,
+      // para poder mantener continuidad temporal y luego repartirlas por mes.
+      const allEntries: ScheduleEntry[] = [];
+      for (const channel of channels) {
+        const channelEntries = this.buildChannelYearEntries(channel, shows, targetYear);
+        allEntries.push(...channelEntries);
+      }
+
+      const generatedMonths: string[] = [];
+
+      for (let month = 1; month <= 12; month++) {
+        const monthEntries = allEntries.filter((entry) => {
+          const start = new Date(entry.startTime);
+          return start.getFullYear() === targetYear && start.getMonth() + 1 === month;
+        });
+
+        const schedule: MonthlySchedule = {
+          year: targetYear,
+          month,
+          monthName: this.getMonthName(month),
+          entries: monthEntries,
+          generated: new Date().toISOString(),
+          primaryYear: targetYear
+        };
+
+        const monthDir = path.join(this.schedulesPath, String(targetYear));
+        if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
+
+        const filePath = path.join(monthDir, `${this.getMonthName(month)}-${targetYear}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(schedule, null, 2), 'utf8');
+        generatedMonths.push(`${targetYear}-${String(month).padStart(2, '0')}`);
+      }
+
+      this.config = {
+        primaryYear: targetYear,
+        secondaryYears: [],
+        lastGenerated: new Date().toISOString(),
+        currentYear: targetYear,
+        generatedMonths
+      };
+
+      await this.saveConfig();
+      return { success: true, generatedMonths: generatedMonths.length };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error generando programación';
+      console.error('❌ [ScheduleService] Error en generateYear:', error);
+      return { success: false, error: message };
+    }
+  }
+
   public async getMonthSchedule(year: number, month: number): Promise<MonthlySchedule | null> {
     const monthName = this.getMonthName(month);
     const filePath = path.join(this.schedulesPath, String(year), `${monthName}-${year}.json`);
-    if (!fs.existsSync(filePath)) return null;
+    if (!fs.existsSync(filePath)) {
+      const result = await this.generateYear(year);
+      if (!result.success) return null;
+      return this.getMonthSchedule(year, month);
+    }
+
     const content = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(content) as MonthlySchedule;
+  }
+
+  private setupIPC(): void {
+    ipcMain.handle('schedule:initialize', async () => {
+      const status = await this.initialize();
+      return { success: true, status, config: this.config };
+    });
+
+    ipcMain.handle('schedule:setPrimaryYear', async (_event, year: number) => {
+      await this.setPrimaryYear(year);
+      return { success: true, config: this.config };
+    });
+
+    ipcMain.handle('schedule:getCurrentConfig', async () => {
+      return this.getCurrentConfig();
+    });
+
+    ipcMain.handle('schedule:getCurrentScheduleEntry', async (_event, channelId?: string) => {
+      return this.getCurrentScheduleEntry(channelId);
+    });
+
+    ipcMain.handle('schedule:getScheduleEntryAt', async (_event, date: string, channelId?: string) => {
+      return this.getScheduleEntryAt(date, channelId);
+    });
+
+    ipcMain.handle('schedule:getMonthSchedule', async (_event, year: number, month: number) => {
+      return this.getMonthSchedule(year, month);
+    });
+
+    ipcMain.handle('schedule:generateYear', async (_event, year: number) => {
+      return this.generateYear(year);
+    });
+
+    ipcMain.handle('schedule:reset', async () => {
+      return this.resetSchedule();
+    });
   }
 }
 

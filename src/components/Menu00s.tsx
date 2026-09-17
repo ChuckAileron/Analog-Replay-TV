@@ -5,6 +5,7 @@ interface Menu00sProps {
   settings: TVSettings;
   onAspectRatioToggle: () => void;
   onStyleToggle: () => void;
+  onResetSchedule?: () => void;
   isMenuOpen: boolean;
 }
 
@@ -12,6 +13,7 @@ export const Menu00s = ({
   settings,
   onAspectRatioToggle,
   onStyleToggle,
+  onResetSchedule,
   isMenuOpen
 }: Menu00sProps) => {
   return (
@@ -19,6 +21,7 @@ export const Menu00s = ({
       settings={settings}
       onAspectRatioToggle={onAspectRatioToggle}
       onStyleToggle={onStyleToggle}
+      onResetSchedule={onResetSchedule}
       isMenuOpen={isMenuOpen}
       menuClassName="menu-00s"
       menuTitle="Settings Menu"

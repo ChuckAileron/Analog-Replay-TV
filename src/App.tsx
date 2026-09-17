@@ -1,25 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { TVSettings } from './types/tv.types';
 import type { TVShow } from './types/show.types';
 import type { ScheduleStatus } from './types/schedule.types';
 import { channelManager } from './features/channels/channelManager';
+import type { ChannelChangeResult } from './features/channels/channelManager';
+import { showManager } from './features/shows/showManager';
 import { settingsManager } from './features/settings/settingsManager';
 import { TVGuide } from './components/TVGuide';
 import { Menu90s } from './components/Menu90s';
 import { Menu00s } from './components/Menu00s';
 import { TVShowPlayer } from './components/TVShowPlayer';
 import { ScheduleSetup } from './components/ScheduleSetup';
+import { RemoteControl } from './components/RemoteControl';
+import { AnalogReplayFiller } from './components/AnalogReplayFiller';
 
 import './styles/common-90s.css';
 import './styles/tv-1990s.css';
 import './styles/tv-2000s.css';
 import './styles/menu-90s.css';
 import './styles/menu-00s.css';
-import './styles/tv-components.css';
 import './styles/menu.css';
 import './styles/channel-display.css';
 import './styles/controls-00s.css';
-import './styles/loading-animations.css';
 import './styles/loading-animations.css';
 
 function App() {
@@ -30,7 +32,28 @@ function App() {
   const [channelDisplayKey, setChannelDisplayKey] = useState<number>(0);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [channelError, setChannelError] = useState<string | null>(null);
-  
+  // Controla la visibilidad de los botones inferiores (Channel Up/Down, Menu, TV Guide).
+  // Ocultos por defecto; se muestran con Enter/flechas y se ocultan con Escape.
+  const [controlsVisible, setControlsVisible] = useState<boolean>(false);
+  // Controla la visibilidad del panel de control remoto simulado
+  const [remoteVisible, setRemoteVisible] = useState<boolean>(false);
+  // Estado de encendido/apagado de la TV (simulado por el control remoto)
+  const [isPoweredOn, setIsPoweredOn] = useState<boolean>(true);
+  // Recuerda el canal anterior para el botón "LAST" del control remoto
+  const [previousChannel, setPreviousChannel] = useState<number>(1);
+  // Temporada, episodio y punto de reanudación (segundos) determinados por la
+  // programación real según la hora actual del dispositivo.
+  const [currentSeason, setCurrentSeason] = useState<number>(1);
+  const [currentEpisode, setCurrentEpisode] = useState<number | undefined>(undefined);
+  const [currentSeekTime, setCurrentSeekTime] = useState<number>(0);
+  // Tipo de lo que corresponde transmitir ahora mismo según la programación:
+  // 'show' = un episodio real, 'filler' = espacio de relleno (logo animado
+  // AnalogReplayTV, mientras se implementan los comerciales), 'empty' = sin programación.
+  const [currentProgramType, setCurrentProgramType] = useState<'show' | 'filler' | 'empty'>('empty');
+  // Recuerda el id de la última entrada de programación aplicada, para detectar
+  // cuándo la programación avanzó a un episodio distinto durante el sondeo periódico
+  const lastScheduleEntryIdRef = useRef<string | null>(null);
+
   // Estados del sistema de programación
   const [scheduleStatus, setScheduleStatus] = useState<ScheduleStatus>('not_initialized');
 
@@ -38,6 +61,52 @@ function App() {
   useEffect(() => {
     console.log('🔍 [App] Schedule Status changed to:', scheduleStatus);
   }, [scheduleStatus]);
+
+  // Mostrar/ocultar los botones de control (Channel Up/Down, Menu, TV Guide) con el teclado:
+  // Enter o cualquier flecha los muestra; Escape los oculta.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // No interferir si el usuario está escribiendo en un campo de texto
+      const target = event.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      // No interferir mientras el menú de configuración o la guía de programación
+      // están abiertos, ya que ellos manejan sus propios atajos de teclado.
+      if (isMenuOpen || showGuide) {
+        return;
+      }
+
+      // Cuando el control remoto está abierto, las flechas y Enter las maneja
+      // su propio listener interno (navegación entre botones del remoto).
+      if (remoteVisible && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(event.key)) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'Enter':
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight':
+          setControlsVisible(true);
+          break;
+        case 'Escape':
+          // Escape cierra primero el control remoto si está abierto;
+          // si no, oculta los botones inferiores.
+          if (remoteVisible) {
+            setRemoteVisible(false);
+          } else {
+            setControlsVisible(false);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMenuOpen, showGuide, remoteVisible]);
 
   // Inicializar canales y configuración al montar el componente
   useEffect(() => {
@@ -79,62 +148,179 @@ function App() {
   const handleChannelChange = async (direction: 'up' | 'down'): Promise<void> => {
     try {
       const result = await channelManager.changeChannel(currentChannel, direction);
-      
-      // Actualizar el canal actual
-      setCurrentChannel(result.channelNumber);
-      
-      // LOGS DETALLADOS PARA DEBUG
-      console.log('📺 [App] RESULTADO DE CAMBIO DE CANAL:');
-      console.log(`   - Canal anterior: ${currentChannel}`);
-      console.log(`   - Canal nuevo: ${result.channelNumber}`);
-      console.log(`   - Show encontrado: ${result.show ? result.show.name : 'NINGUNO'}`);
-      if (result.show) {
-        console.log(`   - Canales del show: [${result.show.channel.join(', ')}]`);
-      }
-      console.log(`   - Error: ${result.error || 'NINGUNO'}`);
-      
-      // Actualizar el show si se encontró uno
-      setCurrentShow(result.show);
-      console.log(`🎬 [App] ESTABLECIENDO CURRENT SHOW: ${result.show ? result.show.name : 'NULL'}`);
-      
-      // Actualizar mensaje de error si hay alguno
-      setChannelError(result.error || null);
-      
-      // Reiniciar la animación cambiando la key
-      setChannelDisplayKey(prev => prev + 1);
-
-      // Si la programación está lista, intentar obtener el show actual desde la programación
-      if (scheduleStatus === 'ready' && result.channelNumber) {
-        try {
-          // Obtener información del canal para conseguir el UUID
-          const channelInfo = channelManager.getChannelInfo(result.channelNumber);
-          if (channelInfo && (channelInfo.uuid || channelInfo.id)) {
-            const channelId = channelInfo.uuid || channelInfo.id.toString();
-            console.log(`🔍 [App] Buscando programación para canal ${result.channelNumber} (ID: ${channelId})`);
-            
-            const scheduleEntry = await window.electronAPI.schedule.getCurrentScheduleEntry(channelId);
-            if (scheduleEntry) {
-              console.log('📺 [App] Entrada de programación encontrada:', scheduleEntry);
-              // Aquí podrías convertir ScheduleEntry a TVShow si fuera necesario
-            } else {
-              console.log('ℹ️ [App] No hay programación actual para este canal');
-            }
-          }
-        } catch (scheduleError) {
-          console.warn('⚠️ [App] Error obteniendo programación:', scheduleError);
-          // Continúa con el show del channel manager como fallback
-        }
-      }
-
-      if (result.error) {
-        console.log('⚠️ [App]', result.error);
-      }
+      await applyChannelChangeResult(result);
     } catch (error) {
       console.error('❌ [App] Error al cambiar canal:', error);
       setChannelError(`Error al cambiar canal: ${error instanceof Error ? error.message : String(error)}`);
       setCurrentShow(null);
     }
   };
+
+  const handleGoToChannel = async (channelNumber: number): Promise<void> => {
+    try {
+      const result = await channelManager.goToChannel(channelNumber);
+      await applyChannelChangeResult(result);
+    } catch (error) {
+      console.error('❌ [App] Error al ir al canal:', error);
+      setChannelError(`Error al ir al canal: ${error instanceof Error ? error.message : String(error)}`);
+      setCurrentShow(null);
+    }
+  };
+
+  interface ResolvedSchedule {
+    show: TVShow | null;
+    season: number;
+    episode?: number;
+    seekTime: number;
+    entryId: string | null;
+    type: 'show' | 'filler' | 'empty';
+  }
+
+  /**
+   * Determina qué corresponde transmitir AHORA MISMO en un canal dado, según
+   * la hora real del dispositivo cruzada con la programación generada:
+   * - Un episodio real de un show (type: 'show'), con el show resuelto y el
+   *   seekTime calculado para reanudar en el punto correcto.
+   * - Un espacio de relleno (type: 'filler'), cuando el episodio anterior
+   *   terminó antes de completar su slot de 30 minutos.
+   * - Nada programado (type: 'empty').
+   */
+  const resolveScheduleForChannel = async (channelNumber: number): Promise<ResolvedSchedule> => {
+    const fallback: ResolvedSchedule = { show: null, season: 1, episode: undefined, seekTime: 0, entryId: null, type: 'empty' };
+
+    try {
+      const channelInfo = channelManager.getChannelInfo(channelNumber);
+      if (!channelInfo || (!channelInfo.uuid && !channelInfo.id)) {
+        return fallback;
+      }
+
+      const channelId = channelInfo.uuid || channelInfo.id.toString();
+      const scheduleEntry = await window.electronAPI.schedule.getCurrentScheduleEntry(channelId);
+
+      if (!scheduleEntry) {
+        console.log(`ℹ️ [App] No hay programación actual para el canal ${channelNumber}`);
+        return fallback;
+      }
+
+      // Espacio de relleno: no hay show real que resolver, solo mostrar el logo animado
+      if (scheduleEntry.type === 'filler') {
+        console.log('📺 [App] Espacio de relleno (AnalogReplayTV) en emisión para este canal');
+        return { show: null, season: 0, episode: undefined, seekTime: 0, entryId: scheduleEntry.id, type: 'filler' };
+      }
+
+      const show = await showManager.getShowByIdentifier(scheduleEntry.showId);
+      if (!show) {
+        console.warn('⚠️ [App] La entrada de programación referencia un show que ya no existe:', scheduleEntry.showId);
+        return { ...fallback, entryId: scheduleEntry.id };
+      }
+
+      const startTimeMs = new Date(scheduleEntry.startTime).getTime();
+      const seekTime = Math.max(0, (Date.now() - startTimeMs) / 1000);
+
+      console.log('📺 [App] Programación actual resuelta:', {
+        show: show.name,
+        season: scheduleEntry.season,
+        episode: scheduleEntry.episode,
+        seekTime: Math.round(seekTime)
+      });
+
+      return {
+        show,
+        season: scheduleEntry.season,
+        episode: scheduleEntry.episode,
+        seekTime,
+        entryId: scheduleEntry.id,
+        type: 'show'
+      };
+    } catch (error) {
+      console.warn('⚠️ [App] Error resolviendo la programación del canal:', error);
+      return fallback;
+    }
+  };
+
+  const applyChannelChangeResult = async (result: ChannelChangeResult, scheduleReadyOverride?: boolean): Promise<void> => {
+    // Recordar el canal anterior para el botón "LAST" del control remoto
+    setPreviousChannel(currentChannel);
+
+    // Actualizar el canal actual
+    setCurrentChannel(result.channelNumber);
+
+    // Reiniciar la animación cambiando la key
+    setChannelDisplayKey(prev => prev + 1);
+
+    // `scheduleReadyOverride` permite indicar explícitamente que la programación
+    // ya está lista en casos donde el estado `scheduleStatus` del componente
+    // todavía no se actualizó en este mismo ciclo (closure obsoleta), como
+    // justo después de completar la selección de año inicial.
+    const isScheduleReady = scheduleReadyOverride ?? (scheduleStatus === 'ready');
+
+    if (isScheduleReady) {
+      // La programación real es la fuente de verdad: determina qué show,
+      // temporada, episodio y punto de reanudación corresponden ahora mismo.
+      const resolved = await resolveScheduleForChannel(result.channelNumber);
+      lastScheduleEntryIdRef.current = resolved.entryId;
+
+      setCurrentShow(resolved.show);
+      setCurrentSeason(resolved.season);
+      setCurrentEpisode(resolved.episode);
+      setCurrentSeekTime(resolved.seekTime);
+      setCurrentProgramType(resolved.type);
+      setChannelError(resolved.type === 'empty' ? (result.error || null) : null);
+
+      console.log(`🎬 [App] ESTABLECIENDO CURRENT SHOW (desde programación): ${resolved.show ? resolved.show.name : `[${resolved.type}]`}`);
+    } else {
+      // Fallback (no debería ocurrir en condiciones normales, ya que el canal
+      // solo puede cambiarse cuando scheduleStatus === 'ready')
+      lastScheduleEntryIdRef.current = null;
+      setCurrentShow(result.show);
+      setCurrentSeason(1);
+      setCurrentEpisode(undefined);
+      setCurrentSeekTime(0);
+      setCurrentProgramType(result.show ? 'show' : 'empty');
+      setChannelError(result.error || null);
+    }
+
+    if (result.error) {
+      console.log('⚠️ [App]', result.error);
+    }
+  };
+
+  // Sondeo periódico: mientras la TV esté encendida y sintonizada en un canal,
+  // revisa cada cierto tiempo si la programación avanzó a un episodio distinto
+  // (según la hora real) y, de ser así, actualiza el reproductor automáticamente
+  // sin que el usuario tenga que cambiar de canal manualmente.
+  useEffect(() => {
+    if (scheduleStatus !== 'ready' || !isPoweredOn) {
+      return;
+    }
+
+    const POLL_INTERVAL_MS = 30000;
+
+    const interval = setInterval(async () => {
+      try {
+        const resolved = await resolveScheduleForChannel(currentChannel);
+        const entryChanged = resolved.entryId !== lastScheduleEntryIdRef.current;
+
+        if (entryChanged) {
+          console.log('🔄 [App] La programación avanzó a un nuevo bloque, actualizando reproductor...');
+          lastScheduleEntryIdRef.current = resolved.entryId;
+          setCurrentShow(resolved.show);
+          setCurrentSeason(resolved.season);
+          setCurrentEpisode(resolved.episode);
+          setCurrentSeekTime(resolved.seekTime);
+          setCurrentProgramType(resolved.type);
+          setChannelError(resolved.type === 'empty' ? null : null);
+          setChannelDisplayKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.warn('⚠️ [App] Error en sondeo periódico de programación:', error);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduleStatus, isPoweredOn, currentChannel]);
 
   const toggleGuide = (): void => {
     setShowGuide(prev => !prev);
@@ -153,6 +339,69 @@ function App() {
   const handleCRTFilterToggle = (): void => {
     const newSettings = settingsManager.toggleCRTFilter();
     setSettings(newSettings);
+  };
+
+  // ===== Handlers del control remoto simulado =====
+
+  const handleVolumeUp = (): void => {
+    const current = settingsManager.getCurrentSettings();
+    const newVolume = Math.min(100, current.volume + 10);
+    const newSettings = settingsManager.updateSettings({ volume: newVolume, isMuted: false });
+    setSettings(newSettings);
+  };
+
+  const handleVolumeDown = (): void => {
+    const current = settingsManager.getCurrentSettings();
+    const newVolume = Math.max(0, current.volume - 10);
+    const newSettings = settingsManager.updateSettings({ volume: newVolume });
+    setSettings(newSettings);
+  };
+
+  const handleMuteToggle = (): void => {
+    const current = settingsManager.getCurrentSettings();
+    const newSettings = settingsManager.updateSettings({ isMuted: !current.isMuted });
+    setSettings(newSettings);
+  };
+
+  const handlePowerToggle = (): void => {
+    setIsPoweredOn(prev => !prev);
+  };
+
+  const handleLastChannel = (): void => {
+    handleGoToChannel(previousChannel);
+  };
+
+  // Resetea completamente la programación generada, forzando que el usuario
+  // vuelva a elegir un año de transmisión desde cero.
+  const handleResetSchedule = async (): Promise<void> => {
+    const confirmMessage = settings.tvStyle === '90s'
+      ? '¿ESTÁS SEGURO DE QUE QUIERES RESETEAR LA PROGRAMACIÓN?\n\nSE BORRARÁ TODA LA PROGRAMACIÓN GENERADA Y DEBERÁS ELEGIR UN AÑO NUEVAMENTE.'
+      : '¿Estás seguro de que quieres resetear la programación?\n\nSe borrará toda la programación generada y deberás elegir un año nuevamente.';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const result = await window.electronAPI.schedule.reset();
+      if (!result.success) {
+        throw new Error(result.error || 'Error desconocido al resetear la programación');
+      }
+
+      console.log('✅ [App] Programación reseteada correctamente');
+      setIsMenuOpen(false);
+      setCurrentShow(null);
+      setChannelError(null);
+      lastScheduleEntryIdRef.current = null;
+      setScheduleStatus('needs_year_selection');
+    } catch (error) {
+      console.error('❌ [App] Error reseteando la programación:', error);
+      alert(
+        settings.tvStyle === '90s'
+          ? 'ERROR AL RESETEAR LA PROGRAMACIÓN. INTENTA DE NUEVO.'
+          : 'Ocurrió un error al resetear la programación. Intenta de nuevo.'
+      );
+    }
   };
 
   return (
@@ -177,9 +426,11 @@ function App() {
                   canalNuevo: result.channelNumber,
                   show: result.show?.name || 'No show'
                 });
-                setCurrentChannel(result.channelNumber); // ✅ Actualizar el estado del canal
-                setCurrentShow(result.show);
-                setChannelDisplayKey(prev => prev + 1);
+                // Usar applyChannelChangeResult para resolver también la programación
+                // real (temporada/episodio/seekTime), no solo el show estático.
+                // Se pasa `true` explícitamente porque `scheduleStatus` del estado
+                // del componente aún no refleja 'ready' en este mismo ciclo (closure).
+                await applyChannelChangeResult(result, true);
               }
             } catch (error) {
               console.error('❌ [App] Error después de configuración:', error);
@@ -251,32 +502,62 @@ function App() {
             />
           )}
           <div className={`tv-screen aspect-${settings.aspectRatio.replace(':', '-')}`}>
-            {/* Display del canal */}
-            <div 
-              key={channelDisplayKey} 
-              className="channel-display"
-            >
-              {(() => {
-                console.log('🖥️ [App] Current Channel:', currentChannel);
-                const channelInfo = channelManager.getChannelInfo(currentChannel);
-                console.log('🖥️ [App] Channel Info:', channelInfo);
-                return (
-                  <>
-                    <span className="channel-number">{currentChannel}</span>
-                    {channelInfo?.name && <span className="channel-name">{channelInfo.name}</span>}
-                  </>
-                );
-              })()}
-            </div>
+            {/* Overlay de "TV apagada" simulando el botón de encendido/apagado del control remoto */}
+            {!isPoweredOn && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: '#000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 900
+              }}>
+                <div style={{
+                  color: '#444',
+                  fontFamily: settings.tvStyle === '90s' ? 'monospace' : 'sans-serif',
+                  fontSize: '14px',
+                  letterSpacing: '2px'
+                }}>
+                  {settings.tvStyle === '90s' ? 'TV APAGADA' : 'TV Apagada'}
+                </div>
+              </div>
+            )}
 
-            {/* Reproductor de video o mensaje de canal vacío */}
-            {currentShow ? (
+            {/* Display del canal (oculto mientras la guía está abierta para que no quede flotando sobre ella) */}
+            {!showGuide && (
+              <div 
+                key={channelDisplayKey} 
+                className="channel-display"
+              >
+                {(() => {
+                  console.log('🖥️ [App] Current Channel:', currentChannel);
+                  const channelInfo = channelManager.getChannelInfo(currentChannel);
+                  console.log('🖥️ [App] Channel Info:', channelInfo);
+                  return (
+                    <>
+                      <span className="channel-number">{currentChannel}</span>
+                      {channelInfo?.name && <span className="channel-name">{channelInfo.name}</span>}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Reproductor de video, relleno "AnalogReplayTV", o mensaje de canal vacío */}
+            {currentProgramType === 'show' && currentShow ? (
               <TVShowPlayer 
                 show={currentShow}
-                seasonNumber={1}  // Por defecto empezamos con la primera temporada
+                seasonNumber={currentSeason}
+                episodeNumber={currentEpisode}
+                seekTimeSeconds={currentSeekTime}
                 style={settings.tvStyle === '90s' ? 'retro-90s' : 'retro-00s'}
                 crtFilter={settings.tvStyle === '90s' && settings.crtFilter}
+                volume={settings.volume}
+                muted={settings.isMuted || !isPoweredOn}
               />
+            ) : currentProgramType === 'filler' ? (
+              <AnalogReplayFiller tvStyle={settings.tvStyle} />
             ) : (
               <div className="empty-channel" style={{
                 width: '100%',
@@ -317,42 +598,81 @@ function App() {
                 {channelError}
               </div>
             )}
-            
-            {/* Guía de programación */}
-            {showGuide && (
-              <TVGuide 
-                onClose={() => setShowGuide(false)}
-                onSelectProgram={(program, channel) => {
-                  console.log('🎯 [App] Programa seleccionado:', program.showName, 'en canal:', channel.channelName);
-                  // TODO: Navegar al canal y programa seleccionado
-                  setShowGuide(false);
-                }}
-              />
-            )}
           </div>
 
-          <div className="tv-controls">
-            <div className="channel-buttons">
-              <button onClick={() => handleChannelChange('up')}>
-                Channel Up
-              </button>
-              <button onClick={() => handleChannelChange('down')}>
-                Channel Down
-              </button>
-              <button
-                className={`menu-button ${settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}`}
-                onClick={() => setIsMenuOpen(prev => !prev)}
-              >
-                MENU
-              </button>
-              <button
-                className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                onClick={toggleGuide}
-              >
-                {settings.tvStyle === '90s' ? 'TV GUIDE' : 'Program Guide'}
-              </button>
+          {/* Guía de programación (fuera de .tv-screen para que cubra toda la ventana) */}
+          {showGuide && (
+            <TVGuide
+              tvStyle={settings.tvStyle}
+              onClose={() => setShowGuide(false)}
+              onChannelSelect={(channelNumber) => {
+                handleGoToChannel(channelNumber);
+              }}
+              onSelectProgram={(program, channel) => {
+                console.log('🎯 [App] Programa seleccionado:', program.showName, 'en canal:', channel.channelName);
+                // TODO: Navegar al canal y programa seleccionado
+                setShowGuide(false);
+              }}
+            />
+          )}
+
+          {controlsVisible && (
+            <div className="tv-controls">
+              <div className="channel-buttons">
+                <button onClick={() => handleChannelChange('up')} disabled={!isPoweredOn}>
+                  Channel Up
+                </button>
+                <button onClick={() => handleChannelChange('down')} disabled={!isPoweredOn}>
+                  Channel Down
+                </button>
+                <button
+                  className={`menu-button ${settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}`}
+                  onClick={() => setIsMenuOpen(prev => !prev)}
+                >
+                  MENU
+                </button>
+                <button
+                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                  onClick={toggleGuide}
+                  disabled={!isPoweredOn}
+                >
+                  {settings.tvStyle === '90s' ? 'TV GUIDE' : 'Program Guide'}
+                </button>
+                <button
+                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                  onClick={() => setRemoteVisible(prev => !prev)}
+                >
+                  {settings.tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control Remoto'}
+                </button>
+                <button
+                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                  onClick={() => setControlsVisible(false)}
+                >
+                  {settings.tvStyle === '90s' ? 'OCULTAR BOTONES' : 'Ocultar Botones'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Panel de control remoto simulado (fuera de .tv-screen, debajo del frame de reproducción) */}
+          {remoteVisible && (
+            <RemoteControl
+              tvStyle={settings.tvStyle}
+              isPoweredOn={isPoweredOn}
+              isMuted={settings.isMuted}
+              onClose={() => setRemoteVisible(false)}
+              onPowerToggle={handlePowerToggle}
+              onChannelUp={() => handleChannelChange('up')}
+              onChannelDown={() => handleChannelChange('down')}
+              onVolumeUp={handleVolumeUp}
+              onVolumeDown={handleVolumeDown}
+              onMuteToggle={handleMuteToggle}
+              onMenuToggle={() => setIsMenuOpen(prev => !prev)}
+              onGuideToggle={toggleGuide}
+              onGoToChannel={handleGoToChannel}
+              onLastChannel={handleLastChannel}
+            />
+          )}
 
           {/* Menús de configuración */}
           <Menu90s
@@ -360,12 +680,14 @@ function App() {
             onAspectRatioToggle={handleAspectRatioToggle}
             onStyleToggle={handleStyleToggle}
             onCRTFilterToggle={handleCRTFilterToggle}
+            onResetSchedule={handleResetSchedule}
             isMenuOpen={isMenuOpen && settings.tvStyle === '90s'}
           />
           <Menu00s
             settings={settings}
             onAspectRatioToggle={handleAspectRatioToggle}
             onStyleToggle={handleStyleToggle}
+            onResetSchedule={handleResetSchedule}
             isMenuOpen={isMenuOpen && settings.tvStyle === '00s'}
           />
         </>

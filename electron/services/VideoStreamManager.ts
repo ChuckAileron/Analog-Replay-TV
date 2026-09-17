@@ -880,10 +880,18 @@ export class VideoStreamManager {
    */
   private async showErrorMessage(errorInfo: ErrorMessageInfo): Promise<void> {
     const { title, message, type } = errorInfo;
-    
+
+    // Serializar de forma segura para evitar que backslashes (rutas de Windows),
+    // backticks o secuencias ${...} dentro del mensaje rompan el template literal
+    // del script inyectado (esto causaba que las rutas perdieran sus backslashes).
+    const safeTitleJson = JSON.stringify(title);
+    const safeMessageJson = JSON.stringify(message);
+
     try {
       const errorScript = `
         (() => {
+          const __vsmTitle = ${safeTitleJson};
+          const __vsmMessage = ${safeMessageJson};
           // Crear y mostrar un mensaje de error personalizado
           const createErrorMessage = () => {
             // Remover mensajes de error anteriores
@@ -957,12 +965,21 @@ export class VideoStreamManager {
               document.head.appendChild(style);
             }
             
-            // Crear contenido del error
-            errorDiv.innerHTML = \`
-              <h3>${title}</h3>
-              <p>${message}</p>
-              <button class="vsm-error-close" onclick="this.parentElement.remove()">Cerrar</button>
-            \`;
+            // Crear contenido del error (usando textContent para evitar problemas
+            // de escape con backslashes de rutas Windows o caracteres especiales)
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = __vsmTitle;
+            const messageEl = document.createElement('p');
+            messageEl.textContent = __vsmMessage;
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'vsm-error-close';
+            closeBtn.textContent = 'Cerrar';
+            closeBtn.onclick = () => errorDiv.remove();
+
+            errorDiv.innerHTML = '';
+            errorDiv.appendChild(titleEl);
+            errorDiv.appendChild(messageEl);
+            errorDiv.appendChild(closeBtn);
             
             document.body.appendChild(errorDiv);
             

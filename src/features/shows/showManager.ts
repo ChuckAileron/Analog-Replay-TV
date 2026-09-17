@@ -59,6 +59,25 @@ export const showManager = {
     return shows.find(show => show.name === name) || null;
   },
 
+  // Obtener un show por un identificador flexible: uuid, id (numérico o string
+  // legacy) o nombre (case-insensitive). Usado por el sistema de programación
+  // para resolver el show real a partir de un ScheduleEntry.showId.
+  getShowByIdentifier: async (identifier: string): Promise<TVShow | null> => {
+    try {
+      if (!isInitialized) {
+        await showManager.initialize();
+      }
+      return shows.find((show: any) =>
+        show.uuid === identifier ||
+        String(show.id) === identifier ||
+        show.name.toLowerCase() === identifier.toLowerCase()
+      ) || null;
+    } catch (error) {
+      console.error('Error getting show by identifier:', error);
+      return null;
+    }
+  },
+
   // Obtener un show por ID
   getShow: async (id: number): Promise<TVShow | null> => {
     try {

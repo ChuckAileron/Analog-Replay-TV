@@ -78,8 +78,6 @@ export function useTVGuide(): UseTVGuideReturn {
     selectedProgram: 0
   });
 
-  const keyHandlerRef = useRef<(event: KeyboardEvent) => void>();
-
   // Cargar datos automáticamente cuando se inicializa el hook
   useEffect(() => {
     console.log('🚀 [useTVGuide] Inicializando hook, cargando datos para hoy');
@@ -350,53 +348,6 @@ export function useTVGuide(): UseTVGuideReturn {
     const selectedChannel = guideData.channels[navigationState.selectedChannel];
     return selectedChannel.programs[navigationState.selectedProgram] || null;
   }, [guideData, navigationState]);
-
-  // Configurar navegación por teclado
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Solo procesar si no hay elementos de input enfocados
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      switch (event.key) {
-        case 'ArrowUp':
-          event.preventDefault();
-          navigateUp();
-          break;
-        case 'ArrowDown':
-          event.preventDefault();
-          navigateDown();
-          break;
-        case 'ArrowLeft':
-          event.preventDefault();
-          navigateLeft();
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          navigateRight();
-          break;
-        case 'Home':
-          event.preventDefault();
-          goToToday();
-          break;
-        case 'F5':
-          event.preventDefault();
-          refreshData();
-          break;
-      }
-    };
-
-    keyHandlerRef.current = handleKeyDown;
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      if (keyHandlerRef.current) {
-        window.removeEventListener('keydown', keyHandlerRef.current);
-      }
-    };
-  }, [navigateUp, navigateDown, navigateLeft, navigateRight, goToToday, refreshData]);
 
   // Cargar datos inicial
   useEffect(() => {

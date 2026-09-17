@@ -14,7 +14,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:initialize');
             console.log('Schedule initialize result:', result);
-            return result;
+            return result?.status ?? 'ready';
           } catch (error) {
             console.error('Error in schedule:initialize:', error);
             throw error;
@@ -25,7 +25,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:setPrimaryYear', year);
             console.log('Schedule setPrimaryYear result:', result);
-            return result;
+            return result?.success ?? true;
           } catch (error) {
             console.error('Error in schedule:setPrimaryYear:', error);
             throw error;
@@ -36,7 +36,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:getCurrentConfig');
             console.log('Schedule getCurrentConfig result:', result);
-            return result;
+            return result ?? null;
           } catch (error) {
             console.error('Error in schedule:getCurrentConfig:', error);
             throw error;
@@ -47,7 +47,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:getCurrentScheduleEntry', channelId);
             console.log('Schedule getCurrentScheduleEntry result:', result);
-            return result;
+            return result ?? null;
           } catch (error) {
             console.error('Error in schedule:getCurrentScheduleEntry:', error);
             throw error;
@@ -58,7 +58,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:getScheduleEntryAt', date, channelId);
             console.log('Schedule getScheduleEntryAt result:', result);
-            return result;
+            return result ?? null;
           } catch (error) {
             console.error('Error in schedule:getScheduleEntryAt:', error);
             throw error;
@@ -69,7 +69,7 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:getMonthSchedule', year, month);
             console.log('Schedule getMonthSchedule result:', result);
-            return result;
+            return result ?? null;
           } catch (error) {
             console.error('Error in schedule:getMonthSchedule:', error);
             throw error;
@@ -80,9 +80,20 @@ try {
           try {
             const result = await ipcRenderer.invoke('schedule:generateYear', year);
             console.log('Schedule generateYear result:', result);
-            return result;
+            return result ?? { success: false, error: 'No result' };
           } catch (error) {
             console.error('Error in schedule:generateYear:', error);
+            throw error;
+          }
+        },
+        reset: async () => {
+          console.log('Schedule: Reset');
+          try {
+            const result = await ipcRenderer.invoke('schedule:reset');
+            console.log('Schedule reset result:', result);
+            return result ?? { success: false, error: 'No result' };
+          } catch (error) {
+            console.error('Error in schedule:reset:', error);
             throw error;
           }
         }
@@ -158,6 +169,35 @@ try {
         } catch (error) {
           console.error('Error in getFolderVideos:', error);
           throw error;
+        }
+      },
+
+      // Resuelve la ruta real de un episodio buscando en múltiples carpetas,
+      // probando todos los nombres de archivo candidatos conocidos para ese episodio.
+      // Nunca rechaza la promesa: retorna null si no encuentra el archivo.
+      resolveEpisodeFile: async (directories: string[], fileNames: string[], seasonNumber?: number) => {
+        console.log('Resolving episode file:', fileNames, 'in directories:', directories, 'season:', seasonNumber);
+        try {
+          const result = await ipcRenderer.invoke('resolve-episode-file', { directories, fileNames, seasonNumber });
+          console.log('Resolved episode file result:', result);
+          return result as string | null;
+        } catch (error) {
+          console.error('Error in resolveEpisodeFile:', error);
+          return null;
+        }
+      },
+
+      // Empareja los episodios de una temporada contra los archivos reales de una
+      // carpeta recién agregada, retornando un mapa { numeroEpisodio: nombreArchivoEncontrado | null }
+      matchFolderEpisodes: async (folderPath: string, episodes: Array<{ episode: number; fileNames: string[] }>) => {
+        console.log('Matching folder episodes:', folderPath, episodes);
+        try {
+          const result = await ipcRenderer.invoke('match-folder-episodes', { folderPath, episodes });
+          console.log('Match folder episodes result:', result);
+          return result as Record<number, string | null>;
+        } catch (error) {
+          console.error('Error in matchFolderEpisodes:', error);
+          return {};
         }
       },
 

@@ -7,7 +7,7 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1000;
+  z-index: 3000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -62,7 +62,7 @@
 
 .guide-header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--font-size-xl);
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -80,7 +80,7 @@
 }
 
 .current-date {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: normal;
   position: relative;
   z-index: 150;
@@ -106,14 +106,14 @@
 .header-actions button,
 .action-button {
   border: 3px solid;
-  border-radius: 8px;
-  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
   font-weight: bold;
   background: transparent;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   position: relative;
   z-index: 250;
   min-width: 100px;
@@ -178,7 +178,7 @@
   background: #cc0000 !important;
   color: #ffffff !important;
   border-color: #cc0000 !important;
-  font-size: 20px !important;
+  font-size: var(--font-size-lg) !important;
   min-width: 60px !important;
   min-height: 50px !important;
   z-index: 300 !important;
@@ -332,7 +332,7 @@
   background: rgba(255,255,255,0.1);
 }
 
-/* Channel Info - Sticky left column */
+/* Channel Info */
 .channel-info {
   display: flex;
   flex-direction: column;
@@ -342,12 +342,12 @@
   border-right: 2px solid;
   text-align: center;
   gap: 6px;
-  position: sticky;
-  left: 0;
-  z-index: 50;
   min-height: 70px;
   width: 180px;
+  flex-shrink: 0;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .tv-guide.style-90s .channel-info {
@@ -355,9 +355,17 @@
   background: #000000;
 }
 
+.tv-guide.style-90s .channel-info:hover {
+  background: #002200;
+}
+
 .tv-guide.style-00s .channel-info {
   border-right-color: #0066cc;
   background: #001122;
+}
+
+.tv-guide.style-00s .channel-info:hover {
+  background: #002244;
 }
 
 .channel-number {
@@ -484,10 +492,10 @@
 
 .error-content button {
   border: 1px solid;
-  border-radius: 4px;
-  padding: 10px 20px;
+  border-radius: var(--button-radius);
+  padding: var(--button-padding-y) var(--button-padding-x);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   font-weight: bold;
   background: transparent;

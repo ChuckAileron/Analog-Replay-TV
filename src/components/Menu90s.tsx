@@ -6,6 +6,7 @@ interface Menu90sProps {
   onAspectRatioToggle: () => void;
   onStyleToggle: () => void;
   onCRTFilterToggle: () => void;
+  onResetSchedule?: () => void;
   isMenuOpen: boolean;
 }
 
@@ -14,6 +15,7 @@ export const Menu90s = ({
   onAspectRatioToggle,
   onStyleToggle,
   onCRTFilterToggle,
+  onResetSchedule,
   isMenuOpen
 }: Menu90sProps) => {
   return (
@@ -22,6 +24,7 @@ export const Menu90s = ({
       onAspectRatioToggle={onAspectRatioToggle}
       onStyleToggle={onStyleToggle}
       onCRTFilterToggle={onCRTFilterToggle}
+      onResetSchedule={onResetSchedule}
       isMenuOpen={isMenuOpen}
       menuClassName="menu-90s style-90s content-container"
       menuTitle="SETTINGS MENU"

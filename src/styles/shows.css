@@ -1,21 +1,25 @@
-/* Estilos específicos para el listado de programas */
-.program-item {
+/* Estilos específicos para el listado de shows */
+.show-item {
   background-color: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--channel-text-color);
-  margin-bottom: 15px;
-  padding: 20px;
+  margin-bottom: var(--space-4);
+  padding: var(--space-5);
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  border-radius: 4px;
+  gap: var(--space-4);
+  border-radius: var(--radius-sm);
 }
 
-.program-list-item-info {
+.show-list-item-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.style-00s .program-list-header {
+.style-00s .show-list-header {
   display: flex;
   gap: 15px;
   align-items: center;
@@ -24,21 +28,21 @@
   border-bottom: 1px solid rgba(100, 150, 255, 0.2);
 }
 
-.style-00s .program-list-title {
+.style-00s .show-list-title {
   font-size: 1.2em;
   font-weight: bold;
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.style-00s .program-list-details {
+.style-00s .show-list-details {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.style-00s .program-channels,
-.style-00s .program-seasons {
+.style-00s .show-channels,
+.style-00s .show-seasons {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -51,7 +55,7 @@
 }
 
 /* Mantener estilos 90s */
-.style-90s .program-list-header {
+.style-90s .show-list-header {
   display: flex;
   gap: 15px;
   align-items: center;
@@ -60,7 +64,7 @@
   border-bottom: 1px solid rgba(51, 255, 51, 0.2);
 }
 
-.style-90s .program-list-title {
+.style-90s .show-list-title {
   font-size: 1.2em;
   font-weight: bold;
   color: var(--channel-text-color);
@@ -158,9 +162,252 @@
   color: rgba(51, 255, 51, 0.8);
 }
 
-.program-actions {
+.show-actions {
   display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ===== Años de transmisión ===== */
+.air-years-section {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-left: 20px;
-  align-self: center;
+}
+
+.air-years-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.year-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.9em;
+  color: #fff;
+}
+
+.year-tag button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 1em;
+  line-height: 1;
+}
+
+.year-tag button:hover {
+  color: #ff6666;
+}
+
+.style-90s .year-tag {
+  background: rgba(51, 255, 51, 0.1);
+  border-color: rgba(51, 255, 51, 0.3);
+  color: var(--channel-text-color);
+}
+
+/* Checkbox "Hasta la fecha" */
+.form-group .checkbox-label,
+.checkbox-label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-group .until-date-label,
+.until-date-label {
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  max-width: fit-content;
+  margin: 0 auto;
+  font-size: 0.9em;
+  color: #aac8ff;
+  padding: 4px 0;
+  text-align: center;
+}
+
+.until-date-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #88aaff;
+}
+
+.style-90s .until-date-label {
+  color: rgba(51, 255, 51, 0.9);
+}
+
+.style-90s .until-date-label input[type="checkbox"] {
+  accent-color: #33ff33;
+}
+
+.checkbox-hint {
+  display: block;
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+/* Badge en el listado */
+.until-date-badge {
+  font-size: 0.75em;
+  background: rgba(100, 200, 100, 0.2);
+  border: 1px solid rgba(100, 200, 100, 0.5);
+  color: #aaffaa;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.style-90s .until-date-badge {
+  background: rgba(51, 255, 51, 0.15);
+  border-color: rgba(51, 255, 51, 0.4);
+  color: var(--channel-text-color);
+}
+
+/* Años de transmisión en el listado */
+.show-air-years {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.air-year-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.year-tag-small {
+  background: rgba(100, 150, 255, 0.15);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  color: #cce0ff;
+}
+
+.style-90s .year-tag-small {
+  background: rgba(51, 255, 51, 0.1);
+  border-color: rgba(51, 255, 51, 0.25);
+  color: rgba(51, 255, 51, 0.9);
+}
+
+/* ===== Carpetas adicionales ===== */
+.additional-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.additional-path-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.style-90s .additional-path-item {
+  border-color: rgba(51, 255, 51, 0.2);
+}
+
+.additional-path-text {
+  flex: 1;
+  font-size: 0.85em;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-path-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 100, 100, 0.8);
+  cursor: pointer;
+  font-size: 1.1em;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.remove-path-btn:hover {
+  color: #ff4444;
+}
+
+.add-path-btn {
+  align-self: flex-start;
+  font-size: 0.85em;
+  padding: 4px 10px;
+}
+
+/* ===== Grilla compacta de episodios ===== */
+.episodes-grid {
+  display: grid;
+  grid-template-columns: 52px 1fr 80px;
+  gap: 2px 6px;
+  margin-bottom: 8px;
+}
+
+.episodes-grid-header {
+  display: contents;
+}
+
+.episodes-grid-header > span {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding: 2px 4px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 4px;
+}
+
+.episodes-grid-row {
+  display: contents;
+}
+
+.episodes-grid-row input {
+  padding: 4px 6px;
+  font-size: 0.85em;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(100, 150, 255, 0.25);
+  color: inherit;
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.style-90s .episodes-grid-row input {
+  border-color: rgba(51, 255, 51, 0.25);
+}
+
+.episodes-grid-row input:focus {
+  outline: none;
+  border-color: rgba(100, 150, 255, 0.6);
+}
+
+.style-90s .episodes-grid-row input:focus {
+  border-color: rgba(51, 255, 51, 0.6);
+}
+
+.episode-num-input {
+  text-align: center;
+}
+
+.episode-duration-input {
+  text-align: center;
 }

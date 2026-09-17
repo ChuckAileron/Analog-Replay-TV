@@ -30,7 +30,7 @@ export class ScheduleServiceRenderer {
   public async initialize(): Promise<ScheduleStatus> {
     try {
       const result = await window.electronAPI.schedule.initialize();
-      return result as ScheduleStatus;
+      return (result ?? 'ready') as ScheduleStatus;
     } catch (error) {
       console.error('❌ [ScheduleServiceRenderer] Error en inicialización:', error);
       throw error;
@@ -75,120 +75,75 @@ export class ScheduleServiceRenderer {
   }
 
   /**
-   * Obtiene los datos del TV Guide para una fecha específica
-   * Por ahora implementamos una versión básica usando los datos existentes
+   * Obtiene los datos del TV Guide para una fecha específica, leyendo
+   * directamente las entradas reales de la programación generada (mismo
+   * archivo mensual que usa `getCurrentScheduleEntry`), en vez de inventar
+   * horarios artificiales. Esto asegura que la guía muestre el show y
+   * episodio real que corresponde a cada franja horaria de cada canal.
    */
   public async getTVGuideData(year: number, month: number, day: number): Promise<TVGuideData | null> {
     try {
       console.log(`📅 [ScheduleServiceRenderer] Solicitando datos del TV Guide para ${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-      
-      // Por ahora, crear datos del TV Guide usando los canales y programación existente
-      // TODO: Implementar método específico en el main process para TV Guide
-      
+
       // Obtener canales disponibles
-      const channels = await window.electronAPI.loadChannelsConfig();
-      if (!channels || !channels.channels || channels.channels.length === 0) {
+      const channelsConfig = await window.electronAPI.loadChannelsConfig();
+      if (!channelsConfig || !channelsConfig.channels || channelsConfig.channels.length === 0) {
         console.warn('⚠️ [ScheduleServiceRenderer] No hay canales disponibles');
         return null;
       }
 
-      // Crear estructura del TV Guide
-      const guideChannels = await Promise.all(
-        channels.channels.map(async (channel: any) => {
-          // Usar datos reales de programación
-          const programs: TVGuideProgram[] = [];
-          
-          // Obtener shows reales para este canal
-          try {
-            // Mapear IDs numéricos a los channelId string usados en la programación
-            const channelIdMap: { [key: string]: string } = {
-              '1': 'ch_disney_001',
-              '2': 'ch_nickelodeon_002',
-              '3': 'ch_cartoonnetwork_003'
-            };
-            
-            // En lugar de intentar obtener el show actual, usar el primer show del día como base
-            // y variar los horarios para el TV Guide
-            const baseDate = new Date(year, month - 1, day, 8, 0, 0); // 8:00 AM como base
-            const mappedChannelId = channelIdMap[channel.id.toString()] || channel.id.toString();
-            const currentEntry = await window.electronAPI.schedule.getScheduleEntryAt(baseDate.toISOString(), mappedChannelId);
-            
-            // Si hay programación real, usarla como base
-            if (currentEntry && currentEntry.showName && !currentEntry.showName.includes('Programación')) {
-              // Generar horario basado en programación real
-              for (let hour = 6; hour < 24; hour++) {
-                const startTime = new Date(year, month - 1, day, hour, 0);
-                const endTime = new Date(year, month - 1, day, hour + 1, 0);
-                
-                programs.push({
-                  id: `${channel.id}-${hour}`,
-                  showId: parseInt(currentEntry.showId) || 1,
-                  showName: currentEntry.showName,
-                  seasonNumber: currentEntry.season || 1,
-                  episodeNumber: currentEntry.episode || hour - 5,
-                  episodeTitle: currentEntry.episodeTitle || `Episodio ${hour - 5}`,
-                  startTime: startTime,
-                  endTime: endTime,
-                  duration: 60,
-                  description: `${currentEntry.showName} - ${currentEntry.episodeTitle || 'Programación continua'}`,
-                  isCurrentlyPlaying: false,
-                  progress: 0
-                });
-              }
-            } else {
-              // Fallback: usar solo el nombre del canal
-              for (let hour = 6; hour < 24; hour++) {
-                const startTime = new Date(year, month - 1, day, hour, 0);
-                const endTime = new Date(year, month - 1, day, hour + 1, 0);
-                
-                programs.push({
-                  id: `${channel.id}-${hour}`,
-                  showId: 1,
-                  showName: channel.name,
-                  seasonNumber: 1,
-                  episodeNumber: hour - 5,
-                  episodeTitle: `${hour.toString().padStart(2, '0')}:00`,
-                  startTime: startTime,
-                  endTime: endTime,
-                  duration: 60,
-                  description: `Programación de ${channel.name}`,
-                  isCurrentlyPlaying: false,
-                  progress: 0
-                });
-              }
-            }
-          } catch (error) {
-            console.warn(`❌ Error obteniendo programación para ${channel.name}:`, error);
-            // Fallback: usar solo el nombre del canal
-            for (let hour = 6; hour < 24; hour++) {
-              const startTime = new Date(year, month - 1, day, hour, 0);
-              const endTime = new Date(year, month - 1, day, hour + 1, 0);
-              
-              programs.push({
-                id: `${channel.id}-${hour}`,
-                showId: 1,
-                showName: channel.name,
-                seasonNumber: 1,
-                episodeNumber: hour - 5,
-                episodeTitle: `${hour.toString().padStart(2, '0')}:00`,
-                startTime: startTime,
-                endTime: endTime,
-                duration: 60,
-                description: `Programación de ${channel.name}`,
-                isCurrentlyPlaying: false,
-                progress: 0
-              });
-            }
-          }
+      // Obtener el mes completo de programación real (mismos datos que usa
+      // el reproductor para determinar qué se transmite ahora)
+      const monthSchedule = await window.electronAPI.schedule.getMonthSchedule(year, month);
+      const allEntries: any[] = monthSchedule?.entries || [];
 
+      const dayStart = new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+      const dayEnd = new Date(year, month - 1, day + 1, 0, 0, 0, 0).getTime();
+
+      const guideChannels = channelsConfig.channels.map((channel: any) => {
+        // Un canal puede identificarse en las entradas por su uuid, id legacy o nombre
+        const channelEntries = allEntries
+          .filter((entry) => {
+            const matchesChannel =
+              entry.channelId === channel.uuid ||
+              entry.channelId === String(channel.id) ||
+              (typeof entry.channelId === 'string' && entry.channelId.toLowerCase() === String(channel.name).toLowerCase());
+
+            if (!matchesChannel) return false;
+
+            const start = new Date(entry.startTime).getTime();
+            const end = new Date(entry.endTime).getTime();
+            // Incluir cualquier entrada que se solape con el día solicitado
+            return start < dayEnd && end > dayStart;
+          })
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+        const programs: TVGuideProgram[] = channelEntries.map((entry) => {
+          const startTime = new Date(entry.startTime);
+          const endTime = new Date(entry.endTime);
           return {
-            channelId: channel.id.toString(),
-            channelNumber: channel.id,
-            channelName: channel.name,
-            programs
+            id: entry.id,
+            showId: 0, // El id real es un uuid/string (entry.showId); no aplica al tipo numérico legacy
+            showName: entry.showName,
+            seasonNumber: entry.season,
+            episodeNumber: entry.episode,
+            episodeTitle: entry.episodeTitle,
+            startTime,
+            endTime,
+            duration: Math.max(1, Math.round((endTime.getTime() - startTime.getTime()) / 60000)),
+            description: entry.episodeTitle ? `${entry.showName}: ${entry.episodeTitle}` : entry.showName,
+            isCurrentlyPlaying: false,
+            progress: 0
           };
-        })
-      );
+        });
+
+        return {
+          channelId: channel.uuid || String(channel.id),
+          channelNumber: channel.number,
+          channelName: channel.name,
+          programs
+        };
+      });
 
       const tvGuideData: TVGuideData = {
         year: year,
@@ -198,7 +153,7 @@ export class ScheduleServiceRenderer {
       };
 
       console.log(`✅ [ScheduleServiceRenderer] TV Guide generado: ${guideChannels.length} canales, ${guideChannels.reduce((total: number, ch: any) => total + ch.programs.length, 0)} programas`);
-      
+
       return tvGuideData;
 
     } catch (error) {
@@ -315,14 +270,17 @@ export class ScheduleServiceRenderer {
     return 'ready';
   }
 
-  public calculateCurrentShowTime(_entry: ScheduleEntry): any {
-    // Mock implementation
-    return {
-      totalDuration: 1800, // 30 minutos
-      elapsedTime: 0,
-      remainingTime: 1800,
-      progress: 0
-    };
+  public calculateCurrentShowTime(entry: ScheduleEntry): any {
+    const startMs = new Date(entry.startTime).getTime();
+    const endMs = new Date(entry.endTime).getTime();
+    const nowMs = Date.now();
+
+    const totalDuration = Math.max(0, (endMs - startMs) / 1000);
+    const elapsedTime = Math.max(0, Math.min(totalDuration, (nowMs - startMs) / 1000));
+    const remainingTime = Math.max(0, totalDuration - elapsedTime);
+    const progress = totalDuration > 0 ? (elapsedTime / totalDuration) * 100 : 0;
+
+    return { totalDuration, elapsedTime, remainingTime, progress };
   }
 
   public async enableSeasonRepeat(enabled: boolean): Promise<void> {

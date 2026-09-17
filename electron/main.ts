@@ -9,7 +9,7 @@ import { videoConverter } from './services/VideoConverter.js';
 import { videoAnalyzer } from './services/VideoAnalyzer.js';
 import { NativeVideoPlayerManager } from './services/NativeVideoPlayer.js';
 import { VideoStreamManager } from './services/VideoStreamManager.js';
-import { ScheduleService } from './services/ScheduleService.js';
+import { ScheduleServiceMain } from './services/ScheduleService.js';
 
 // Importar VideoEngineMain dinámicamente para evitar problemas de paths
 let VideoEngineMain: any;
@@ -154,10 +154,11 @@ ipcMain.handle('open-external', async (_, filePath) => {
 app.whenReady().then(async () => {
   // Inicializar ScheduleService
   try {
-    const scheduleService = ScheduleService.getInstance();
-    console.log('✅ [Main] ScheduleService inicializado correctamente');
+    const scheduleService = ScheduleServiceMain.getInstance();
+    console.log('✅ [Main] ScheduleServiceMain inicializado correctamente');
+    console.log('🔍 [Main] Estado inicial del schedule:', await scheduleService.initialize());
   } catch (error) {
-    console.error('❌ Error inicializando ScheduleService:', error);
+    console.error('❌ Error inicializando ScheduleServiceMain:', error);
   }
 
   // Inicializar motor de video
@@ -537,6 +538,199 @@ ipcMain.handle('get-folder-videos', async (_, folderPath) => {
     console.error('Error in get-folder-videos:', error);
     throw error;
   }
+});
+
+// Normaliza un nombre de archivo para comparación tolerante
+// (case-insensitive, espacios colapsados, forma unicode normalizada)
+function normalizeFileName(name: string): string {
+  return name
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Extrae un "código de episodio" del nombre de archivo (p.ej. "01a", "12b", "51")
+// buscando el primer patrón numérico (con letra opcional) del nombre.
+// Esto permite emparejar el mismo episodio aunque provenga de fuentes con
+// nomenclatura y calidad totalmente distintas (ej. "Bob Esponja - 01a - Se Busca
+// Ayuda (1080p WEB-DL).mkv" vs "01a - Se Busca Ayuda.mp4").
+function extractEpisodeCode(fileName: string): string | null {
+  const base = fileName.replace(/\.[^./\\]+$/, ''); // quitar extensión
+  const match = base.match(/(\d{1,3}[a-zA-Z]?)/);
+  return match ? match[1].toLowerCase() : null;
+}
+
+// Determina si el nombre de una subcarpeta parece corresponder a una temporada,
+// opcionalmente verificando que coincida con el número de temporada esperado.
+function looksLikeSeasonFolder(name: string, seasonNumber?: number): boolean {
+  const normalized = name.toLowerCase();
+  if (seasonNumber == null) {
+    return /temporada|season/.test(normalized);
+  }
+  const padded = String(seasonNumber).padStart(2, '0');
+  const patterns = [
+    `temporada ${seasonNumber}`,
+    `temporada${seasonNumber}`,
+    `temporada 0${seasonNumber}`,
+    `season ${seasonNumber}`,
+    `season${seasonNumber}`,
+    `s${padded}`,
+    `t${seasonNumber}`,
+  ];
+  return patterns.some(p => normalized.includes(p));
+}
+
+// Busca el archivo dentro de una carpeta específica (sin recursión), probando
+// en orden: coincidencia exacta, coincidencia tolerante, y coincidencia por
+// código de episodio (último recurso, para fuentes con nomenclatura distinta).
+async function searchDirectoryForFile(
+  dir: string,
+  fileName: string,
+  targetNormalized: string,
+  targetCode: string | null
+): Promise<string | null> {
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+
+  const files = entries.filter(e => e.isFile());
+
+  const exact = files.find(e => e.name === fileName);
+  if (exact) return path.join(dir, exact.name);
+
+  const fuzzy = files.find(e => normalizeFileName(e.name) === targetNormalized);
+  if (fuzzy) return path.join(dir, fuzzy.name);
+
+  if (targetCode) {
+    const byCode = files.find(e => extractEpisodeCode(e.name) === targetCode);
+    if (byCode) return path.join(dir, byCode.name);
+  }
+
+  return null;
+}
+
+// Intenta resolver un único nombre de archivo candidato en todas las carpetas dadas
+// (incluyendo subcarpetas de temporada como fallback). Retorna la ruta real o null.
+async function resolveSingleFileNameInDirectories(
+  directories: string[],
+  fileName: string,
+  seasonNumber?: number
+): Promise<string | null> {
+  const targetNormalized = normalizeFileName(fileName);
+  const targetCode = extractEpisodeCode(fileName);
+
+  for (const dir of directories) {
+    if (!dir) continue;
+    try {
+      // 1. Buscar directamente dentro de la carpeta configurada
+      const direct = await searchDirectoryForFile(dir, fileName, targetNormalized, targetCode);
+      if (direct) return direct;
+
+      // 2. Si no se encontró, puede que el usuario haya seleccionado la carpeta
+      // raíz del show en lugar de la carpeta específica de la temporada.
+      // Buscar en subcarpetas que parezcan de temporada (ej. "Temporada 1").
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      const seasonDirs = entries.filter(e => e.isDirectory() && looksLikeSeasonFolder(e.name, seasonNumber));
+      for (const seasonDir of seasonDirs) {
+        const nested = await searchDirectoryForFile(
+          path.join(dir, seasonDir.name),
+          fileName,
+          targetNormalized,
+          targetCode
+        );
+        if (nested) return nested;
+      }
+    } catch (error) {
+      // Carpeta inaccesible, no existe, o ruta inválida (p.ej. disco desconectado):
+      // continuar silenciosamente con la siguiente carpeta configurada.
+      console.warn(`⚠️ [Main] No se pudo leer la carpeta "${dir}" al resolver episodio:`, error instanceof Error ? error.message : error);
+      continue;
+    }
+  }
+
+  return null;
+}
+
+// Manejador para resolver la ruta real de un episodio buscando en múltiples carpetas,
+// probando TODOS los nombres de archivo candidatos conocidos para ese episodio (uno
+// por cada carpeta en la que se haya detectado originalmente, ya que pueden variar
+// entre fuentes/calidades distintas). Nunca lanza errores al renderer: si no
+// encuentra ningún archivo en ninguna carpeta, retorna null.
+ipcMain.handle('resolve-episode-file', async (_, payload: { directories: string[]; fileNames: string[]; seasonNumber?: number }) => {
+  const { directories, fileNames, seasonNumber } = payload || { directories: [], fileNames: [] };
+
+  if (!fileNames || fileNames.length === 0 || !directories || directories.length === 0) {
+    return null;
+  }
+
+  // Probar cada nombre de archivo candidato, en orden de prioridad
+  for (const fileName of fileNames) {
+    if (!fileName) continue;
+    const found = await resolveSingleFileNameInDirectories(directories, fileName, seasonNumber);
+    if (found) return found;
+  }
+
+  // No se encontró ningún nombre candidato en ninguna de las carpetas configuradas
+  return null;
+});
+
+// Manejador para emparejar los episodios de una temporada contra los archivos reales
+// de una carpeta recién agregada. Para cada episodio, busca coincidencia (exacta,
+// tolerante, o por código de episodio) entre sus nombres de archivo ya conocidos y
+// los archivos presentes en la carpeta, retornando el nombre real encontrado (o null)
+// para que la UI pueda agregarlo a la lista de nombres candidatos del episodio.
+ipcMain.handle('match-folder-episodes', async (_, payload: {
+  folderPath: string;
+  episodes: Array<{ episode: number; fileNames: string[] }>;
+}) => {
+  const { folderPath, episodes } = payload || { folderPath: '', episodes: [] };
+  const results: Record<number, string | null> = {};
+
+  if (!folderPath || !episodes || episodes.length === 0) {
+    return results;
+  }
+
+  try {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+    const files = entries.filter(e => e.isFile()).map(e => e.name);
+
+    for (const ep of episodes) {
+      let match: string | null = null;
+
+      // 1. Coincidencia exacta o tolerante contra cualquiera de los nombres conocidos
+      for (const candidate of ep.fileNames) {
+        if (!candidate) continue;
+        const exact = files.find(f => f === candidate);
+        if (exact) { match = exact; break; }
+
+        const normalizedCandidate = normalizeFileName(candidate);
+        const fuzzy = files.find(f => normalizeFileName(f) === normalizedCandidate);
+        if (fuzzy) { match = fuzzy; break; }
+      }
+
+      // 2. Último recurso: emparejar por código de episodio (para fuentes con
+      // nomenclatura totalmente distinta, pero mismo identificador de episodio)
+      if (!match) {
+        for (const candidate of ep.fileNames) {
+          if (!candidate) continue;
+          const code = extractEpisodeCode(candidate);
+          if (!code) continue;
+          const byCode = files.find(f => extractEpisodeCode(f) === code);
+          if (byCode) { match = byCode; break; }
+        }
+      }
+
+      results[ep.episode] = match;
+    }
+  } catch (error) {
+    console.warn(`⚠️ [Main] No se pudo leer la carpeta "${folderPath}" al emparejar episodios:`, error instanceof Error ? error.message : error);
+  }
+
+  return results;
 });
 
 ipcMain.handle('select-show-file', async () => {

@@ -18,8 +18,8 @@
   background: var(--menu-bg);
   border: 2px solid var(--menu-border-color);
   color: var(--menu-text-color);
-  padding: 20px;
-  z-index: 2000;
+  padding: var(--space-5);
+  z-index: var(--z-menu);
   width: 500px;
   max-width: 90%;
   max-height: 80vh;
@@ -35,23 +35,23 @@
 }
 
 .menu-00s {
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 0 30px rgba(51, 255, 51, 0.2);
 }
 
 .menu-header {
-  font-size: 24px;
+  font-size: var(--font-size-lg);
   text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--menu-border-color);
   text-shadow: 0 0 5px var(--menu-text-color);
 }
 
 .menu-sections {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
   justify-content: center;
 }
 
@@ -59,9 +59,11 @@
   background: var(--button-bg);
   border: 1px solid var(--button-border);
   color: var(--menu-text-color);
-  padding: 8px 16px;
+  padding: var(--button-padding-y-sm) var(--button-padding-x-sm);
+  border-radius: var(--button-radius);
+  font-size: var(--button-font-size);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .section-button:hover,
@@ -73,21 +75,35 @@
 .menu-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .menu-options button {
   background: var(--button-bg);
   border: 1px solid var(--button-border);
   color: var(--menu-text-color);
-  padding: 10px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
+  font-size: var(--button-font-size);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .menu-options button:hover {
   background: var(--button-hover);
   box-shadow: 0 0 10px var(--menu-text-color);
+}
+
+/* Botón de acción destructiva (resetear programación) */
+.menu-options button.reset-schedule-button {
+  margin-top: var(--space-2);
+  border-color: #ff5555;
+  color: #ff8888;
+}
+
+.menu-options button.reset-schedule-button:hover {
+  background: rgba(255, 85, 85, 0.2);
+  box-shadow: 0 0 10px #ff5555;
 }
 
 /* Input Styles */
@@ -128,11 +144,11 @@ textarea:focus {
 
 /* Channel Config Styles */
 .channel-config {
-  padding: 15px;
+  padding: var(--space-4);
   width: 100%;
   box-sizing: border-box;
   margin: 0 auto;
-  font-size: 14px;
+  font-size: var(--font-size-base);
   color: var(--menu-text-color);
   display: flex;
   flex-direction: column;
@@ -140,9 +156,9 @@ textarea:focus {
 }
 
 .channel-config h2 {
-  font-size: 18px;
-  margin: 0 0 15px 0;
-  padding-bottom: 8px;
+  font-size: var(--font-size-md);
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--menu-border-color);
   text-shadow: 0 0 5px var(--menu-text-color);
 }
@@ -267,47 +283,7 @@ textarea:focus {
   align-items: center;
 }
 
-.channel-actions button {
-  padding: 5px 10px;
-  font-size: 12px;
-  min-width: 70px;
-}
 
-.channel-config button {
-  background: var(--button-bg);
-  border: 1px solid var(--menu-border-color);
-  color: var(--menu-text-color);
-  padding: 8px 16px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 12px;
-  text-shadow: 0 0 2px var(--menu-text-color);
-}
-
-.channel-config button:hover {
-  background: var(--button-hover);
-  box-shadow: 0 0 8px var(--menu-text-color);
-}
-
-.edit-button, .delete-button {
-  min-width: 80px !important;
-  text-align: center;
-  font-family: monospace;
-  font-size: 14px !important;
-  padding: 6px 12px !important;
-}
-
-.delete-button {
-  background: rgba(255, 51, 51, 0.1) !important;
-  border-color: #ff3333 !important;
-  color: #ff3333 !important;
-}
-
-.delete-button:hover {
-  background: rgba(255, 51, 51, 0.2) !important;
-  box-shadow: 0 0 8px #ff3333 !important;
-}
 
 /* Ajustar el margen del último botón del formulario */
 .channel-form button:last-child {

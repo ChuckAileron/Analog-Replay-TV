@@ -6,8 +6,10 @@ import '../styles/tv-guide.css';
 interface TVGuideProps {
   onClose: () => void;
   onSelectProgram?: (program: TVGuideProgram, channel: TVGuideChannel) => void;
+  onChannelSelect?: (channelNumber: number) => void;
   initialDate?: Date;
   className?: string;
+  tvStyle?: '90s' | '00s';
 }
 
 /**
@@ -16,8 +18,10 @@ interface TVGuideProps {
 export const TVGuide: React.FC<TVGuideProps> = ({
   onClose,
   onSelectProgram,
+  onChannelSelect,
   initialDate,
-  className = ''
+  className = '',
+  tvStyle = '00s'
 }) => {
   const {
     guideData,
@@ -38,8 +42,6 @@ export const TVGuide: React.FC<TVGuideProps> = ({
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
   const timeHeaderRef = useRef<HTMLDivElement>(null);
-
-  const [tvStyle, setTVStyle] = useState<'90s' | '00s'>('00s');
 
   // Manejar navegación por teclado personalizada
   useEffect(() => {
@@ -78,6 +80,16 @@ export const TVGuide: React.FC<TVGuideProps> = ({
           event.preventDefault();
           onClose();
           break;
+
+        case 'Enter': {
+          event.preventDefault();
+          const channel = guideData?.channels[selectedChannel];
+          if (channel) {
+            onChannelSelect?.(channel.channelNumber);
+            onClose();
+          }
+          break;
+        }
         
         case 'F5':
           event.preventDefault();
@@ -93,7 +105,7 @@ export const TVGuide: React.FC<TVGuideProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [guideData, onClose, refreshData, goToToday]);
+  }, [guideData, selectedChannel, onClose, onChannelSelect, refreshData, goToToday]);
 
   // Auto scroll para mantener la celda seleccionada visible
   useEffect(() => {
@@ -105,23 +117,6 @@ export const TVGuide: React.FC<TVGuideProps> = ({
       timeHeaderRef.current.scrollLeft = Math.max(0, scrollLeft);
     }
   }, [selectedTimeSlot]);
-
-  // Detectar el estilo de la aplicación principal
-  useEffect(() => {
-    const checkAppStyle = () => {
-      const body = document.body;
-      const computedStyle = window.getComputedStyle(body);
-      if (body.classList.contains('style-90s') || 
-          computedStyle.backgroundColor === 'rgb(0, 0, 0)' ||
-          computedStyle.color === 'rgb(0, 255, 0)') {
-        setTVStyle('90s');
-      } else {
-        setTVStyle('00s');
-      }
-    };
-    
-    checkAppStyle();
-  }, []);
 
   // Ir a fecha inicial si se proporciona
   useEffect(() => {
@@ -286,7 +281,15 @@ export const TVGuide: React.FC<TVGuideProps> = ({
               className={`grid-row ${channelIndex === selectedChannel ? 'selected-row' : ''}`}
             >
               {/* Channel Info */}
-              <div className="channel-info">
+              <div
+                className="channel-info"
+                onClick={() => setSelectedChannel(channelIndex)}
+                onDoubleClick={() => {
+                  setSelectedChannel(channelIndex);
+                  onChannelSelect?.(channel.channelNumber);
+                  onClose();
+                }}
+              >
                 <div className="channel-number">{channel.channelNumber}</div>
                 <div className="channel-name">{channel.channelName}</div>
               </div>
