@@ -32,6 +32,7 @@ export interface TVSettings {
   aspectRatio : AspectRatio;
   tvStyle     : TVStyle;
   crtFilter   : boolean;
+  lastChannel : number; // Último canal sintonizado, para restaurarlo al reabrir la app
 }
 
 export interface ChannelGuide {

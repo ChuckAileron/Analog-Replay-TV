@@ -8,7 +8,8 @@ const DEFAULT_SETTINGS: TVSettings = {
   isMuted     : false,
   aspectRatio : '16:9',
   tvStyle     : '90s',
-  crtFilter   : true  // Por defecto activado
+  crtFilter   : true,  // Por defecto activado
+  lastChannel : 1       // Por defecto, canal 1
 };// Clave para almacenamiento local
 const STORAGE_KEY: string = 'retro-tv-settings';
 
@@ -112,5 +113,14 @@ export const settingsManager = {
     toggleCRTFilter: (): TVSettings => {
         const currentSettings: TVSettings = settingsManager.getCurrentSettings();
         return settingsManager.updateSettings({ crtFilter: !currentSettings.crtFilter });
+    },
+
+    /**
+     * Guarda el último canal sintonizado, para restaurarlo al reabrir la app
+     * @param {number} channelNumber - Número del canal actual
+     * @returns {TVSettings} Las nuevas configuraciones
+     */
+    setLastChannel: (channelNumber: number): TVSettings => {
+        return settingsManager.updateSettings({ lastChannel: channelNumber });
     }
 };

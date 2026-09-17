@@ -25,7 +25,9 @@ import './styles/controls-00s.css';
 import './styles/loading-animations.css';
 
 function App() {
-  const [currentChannel, setCurrentChannel] = useState<number>(1); // Iniciar en canal 1
+  // Restaurar el último canal sintonizado (persistido en settings) en vez de
+  // siempre iniciar en el canal 1.
+  const [currentChannel, setCurrentChannel] = useState<number>(() => settingsManager.getCurrentSettings().lastChannel || 1);
   const [currentShow, setCurrentShow] = useState<TVShow | null>(null);
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const [settings, setSettings] = useState<TVSettings>(settingsManager.getCurrentSettings());
@@ -127,9 +129,14 @@ function App() {
         
         console.log(`✅ [App] Schedule status: ${status}`);
         
-        // Si no necesita selección de año, configuración completa
+        // Si no necesita selección de año, sintonizar automáticamente el
+        // último canal que el usuario tenía abierto (persistido en settings).
         if (status === 'ready') {
-          console.log('✅ [App] Sistema de programación listo');
+          console.log('✅ [App] Sistema de programación listo, restaurando último canal:', currentChannel);
+          const result = await channelManager.goToChannel(currentChannel);
+          // Se pasa `true` explícitamente porque `scheduleStatus` del estado
+          // del componente aún no refleja 'ready' en este mismo ciclo (closure).
+          await applyChannelChangeResult(result, true);
         }
         
         // Forzar actualización del display
@@ -244,6 +251,9 @@ function App() {
 
     // Actualizar el canal actual
     setCurrentChannel(result.channelNumber);
+
+    // Persistir el canal para restaurarlo automáticamente la próxima vez que se abra la app
+    settingsManager.setLastChannel(result.channelNumber);
 
     // Reiniciar la animación cambiando la key
     setChannelDisplayKey(prev => prev + 1);
@@ -557,7 +567,7 @@ function App() {
                 muted={settings.isMuted || !isPoweredOn}
               />
             ) : currentProgramType === 'filler' ? (
-              <AnalogReplayFiller tvStyle={settings.tvStyle} />
+              <AnalogReplayFiller tvStyle={settings.tvStyle} crtFilter={settings.crtFilter} />
             ) : (
               <div className="empty-channel" style={{
                 width: '100%',
