@@ -43,7 +43,12 @@
 .style-90s h3 { font-size: var(--font-size-md); }
 
 /* Botones */
-.style-90s button:not(.tv-guide button) {
+/* El control remoto define su propio sistema visual (tokens --remote-*, gradientes,
+   radio y tipografia propia) con reglas mas especificas, asi que se excluye del
+   estilo generico de botones 90s igual que se excluye la guia de TV. Sin esta
+   exclusion el padding y la tipografia genericos desbordan las etiquetas largas
+   (p.ej. "SETTINGS") y el texto deja de quedar centrado. */
+.style-90s button:not(.tv-guide button):not(.remote-control button) {
   background-color: var(--button-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
@@ -57,12 +62,12 @@
   transition: all var(--transition-base);
 }
 
-.style-90s button:hover:not(.tv-guide button) {
+.style-90s button:hover:not(.tv-guide button):not(.remote-control button) {
   background-color: var(--button-hover-bg);
   box-shadow: 0 0 15px var(--text-color);
 }
 
-.style-90s button.active:not(.tv-guide button) {
+.style-90s button.active:not(.tv-guide button):not(.remote-control button) {
   background-color: var(--button-active-bg);
   color: #000;
   text-shadow: none;

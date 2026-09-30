@@ -10,7 +10,6 @@
   --button-hover         : linear-gradient(to bottom, #004488, #002244);
   --button-text-shadow   : 0 0 5px rgba(0, 204, 255, 0.5);
   --screen-glow          : 0 0 30px rgba(0, 128, 255, 0.15);
-  --metallic-border      : linear-gradient(45deg, #0a1f3d, #1a3f6d);
   --danger-color         : #ff5566;
   --danger-color-hover   : #ff7788;
 }
@@ -24,7 +23,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px;
+  /* Sin padding: la pantalla ocupa el alto completo de la ventana. */
+  padding: 0;
   box-sizing: border-box;
   font-family: Arial, sans-serif;
   overflow: hidden;
@@ -36,20 +36,20 @@
   margin: 0;
 }
 
-/* Pantalla de TV 2000s - RESPONSIVE MEJORADO
-   Sin tope fijo en píxeles: escala con el viewport (vw/vh), por lo que crece
-   correctamente al activar pantalla completa, siempre conservando la
-   proporción de aspecto elegida (16:9 o 4:3). */
+/* Pantalla de TV 2000s - La pantalla ocupa TODO el alto de la ventana y el ancho
+   se deriva del aspecto elegido (16:9 o 4:3), con `box-sizing: border-box` para
+   que el marco (cuando lo hubiera) nunca empuje la imagen fuera de la ventana.
+   Esta TV va deliberadamente SIN marco/bisel: la imagen ocupa toda la pantalla,
+   así que no hay ni `border` ni `--metallic-border` (el ajuste "Marco TV" del
+   panel es exclusivo del estilo 90s). */
 .tv-container.style-00s .tv-screen {
-  width: min(90vw, calc(90vh - 120px) * 16/9);
-  height: min(90vh - 120px, 90vw * 9/16);
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
   min-width: 320px;
   min-height: 240px;
-  border: 15px solid;
-  border-image: var(--metallic-border) 1;
-  border-radius: 10px;
   background-color: var(--tv-screen-color);
-  box-shadow: 
+  box-sizing: border-box;
+  box-shadow:
     var(--screen-glow),
     inset 0 0 50px rgba(0, 128, 255, 0.1);
   overflow: hidden;
@@ -66,13 +66,13 @@
 /* Pantalla 4:3 responsive */
 .tv-container.style-00s .tv-screen.aspect-4-3 {
   aspect-ratio: 4/3 !important;
-  width: min(90vw, calc(90vh - 120px) * 4/3) !important;
+  width: min(100vw, calc(100vh * 4 / 3)) !important;
   /* La regla base ya define un "height" explícito calculado en base a 16:9;
      como CSS no recalcula aspect-ratio cuando width y height están ambos
      definidos explícitamente, hay que sobreescribir también el height
      con la fórmula equivalente en proporción 4:3 para que el marco
      realmente cambie de forma. */
-  height: min(90vh - 120px, 90vw * 3/4) !important;
+  height: min(100vh, calc(100vw * 3 / 4)) !important;
 }
 
 /* Display de canal estilo 2000s */
@@ -95,29 +95,66 @@
   animation     : channelDisplay00s 5s linear;
 }
 
-/* Controles de TV 2000s - RESPONSIVE MEJORADO */
-.tv-container.style-00s .tv-controls {
-  width: 100%;
-  max-width: min(1000px, 90vw);
+/* Error de canal: banner OSD superpuesto en la parte superior del cuadro de
+   reproducción. `position: absolute` lo saca del flujo flex (si se deja como
+   hermano en flujo del reproductor, el contenedor flex lo aplasta contra el
+   borde derecho como una columna). */
+.tv-container.style-00s .tv-screen .channel-error {
+  position: absolute;
+  top: clamp(10px, 3.5vh, 28px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
   display: flex;
-  gap: clamp(12px, 2.5vw, 20px);
-  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  flex-shrink: 0;
-  background: linear-gradient(to bottom, #001832, #000c1a);
-  padding: clamp(12px, 2vh, 15px);
-  border-radius: 8px;
-  border: 1px solid var(--menu-border-color);
-  box-shadow: 
-    0 2px 10px rgba(0, 64, 128, 0.2),
-    inset 0 1px 1px rgba(0, 128, 255, 0.1);
+  pointer-events: none;
+  background: rgba(0, 8, 20, 0.85);
+  border: 1px solid #00ccff;
+  color: #66ddff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: clamp(12px, 1.4vw, 16px);
+  letter-spacing: 0.5px;
+  padding: clamp(6px, 1.2vh, 10px) clamp(14px, 2.5vw, 24px);
+  border-radius: 6px;
+  text-align: center;
+  box-shadow:
+    0 2px 12px rgba(0, 64, 128, 0.4),
+    inset 0 1px 1px rgba(0, 128, 255, 0.15);
 }
 
-.tv-container.style-00s .channel-buttons,
-.tv-container.style-00s .settings-buttons {
+/* Controles de TV 2000s - superpuestos sobre la pantalla de reproducción.
+   Al vivir dentro de `.tv-screen` se posicionan en absoluto y no reservan alto,
+   de modo que la imagen usa toda la ventana. `pointer-events: none` deja pasar
+   los clics al video en el espacio sobrante; los botones sí los reciben. */
+.tv-container.style-00s .tv-screen > .tv-controls {
+  position: absolute;
+  /* left/right a 0 + justify-content:center: el overlay toma el ancho completo
+     de la pantalla para que la fila de botones NUNCA envuelva a media ventana
+     (con left:50% el ancho disponible quedaba limitado a la mitad). */
+  left: 0;
+  right: 0;
+  bottom: clamp(10px, 2vh, 24px);
+  z-index: 1100;
+  width: auto;
+  max-width: calc(100% - clamp(20px, 4vw, 48px));
+  margin-inline: auto;
   display: flex;
+  justify-content: center;
   gap: clamp(8px, 1.5vw, 12px);
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.tv-container.style-00s .tv-screen > .tv-controls .channel-buttons {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 1.5vw, 12px);
+  flex-wrap: nowrap;
+  pointer-events: auto;
 }
 
 .tv-container.style-00s .tv-controls button {
@@ -251,33 +288,20 @@
   animation: changeChannel00s 0.4s ease-in-out;
 }
 
-/* ===== MEDIA QUERIES RESPONSIVE ===== */
+/* ===== MEDIA QUERIES RESPONSIVE =====
+   No se sobrescribe el width/height de `.tv-screen` en ningún breakpoint: la
+   pantalla ya ocupa todo el alto de la ventana y el ancho se deriva del aspecto,
+   así que basta con ajustar tipografías y la posición del OSD. */
 
 /* Mobile devices */
 @media (max-width: 480px) {
-  .tv-container.style-00s {
-    padding: 15px;
-  }
-  
-  .tv-container.style-00s .tv-screen {
-    width: 95%;
-    height: calc(85vh - 100px);
-    border-width: 8px;
-    border-radius: 6px;
-  }
-  
   .tv-container.style-00s .channel-display {
     font-size: 18px;
     top: 10px;
     right: 10px;
     padding: 4px 8px;
   }
-  
-  .tv-container.style-00s .tv-controls {
-    padding: 10px;
-    gap: 10px;
-  }
-  
+
   .tv-container.style-00s .tv-controls button {
     padding: 6px 12px;
     font-size: 12px;
@@ -286,17 +310,6 @@
 
 /* Tablets */
 @media (min-width: 481px) and (max-width: 768px) {
-  .tv-container.style-00s {
-    padding: 20px;
-  }
-  
-  .tv-container.style-00s .tv-screen {
-    width: 92%;
-    height: calc(88vh - 110px);
-    border-width: 12px;
-    border-radius: 8px;
-  }
-  
   .tv-container.style-00s .channel-display {
     font-size: 20px;
     top: 15px;
@@ -313,29 +326,9 @@
     right: 25px;
     padding: 10px 20px;
   }
-  
-  .tv-container.style-00s .tv-controls {
-    padding: 20px;
-    gap: 25px;
-  }
-  
+
   .tv-container.style-00s .tv-controls button {
     padding: 10px 18px;
     font-size: 16px;
-  }
-}
-
-
-/* High screens (vertical orientation) */
-@media (max-aspect-ratio: 4/3) {
-  .tv-container.style-00s .tv-screen {
-    height: calc(70vh - 120px);
-  }
-}
-
-/* Very wide screens (horizontal orientation) */
-@media (min-aspect-ratio: 21/9) {
-  .tv-container.style-00s .tv-screen {
-    height: calc(95vh - 120px);
   }
 }

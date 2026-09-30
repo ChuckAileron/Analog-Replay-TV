@@ -24,6 +24,14 @@ export interface Program {
 export type AspectRatio = '16:9' | '4:3';
 export type TVStyle     = '90s' | '00s';
 
+/**
+ * Shader del filtro CRT. Solo aplica en el estilo 90s.
+ *
+ * - `analog-replay`: filtro original de Analog Replay TV (Canvas 2D).
+ * - `royale`:        shader WebGL inspirado en crt-royale (ver electron/services/crtShaders.ts).
+ */
+export type CRTFilterStyle = 'analog-replay' | 'royale';
+
 export interface TVSettings {
   brightness  : number;
   contrast    : number;
@@ -32,6 +40,8 @@ export interface TVSettings {
   aspectRatio : AspectRatio;
   tvStyle     : TVStyle;
   crtFilter   : boolean;
+  crtStyle    : CRTFilterStyle; // Shader del filtro CRT (solo estilo 90s)
+  tvFrame     : boolean; // Bisel/marco de la TV (solo estilo 90s; el 00s va siempre sin marco)
   lastChannel : number; // Último canal sintonizado, para restaurarlo al reabrir la app
 }
 
@@ -39,11 +49,3 @@ export interface ChannelGuide {
   channelId : number;
   programs  : Program[];
 }
-
-export type ControlAction = 
-  | { type: 'CHANNEL_UP' }
-  | { type: 'CHANNEL_DOWN' }
-  | { type: 'SET_CHANNEL'; channel: number }
-  | { type: 'TOGGLE_GUIDE' }
-  | { type: 'TOGGLE_SETTINGS' }
-  | { type: 'UPDATE_SETTINGS'; settings: Partial<TVSettings> };

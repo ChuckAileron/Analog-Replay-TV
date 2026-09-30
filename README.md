@@ -26,20 +26,22 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - **Selección de año de transmisión inicial**: la primera vez que se abre la app, se elige una década y un año; a partir de ahí se genera automáticamente la programación de todos los canales para ese año completo.
 - **Cambio de canal realista**: al subir/bajar de canal, la app siempre muestra el show y episodio que "está en emisión ahora mismo" según la hora real del dispositivo y la programación generada — no siempre el mismo episodio desde el principio, sino el punto exacto (minuto y segundo) donde debería estar la transmisión en ese momento.
 - **Programación alineada a bloques de 30 minutos**: cada episodio comienza siempre en horario "en punto" o "y media", como una parrilla de TV real. Si un episodio dura menos de 30 minutos, el tiempo restante se llena con una pantalla animada de identificación de estación ("AnalogReplayTV") con estilo acorde a la época elegida (90s o 2000s), en lugar de dejar un vacío o cortar abruptamente. Este espacio será usado a futuro para comerciales.
+- **Bloques de emisión por franja horaria (`broadcastBlock`)**: cada show o episodio puede restringirse a una franja del día y entonces solo aparece en la programación durante ese horario: `morning` (06:00–14:00), `afternoon` (14:00–22:00) o `night` (22:00–06:00, cruzando medianoche). Si no se define, el valor por defecto es `all` (sin restricción).
 - **Episodios multiparte como un solo programa**: los archivos de episodio que comparten un código de bloque en su título (patrón `<número><letra>`, por ejemplo "01a: ...", "01b: ...", "01c: ...", que corresponden al mismo episodio real dividido en varias partes) se detectan automáticamente y se agrupan en un solo bloque etiquetado como un único episodio: la programación calcula su duración combinada (todas las partes cuentan como un solo programa dentro del bloque de 30 minutos) y el reproductor las encadena en secuencia automáticamente, incluyendo reanudar en la parte correcta si la transmisión cae a mitad del bloque. Los episodios independientes sin código de letra (como especiales sueltos) siguen tratándose como bloques de una sola parte.
 - **Avance automático de episodios**: mientras se permanece en un canal, la aplicación revisa periódicamente si la programación avanzó a un nuevo episodio o bloque y actualiza la reproducción automáticamente, sin que el usuario tenga que volver a cambiar de canal.
 - **Mezcla de shows por canal**: cuando varios programas comparten el mismo canal, se alternan entre sí (round-robin) en vez de transmitir todos los episodios de uno antes de pasar al siguiente, simulando una parrilla más variada.
 - **Filtrado de programación por década de emisión**: cada show puede configurarse con años de transmisión específicos o marcarse como "hasta la fecha" para que aparezca siempre sin importar el año elegido. La validación es **por década**: si el año de transmisión del show cae en la misma década que el año de la programación seleccionado, el show se incluye (ej. un show con emisión en 1996 aparece en una programación de 1999).
-- **Reproducción resiliente ante archivos faltantes**: si el episodio programado no se encuentra en ninguna carpeta configurada, la aplicación busca automáticamente otro episodio disponible del mismo show en vez de detenerse con un error; los mensajes de error, cuando ocurren, se muestran de forma discreta dentro del propio reproductor (nunca como ventanas emergentes intrusivas).
+- **Reproducción resiliente ante archivos faltantes**: si el episodio programado no se encuentra en ninguna carpeta configurada, la aplicación busca automáticamente otro episodio disponible del mismo show en vez de detenerse con un error; los mensajes de error, cuando ocurren, se muestran como un banner OSD en la parte superior del cuadro de reproducción (nunca como ventanas emergentes intrusivas).
+- **Pantalla a alto completo y controles superpuestos**: el cuadro de reproducción ocupa todo el alto de la ventana y su ancho se ajusta de forma responsiva según la relación de aspecto (16:9 o 4:3), incluido el marco de la TV (que se dibuja hacia adentro sin empujar la imagen). Los botones (control remoto, pantalla completa, ocultar botones) se superponen centrados en la parte baja de la propia imagen, de modo que **no reservan ninguna altura** y la programación siempre usa la ventana completa.
 - **Múltiples carpetas de contenido por temporada**: es posible agregar más de una carpeta de contenido para una misma temporada (por ejemplo, un disco duro externo con otro puerto o una copia de respaldo). Al agregar una carpeta nueva, la aplicación intenta emparejar automáticamente los archivos existentes en ella con los episodios ya configurados (por nombre exacto, nombre similar, o código de episodio), y reproduce el que efectivamente exista sin pedir intervención manual.
 - **Control remoto simulado**: un panel con botones de encendido/apagado, silencio, canal arriba/abajo, volumen arriba/abajo, menú, guía, teclado numérico para saltar directamente a un canal, y botón de último canal ("LAST"). Es completamente navegable con el mouse o con el teclado (flechas para moverse entre botones, Enter para seleccionar).
 - **Encendido/apagado de la TV**: al "apagar" la TV desde el control remoto, la pantalla se pone en negro y el audio se silencia; al "encenderla" de nuevo, la reproducción continúa exactamente donde correspondería según la hora real.
-- **Botones de control ocultables**: los botones inferiores (canal arriba/abajo, menú, guía, control remoto) están ocultos por defecto para una vista más limpia; se muestran presionando Enter o cualquier flecha del teclado, y se ocultan con Escape o con un botón dedicado.
+- **Botones de control ocultables**: los botones de control (control remoto, pantalla completa, ocultar botones) están ocultos por defecto para una vista más limpia; se muestran presionando Enter o cualquier flecha del teclado, y se ocultan con Escape o con un botón dedicado. Al mostrarse se dibujan centrados sobre la parte baja de la reproducción.
 - **Guía de programación (TV Guide)**: muestra en una grilla los canales disponibles junto con el show y episodio real que corresponde a cada franja horaria del día, navegable con el teclado.
-- **Ajustes visuales en vivo**: cambio entre estilo 90s/2000s, relación de aspecto 4:3/16:9 (con el marco de la TV cambiando de forma correctamente), filtro CRT, y control de volumen — todo aplicado sin interrumpir la reproducción en curso.
-- **Resetear programación**: desde el menú de configuración es posible borrar toda la programación generada y volver a elegir un año de transmisión desde cero, con confirmación previa para evitar borrados accidentales.
-- **Gestión completa de shows y canales**: alta, edición e importación de shows (con temporadas, episodios, canales asignados, años de emisión, y carpetas de contenido) y canales, todo desde el menú de configuración dentro de la propia aplicación.
-- **Consola de configuración dedicada (app de escritorio)**: además del menú de configuración de la TV, existe una **aplicación de escritorio separada** (`npm run admin` o botón "Configuración" en la TV) con estética de app nativa — barra superior, barra lateral de navegación, paneles y botón **"Volver"** con historial para regresar a pantallas anteriores. Desde ahí se administran canales, programas y la programación (generar/regenerar un año o resetearla por completo) reutilizando los mismos componentes de configuración de la TV.
+- **Ajustes visuales y volumen**: estilo 90s/2000s, relación de aspecto 4:3/16:9 (con el marco de la TV cambiando de forma correctamente), **marco de TV configurable**, filtro CRT y volumen, aplicados sin interrumpir la reproducción en curso.
+- **Marco de TV configurable**: el ajuste **Marco TV** del panel de ajustes quita o vuelve a poner el bisel del estilo 90s. En el estilo 2000s no existe bisel por diseño (la imagen ocupa toda la pantalla), por lo que la opción solo aparece en 90s.
+- **Ajustes desde el control remoto**: el botón **SETTINGS** del control remoto abre un panel donde se eligen el estilo de TV (90s/2000s), la relación de aspecto (16:9/4:3) y el filtro CRT (solo en estilo 90s), incluido el shader: **CRT Analog Replay TV** (el filtro original) o **CRT Royale** (shader WebGL). Estos cambios se guardan en la base de datos y no interrumpen lo que se está viendo. También se pueden administrar desde la aplicación de configuración externa.
+- **Configuración administrada desde fuera**: canales, programas y programación (generación y reseteo) ya **no** se editan desde la TV; se gestionan desde una aplicación independiente que escribe en la misma base de datos.
 - **Conversión automática de video cuando es necesario**: si el archivo de un episodio no es compatible de forma nativa con el reproductor, la aplicación lo detecta y lo convierte automáticamente con FFmpeg antes de reproducirlo.
 
 ---
@@ -91,6 +93,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 - Soporte para múltiples carpetas de contenido por temporada, con emparejamiento automático de archivos al agregar una carpeta nueva.
 - Configuración de años de transmisión por show (`airYears`) o marca "hasta la fecha" (`airUntilToDate`) para controlar en qué años aparece un show en la programación generada.
 - Generación de programación real y anual: se lee el catálogo real de shows/canales configurados, se filtra por año de emisión, y se arma una rotación mezclada (round-robin) de episodios por canal.
+- Restricción de emisión por franja horaria (`broadcastBlock`: `morning`, `afternoon`, `night`, con `all` como valor por defecto) aplicada tanto al definir los shows como al generar la parrilla anual: un episodio con bloque `night` nunca se transmite fuera de 22:00–06:00.
 - Programación alineada a slots de 30 minutos, con relleno automático ("AnalogReplayTV") cuando un episodio no llena el bloque completo.
 - Resolución en tiempo real de "qué se transmite ahora": cruza la hora actual del dispositivo con la programación generada para determinar el show, temporada, episodio y punto de reanudación exactos.
 - Avance automático de episodios mediante sondeo periódico mientras la TV permanece encendida en un canal.
@@ -105,19 +108,16 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 
 ### 7. Persistencia local y configuración
 
-- Configuración de usuario guardada localmente (estilo visual, aspecto, volumen, filtro CRT).
+- Ajustes de TV leídos de la base de datos al arrancar (estilo visual, relación de aspecto, filtro CRT) y editables desde el panel de ajustes del control remoto o desde la aplicación de configuración externa.
+- Volumen, mute y último canal sintonizado persistidos localmente por la propia TV.
 - Programación generada persistida en la carpeta de datos de usuario de Electron (no en el código fuente), compatible con builds empaquetadas.
 - Inicialización al arrancar la aplicación para recuperar estado previo.
 
-### 8. Consola de configuración (app de escritorio separada)
+### 8. Configuración administrada desde la aplicación externa
 
-- **Ventana propia de escritorio**: se abre en una ventana de Electron independiente con marco y barra de título nativos, sin interferir con la experiencia de la TV (que puede seguir funcionando en paralelo).
-- **Estética de aplicación de escritorio**: barra superior con título, fecha y breadcrumb; barra lateral de navegación (Inicio, Canales, Programas, Programación); paneles y botones de acción con estilo de app de escritorio.
-- **Navegación con botón "Volver"**: se mantiene un historial apilado de pantallas; cada pantalla (o navegación lateral) permite regresar a la pantalla anterior con el botón **"← Volver"** o presionando el item de la pantalla previa en la barra lateral.
-- **Pantalla de inicio (dashboard)**: resumen con conteo de canales (habilitados/total), programas, episodios y estado de la programación (año principal, meses generados, última generación), con accesos rápidos a cada sección.
-- **Canales y Programas**: reutilizan los componentes `ChannelConfig` y `ShowConfig` de la TV (alta, edición, eliminación e importación) dentro del nuevo shell de escritorio.
-- **Programación**: muestra el estado y detalle de la programación generada, permite **generar/regenerar el año** (reutilizando el asistente de selección de década/año) y **resetear la programación completa** con confirmación previa.
-- **Lanzamiento**: se abre de forma independiente con `npm run admin`, o desde la TV con el botón "Configuración" (IPC `open-admin-window`, ventana reutilizable si ya está abierta).
+- **Fuera de la TV**: la TV no incluye UI para canales, programas ni generación/reset de programación. Esos valores se administran desde una aplicación independiente que comparte la misma base de datos SQLite.
+- **Lo único editable en la TV son los ajustes de imagen**, a través del botón **SETTINGS** del control remoto: estilo de TV (90s/2000s), relación de aspecto (16:9/4:3) y filtro CRT (solo disponible en el estilo 90s). Funcionan incluso con la TV apagada.
+- **Sin año configurado**: si la programación todavía no tiene un año principal, la TV arranca igualmente y cada canal muestra "sin programación" en lugar de pedir una selección de año.
 
 ---
 
@@ -166,7 +166,7 @@ Esta es la experiencia completa desde el punto de vista de quien usa la aplicaci
 
 El proyecto está estructurado en varias capas:
 
-- Frontend de la interfaz: componentes React en src/ (incluida la consola de configuración en src/admin/)
+- Frontend de la interfaz: componentes React en src/
 - Lógica de dominio: servicios, hooks y managers para canales, shows y guía
 - Proceso principal de Electron: electron/
 - Procesado y análisis de video: electron/services/
@@ -194,19 +194,11 @@ AnalogReplayTV/
 │   └── types/
 ├── src/
 │   ├── App.tsx
-│   ├── admin/
-│   │   └── main.tsx  (raíz React de la consola de configuración)
 │   ├── components/
 │   │   ├── RemoteControl.tsx
 │   │   ├── AnalogReplayFiller.tsx
 │   │   ├── TVShowPlayer.tsx
 │   │   ├── TVGuide.tsx
-│   │   ├── ShowConfig.tsx
-│   │   ├── ChannelConfig.tsx
-│   │   ├── admin/
-│   │   │   ├── AdminApp.tsx
-│   │   │   ├── AdminHomeScreen.tsx
-│   │   │   └── AdminScheduleScreen.tsx
 │   │   └── ...
 │   ├── config/
 │   ├── features/
@@ -217,20 +209,33 @@ AnalogReplayTV/
 │   └── utils/
 │       ├── episodeFiles.ts
 │       └── episodeBlocks.ts
+│   └── index.html
+├── test/
+│   ├── broadcastBlocks.test.ts
+│   ├── crtFilter.test.ts
+│   ├── episodeBlocks.test.ts
+│   └── videostream-manager.html
 ├── docs/
 │   ├── COMMERCIAL_SYSTEM.md
+│   ├── CRT_FILTERS.md
+│   ├── INSTALL_FFMPEG.md
 │   ├── SCHEDULE_SYSTEM.md
 │   ├── SHOW_SYSTEM.md
-│   └── VIDEO_ARCHITECTURE_PROPOSAL.md
+│   ├── VIDEO_ARCHITECTURE_PROPOSAL.md
+│   ├── VIDEO_QUALITY_CONSTRAINTS.md
+│   └── vlc-help.txt
 ├── public/
 ├── scripts/
+│   ├── generate-new-schedule.cjs
+│   ├── install-ffmpeg.ps1
+│       ├── test-coverage.mjs
+│       └── ...
 ├── dist-electron/
 ├── package.json
 ├── tsconfig.json
+├── tsconfig.test.json
 ├── vite.config.ts
 ├── electron-builder.json
-├── index.html
-├── admin.html  (entrada Vite de la consola de configuración)
 ├── README.md
 └── ...
 ```
@@ -240,13 +245,12 @@ AnalogReplayTV/
 ## Flujo de uso
 
 1. El usuario lanza la aplicación.
-2. Si es la primera vez, se solicita elegir una década y un año de transmisión; con eso se genera automáticamente la programación anual completa para todos los canales configurados.
-3. La UI inicializa canales y carga la programación generada.
-4. El usuario navega entre canales (con los botones en pantalla, el teclado o el control remoto simulado); en cada canal se resuelve el show, temporada, episodio y punto exacto de reproducción según la hora real del dispositivo.
-5. Si el episodio dura menos que su bloque de 30 minutos, se muestra la pantalla animada de relleno "AnalogReplayTV" hasta el siguiente bloque.
-6. Mientras el usuario permanece en un canal, la aplicación revisa periódicamente si la programación avanzó y actualiza la reproducción automáticamente.
-7. Si el video no es compatible, la aplicación lo convierte con FFmpeg antes de reproducirlo; si el archivo programado no está disponible en ninguna carpeta configurada, se reproduce otro episodio disponible del mismo show.
-8. La experiencia se mantiene con estilo retro, guía de programación, control remoto y controles de TV ocultables.
+2. La UI inicializa canales y carga la programación generada (la programación se crea y administra desde la aplicación de configuración externa).
+3. El usuario navega entre canales (con los botones en pantalla, el teclado o el control remoto simulado); en cada canal se resuelve el show, temporada, episodio y punto exacto de reproducción según la hora real del dispositivo.
+4. Si el episodio dura menos que su bloque de 30 minutos, se muestra la pantalla animada de relleno "AnalogReplayTV" hasta el siguiente bloque.
+5. Mientras el usuario permanece en un canal, la aplicación revisa periódicamente si la programación avanzó y actualiza la reproducción automáticamente.
+6. Si el video no es compatible, la aplicación lo convierte con FFmpeg antes de reproducirlo; si el archivo programado no está disponible en ninguna carpeta configurada, se reproduce otro episodio disponible del mismo show.
+7. La experiencia se mantiene con estilo retro, guía de programación, control remoto y controles de TV ocultables.
 9. En cualquier momento el usuario puede resetear la programación desde el menú para elegir un nuevo año desde cero.
 
 ---
@@ -256,7 +260,7 @@ AnalogReplayTV/
 - Node.js 18 o superior
 - npm o pnpm
 - FFmpeg instalado y accesible desde el PATH
-- Entorno Windows recomendado para la instalación de FFmpeg y el empaquetado final
+- Entorno Windows recomendado para instalación de FFmpeg y empaquetado de Windows/Linux; el paquete `.dmg` de macOS solo se puede generar en macOS
 
 ---
 
@@ -339,19 +343,34 @@ npm run desktop:debug
 Igual que `npm run desktop`, pero abriendo DevTools sobre el build final, útil para depurar el renderizado de producción.
 
 ```bash
-npm run admin
-```
-Compila y lanza la **consola de configuración en su propia ventana de escritorio** (marco nativo, sin DevTools): es la app dedicada para administrar canales, programas y la programación (generar/regenerar o resetear). También se puede abrir desde la TV con el botón "Configuración".
-
-```bash
-npm run admin:debug
-```
-Igual que `npm run admin`, pero abriendo DevTools sobre la consola de configuración para depurar su renderizado.
-
-```bash
 npm run electron:build
 ```
 Genera el paquete final de la aplicación de escritorio.
+
+```bash
+npm run dist:win
+```
+Genera los ejecutables de **Windows**: instalador NSIS (`AnalogReplayTV-<versión>-win-x64-setup.exe`) y **portable** (`...-win-x64-portable.exe`, corre sin instalar).
+
+```bash
+npm run dist:mac
+```
+Genera el `.dmg` y el `.app.zip` portables de **macOS** (tiene que ejecutarse en macOS).
+
+```bash
+npm run dist:linux
+```
+Genera el `.AppImage` y el `.tar.gz` de **Linux**.
+
+```bash
+npm run dist
+```
+Genera los paquetes para el sistema operativo actual.
+
+```bash
+npm run dist:win:portable
+```
+Solo el ejecutable portable de la variante (existen `dist:mac:portable` y `dist:linux:portable`).
 
 ```bash
 npm run lint
@@ -362,6 +381,26 @@ Ejecuta ESLint para validar el código.
 npm run type-check
 ```
 Comprueba los tipos de TypeScript para frontend y Electron.
+
+```bash
+npm run check
+```
+Ejecuta la validación completa: `type-check` + `lint` + suite de tests unitarios.
+
+```bash
+npm test
+```
+Compila y ejecuta los tests unitarios TypeScript con el runner nativo de Node.
+
+```bash
+npm run test:coverage
+```
+Genera el informe de cobertura de los módulos puros sin dependencias extra.
+
+```bash
+npm run test:coverage:strict
+```
+Como `test:coverage`, pero exigiendo 100% en líneas, ramas y funciones.
 
 ---
 
@@ -394,40 +433,60 @@ Este modo está pensado para levantar la aplicación como un producto terminado 
 - La ventana usa un **marco nativo** (`frame: true`) con su barra de título, por lo que se puede **arrastrar, mover y redimensionar** como cualquier ventana del sistema operativo.
 - **No se abre DevTools**, evitando el inspector de desarrollo en el uso normal.
 - Se activa con la variable de entorno `DESKTOP_WINDOW=1`; si además se define `OPEN_DEVTOOLS=1` se fuerza la apertura del inspector sobre el build final (lo que hace exactamente el script `npm run desktop:debug`).
+- En los **ejecutables empaquetados** (instalador, portable, `.dmg`, `.AppImage`) este modo es el comportamiento por defecto: el proceso principal usa `app.isPackaged` cuando la variable no está definida, de modo que todos los paquetes abren con marco nativo y sin DevTools, exactamente como `npm run desktop`.
 
 ---
 
-## Consola de configuración (app de escritorio adicional)
+## Configuración (aplicación externa)
 
-El proyecto incluye una **segunda aplicación de escritorio** dedicada a la administración, con estética y navegación de app nativa (barra superior, barra lateral, paneles y botón **"← Volver"** para regresar a pantallas anteriores). Reutiliza los mismos componentes de configuración de la TV.
+La configuración de la TV —canales, programas y programación— **ya no vive en este repositorio**: se administra desde una aplicación independiente que escribe en la misma base de datos SQLite de la carpeta de datos de Electron. Los ajustes visuales de imagen (estilo, relación de aspecto y filtro CRT) también se pueden cambiar desde allí, pero la TV los expone en su propio panel de ajustes.
 
-### Cómo abrirla
+### Qué quedó fuera de la TV
 
-- **Standalone**: `npm run admin` (o `npm run admin:debug` para depurar).
-- **Desde la TV**: botón **"Configuración"** en la barra de controles (visible al presionar Enter/flechas). Si la ventana ya está abierta, se enfoca en lugar de crear una nueva (IPC `open-admin-window`).
+- El botón **"Configuración"** de la barra de controles y el IPC `open-admin-window` ya no existen.
+- Del **menú de ajustes** del control remoto solo se conservan los ajustes de imagen. Se eliminaron el reseteo de programación y las pestañas de canales y programas.
+- El **asistente de selección de década/año** al arrancar también fue eliminado.
+- La segunda entrada de Vite (`admin.html`) y el modo de arranque `ADMIN_WINDOW=1` fueron eliminados.
 
-### Qué permite hacer
+### Ajustes dentro del control remoto
 
-- **Inicio**: resumen general — canales (habilitados/total), programas, episodios y estado de la programación (año principal, meses generados, última generación) — con accesos rápidos.
-- **Canales**: crear, editar, eliminar e importar canales (reutiliza `ChannelConfig`).
-- **Programas**: crear, editar, eliminar e importar shows con temporadas, episodios, canales y años de emisión (reutiliza `ShowConfig`).
-- **Programación**: consultar el estado de la programación generada, **generar/regenerar el año** (asistente de década/año reutilizando `ScheduleSetup`) y **resetear la programación completa** con confirmación previa.
+El botón **SETTINGS** abre, dentro del propio control remoto, un panel con tres acciones:
 
-### Detalles técnicos
+| Acción | Valores | Nota |
+| --- | --- | --- |
+| Estilo de TV | 90's ↔ 00's | Cambia el aspecto completo de la interfaz |
+| Aspecto | 16:9 ↔ 4:3 | El marco de la TV se reajusta (la pantalla siempre ocupa el alto completo de la ventana) |
+| Marco TV | ON ↔ OFF | Solo aparece en el estilo 90's (quita/recupera el bisel; en 00's no existe bisel) |
+| Filtro CRT | ON ↔ OFF | Solo aparece en el estilo 90's |
+| Shader CRT | CRT Analog Replay TV ↔ CRT Royale | Solo aparece con el filtro encendido, en estilo 90's |
 
-- Comparte el mismo `preload` y las mismas APIs IPC de la TV (canales, shows, programación, selectores de archivo/carpeta), por lo que la gestión es idéntica a la del menú de configuración de la TV.
-- Es una segunda entrada de Vite (`admin.html` → `src/admin/main.tsx`) compilada junto a la app principal.
-- En el proceso principal (`electron/main.ts`) se crea con `frame: true` (ventana nativa movible) y se activa el modo exclusivo con `ADMIN_WINDOW=1` (no se inicializan reproductor ni motor de video).
+Se activan con clic o con el teclado (`Enter` sobre la fila enfocada, flechas para moverse entre filas, `Escape` o **← Volver** para regresar al control remoto). Al ser ajustes de nivel de sistema, siguen disponibles con la TV apagada.
+
+**CRT Analog Replay TV** es el filtro original (Canvas 2D, sin cambios). **CRT Royale** es un shader WebGL con curvatura de tubo, máscara de fósforo, líneas de escaneo, convergencia, viñeta, bloom y ruido; se le puede cambiar de shader en caliente, sin cortar el episodio. Las 21 opciones del shader, su calibración y los créditos están en [`docs/CRT_FILTERS.md`](docs/CRT_FILTERS.md).
+
+### Qué sigue escribiendo la TV
+
+Los **ajustes de imagen** indicados arriba y lo que afecta a la sesión en curso: **volumen**, **mute** y **último canal sintonizado**. Canales, programas y programación se leen de la base de datos al arrancar y no se modifican desde la TV.
+
+### Si falta la programación
+
+Si la base de datos todavía no tiene un año principal configurado, la TV arranca igualmente (no queda en una pantalla de configuración) y cada canal muestra "sin programación" hasta que se genere la programación desde la aplicación externa.
 
 ---
 
 ## Producción
 
+Para generar los ejecutables de distribución:
+
 ```bash
-npm run electron:build
+npm run dist            # paquete para el sistema operativo actual
+npm run dist:win        # Windows:  setup.exe + portable.exe
+npm run dist:mac        # macOS (solo en macOS): .dmg + .app.zip
+npm run dist:linux      # Linux: .AppImage + .tar.gz
+npm run dist:all        # los tres en cadena
 ```
 
-Este comando compila la aplicación y genera un paquete listo para distribución mediante Electron Builder.
+Cada comando compila primero el proceso de Electron y el frontend (equivalente a `npm run compile:electron` + `npm run build`) y luego empaqueta con Electron Builder. Los artefactos quedan en `release/<versión>/`. Los ejecutables abren **en modo ventana de escritorio** por defecto (marco nativo, sin DevTools), como se describe en la sección anterior.
 
 ---
 
@@ -439,6 +498,10 @@ El repositorio incluye varios documentos en la carpeta docs/ que describen con d
 - SHOW_SYSTEM.md: definición y gestión de shows
 - VIDEO_ARCHITECTURE_PROPOSAL.md: arquitectura del flujo de video
 - COMMERCIAL_SYSTEM.md: sistema de comerciales y bloques publicitarios (el espacio de relleno "AnalogReplayTV" es el paso previo a este sistema)
+- CRT_FILTERS.md: filtros CRT (shaders de Canvas 2D y WebGL) y su calibración
+- VIDEO_QUALITY_CONSTRAINTS.md: límites de calidad y compatibilidad de video
+- INSTALL_FFMPEG.md: guía de instalación de FFmpeg
+- vlc-help.txt: notas de uso de VLC (motor de reproducción local)
 
 Estos archivos ayudan a entender el diseño del proyecto y la evolución de la arquitectura.
 

@@ -1,23 +1,68 @@
 {
   "appId": "com.analogreplaytv.app",
+  "productName": "AnalogReplayTV",
   "files": [
     "dist/**/*",
-    "electron/**/*"
+    "dist-electron/**/*",
+    "package.json"
   ],
   "directories": {
-    "buildResources": "assets",
     "output": "release/${version}"
   },
   "win": {
-    "target": ["nsis"],
-    "icon": "public/icon.ico"
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "AnalogReplayTV",
+    "artifactName": "${productName}-${version}-win-${arch}-setup.${ext}"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-win-${arch}-portable.${ext}"
   },
   "mac": {
-    "target": ["dmg"],
-    "icon": "public/icon.icns"
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "category": "public.app-category.video",
+    "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
+  },
+  "dmg": {
+    "title": "AnalogReplayTV ${version}"
   },
   "linux": {
-    "target": ["AppImage"],
-    "icon": "public/icon.png"
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "tar.gz",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "category": "AudioVideo",
+    "synopsis": "AnalogReplayTV",
+    "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
   }
 }

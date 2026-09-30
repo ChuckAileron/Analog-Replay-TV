@@ -2,6 +2,14 @@ import { ipcMain, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { appDatabase } from './AppDatabase.js';
+import {
+  getBroadcastBlockEnd,
+  getRemainingBlockSeconds,
+  isBroadcastBlockAllowed,
+  normalizeBroadcastBlock,
+  type BroadcastBlock
+} from './broadcastBlocks.js';
 
 // Clean main-process ScheduleService implementation.
 export interface ScheduleEntry {
@@ -79,6 +87,13 @@ interface RealShow {
   // - 'once-per-day': el show aparece una única vez en el día (un solo turno);
   //   igualmente avanza al siguiente episodio al día siguiente.
   episodeAiringMode?: 'daily-repeat' | 'once-per-day';
+  // Restringe la emisión del show a un único bloque horario del día
+  // (definido en ./broadcastBlocks.ts, que es la definición canónica):
+  // - 'morning'   06:00..13:59
+  // - 'afternoon' 14:00..21:59
+  // - 'night'     22:00..05:59
+  // - 'all'       sin restricción (default, retrocompatible)
+  broadcastBlock?: BroadcastBlock;
 }
 
 // Estado de emisión de un show durante la generación de la programación anual
@@ -87,6 +102,8 @@ interface ShowAiringState {
   episodes: FlatEpisode[];
   pointer: number; // índice del episodio "de hoy" dentro de `episodes`
   mode: 'daily-repeat' | 'once-per-day';
+  // Bloque horario normalizado (ver ./broadcastBlocks.ts). 'all' = sin restricción.
+  block: BroadcastBlock;
 }
 
 // Episodio aplanado con referencia a su show, usado para armar la rotación
@@ -111,6 +128,7 @@ export class ScheduleServiceMain {
     // funcionar correctamente tanto en desarrollo como en builds empaquetadas.
     this.schedulesPath = path.join(userDataPath, 'schedules');
     if (!fs.existsSync(this.schedulesPath)) fs.mkdirSync(this.schedulesPath, { recursive: true });
+    appDatabase.migrateLegacySchedules(this.configPath, this.schedulesPath);
     this.setupIPC();
   }
 
@@ -186,6 +204,7 @@ export class ScheduleServiceMain {
         fs.rmSync(this.schedulesPath, { recursive: true, force: true });
       }
       fs.mkdirSync(this.schedulesPath, { recursive: true });
+      appDatabase.resetSchedules();
 
       this.config = {
         primaryYear: 0,
@@ -194,7 +213,7 @@ export class ScheduleServiceMain {
         currentYear: new Date().getFullYear(),
         generatedMonths: []
       };
-      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
+      appDatabase.saveScheduleConfig(this.config as unknown as Record<string, unknown>);
 
       return { success: true };
     } catch (error) {
@@ -206,13 +225,13 @@ export class ScheduleServiceMain {
 
   private async saveConfig(): Promise<void> {
     if (!this.config) return;
-    fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
+    appDatabase.saveScheduleConfig(this.config as unknown as Record<string, unknown>);
   }
 
   private async loadConfig(): Promise<void> {
-    if (fs.existsSync(this.configPath)) {
-      const content = fs.readFileSync(this.configPath, 'utf8');
-      this.config = JSON.parse(content) as ScheduleConfig;
+    const storedConfig = appDatabase.loadScheduleConfig<ScheduleConfig>();
+    if (storedConfig) {
+      this.config = storedConfig;
       return;
     }
 
@@ -224,7 +243,7 @@ export class ScheduleServiceMain {
       generatedMonths: []
     };
 
-    fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
+    appDatabase.saveScheduleConfig(this.config as unknown as Record<string, unknown>);
   }
 
   private getMonthName(month: number): string {
@@ -236,11 +255,8 @@ export class ScheduleServiceMain {
 
   private readRealChannels(): RealChannel[] {
     try {
-      const configPath = path.join(process.cwd(), 'src/config/channels/channels.config.json');
-      if (!fs.existsSync(configPath)) return [];
-      const data = fs.readFileSync(configPath, 'utf-8');
-      const parsed = JSON.parse(data);
-      return (parsed.channels || []).filter((ch: RealChannel) => ch.isEnabled !== false);
+      const config = appDatabase.loadChannelsConfig();
+      return (config.channels as unknown as RealChannel[]).filter((ch) => ch.isEnabled !== false);
     } catch (error) {
       console.error('❌ [ScheduleService] Error leyendo canales reales:', error);
       return [];
@@ -249,11 +265,8 @@ export class ScheduleServiceMain {
 
   private readRealShows(): RealShow[] {
     try {
-      const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
-      if (!fs.existsSync(configPath)) return [];
-      const data = fs.readFileSync(configPath, 'utf-8');
-      const parsed = JSON.parse(data);
-      return parsed.shows || [];
+      const config = appDatabase.loadShowsConfig();
+      return config.shows as unknown as RealShow[];
     } catch (error) {
       console.error('❌ [ScheduleService] Error leyendo shows reales:', error);
       return [];
@@ -485,6 +498,15 @@ export class ScheduleServiceMain {
    * (logo animado de "AnalogReplayTV") hasta el siguiente slot de 30 min.
    * Esto asegura que todos los episodios comiencen siempre en un horario
    * "en punto" o "y media", como una parrilla de TV real.
+   *
+   * Cada show puede además estar restringido a un único bloque horario del día
+   * mediante `broadcastBlock` (ver ./broadcastBlocks.ts): 'morning' (06:00-
+   * 13:59), 'afternoon' (14:00-21:59) o 'night' (22:00-05:59); 'all' (default)
+   * emite a cualquier hora. Un show restringido NUNCA se programa más allá del
+   * límite de su bloque: si su episodio completo no cabe en lo que resta del
+   * bloque, se salta y el hueco se rellena con el logo de estación, de modo que
+   * no se truncan episodios a mitad. Los shows 'all' no se ven afectados y
+   * mantienen exactamente el comportamiento previo.
    */
   private buildChannelYearEntries(channel: RealChannel, shows: RealShow[], year: number): ScheduleEntry[] {
     const eligibleShows = shows.filter((show) =>
@@ -496,7 +518,8 @@ export class ScheduleServiceMain {
         show,
         episodes: this.flattenShowEpisodes(show),
         pointer: 0,
-        mode: show.episodeAiringMode === 'once-per-day' ? 'once-per-day' : 'daily-repeat'
+        mode: show.episodeAiringMode === 'once-per-day' ? 'once-per-day' : 'daily-repeat',
+        block: normalizeBroadcastBlock(show.broadcastBlock)
       }))
       .filter((state) => state.episodes.length > 0);
 
@@ -544,12 +567,44 @@ export class ScheduleServiceMain {
         continue;
       }
 
-      const state = queue.shift()!;
+      // Bloque horario vigente para el cursor actual (06:00 / 14:00 / 22:00).
+      // Segundos que quedan hasta el fin de ese bloque: un show restringido
+      // solo puede emitirse si su episodio COMPLETO cabe dentro.
+      const remainingInBlock = getRemainingBlockSeconds(cursor);
+
+      // Buscar el primer show de la cola que sea elegible en el bloque actual
+      // y que entre completo en lo que resta del bloque. Se preserva el orden
+      // de la cola (round-robin) entre los que sí son elegibles.
+      let selectedIndex = -1;
+      let occupiedSlots = 0;
+      for (let i = 0; i < queue.length; i++) {
+        const candidate = queue[i];
+        if (!isBroadcastBlockAllowed(candidate.block, cursor)) continue;
+        const candidateEpisode = candidate.episodes[candidate.pointer % candidate.episodes.length];
+        const candidateSlots = Math.max(1, Math.ceil(candidateEpisode.durationSeconds / SLOT_SECONDS));
+        if (candidateSlots * SLOT_SECONDS > remainingInBlock) continue;
+        selectedIndex = i;
+        occupiedSlots = candidateSlots;
+        break;
+      }
+
+      if (selectedIndex === -1) {
+        // Ningún show de la cola es elegible en este bloque, o ninguno cabe
+        // completo: rellenar hasta el fin del bloque con el logo de
+        // identificación de estación, para que el siguiente bloque vuelva a
+        // evaluarse con la cola intacta.
+        const blockEnd = getBroadcastBlockEnd(cursor);
+        const fillerEnd = blockEnd.getTime() > cursor.getTime()
+          ? blockEnd
+          : new Date(cursor.getTime() + SLOT_SECONDS * 1000);
+        entries.push(this.buildFillerEntry(channelIdentifier, channel.name, cursor, fillerEnd));
+        cursor = fillerEnd;
+        continue;
+      }
+
+      const state = queue.splice(selectedIndex, 1)[0];
       const flatEpisode = state.episodes[state.pointer % state.episodes.length];
 
-      // El episodio ocupa la cantidad de slots de 30 min necesaria para cubrir
-      // su duración real (mínimo 1 slot), redondeando hacia arriba.
-      const occupiedSlots = Math.max(1, Math.ceil(flatEpisode.durationSeconds / SLOT_SECONDS));
       const totalSlotSeconds = occupiedSlots * SLOT_SECONDS;
 
       const showStart = new Date(cursor);
@@ -604,6 +659,7 @@ export class ScheduleServiceMain {
       }
 
       const generatedMonths: string[] = [];
+      const monthlySchedules: Array<{ month: number; schedule: Record<string, unknown> }> = [];
 
       for (let month = 1; month <= 12; month++) {
         const monthEntries = allEntries.filter((entry) => {
@@ -620,13 +676,14 @@ export class ScheduleServiceMain {
           primaryYear: targetYear
         };
 
-        const monthDir = path.join(this.schedulesPath, String(targetYear));
-        if (!fs.existsSync(monthDir)) fs.mkdirSync(monthDir, { recursive: true });
-
-        const filePath = path.join(monthDir, `${this.getMonthName(month)}-${targetYear}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(schedule, null, 2), 'utf8');
+        monthlySchedules.push({
+          month,
+          schedule: schedule as unknown as Record<string, unknown>
+        });
         generatedMonths.push(`${targetYear}-${String(month).padStart(2, '0')}`);
       }
+
+      appDatabase.replaceScheduleYear(targetYear, monthlySchedules);
 
       this.config = {
         primaryYear: targetYear,
@@ -646,16 +703,27 @@ export class ScheduleServiceMain {
   }
 
   public async getMonthSchedule(year: number, month: number): Promise<MonthlySchedule | null> {
-    const monthName = this.getMonthName(month);
-    const filePath = path.join(this.schedulesPath, String(year), `${monthName}-${year}.json`);
-    if (!fs.existsSync(filePath)) {
-      const result = await this.generateYear(year);
-      if (!result.success) return null;
-      return this.getMonthSchedule(year, month);
+    const storedSchedule = appDatabase.loadScheduleMonth<MonthlySchedule>(year, month);
+    if (storedSchedule) return storedSchedule;
+
+    const legacyFilePath = path.join(
+      this.schedulesPath,
+      String(year),
+      `${this.getMonthName(month)}-${year}.json`
+    );
+    if (fs.existsSync(legacyFilePath)) {
+      const legacySchedule = JSON.parse(fs.readFileSync(legacyFilePath, 'utf8')) as MonthlySchedule;
+      appDatabase.saveScheduleMonth(
+        year,
+        month,
+        legacySchedule as unknown as Record<string, unknown>
+      );
+      return legacySchedule;
     }
 
-    const content = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(content) as MonthlySchedule;
+    const result = await this.generateYear(year);
+    if (!result.success) return null;
+    return this.getMonthSchedule(year, month);
   }
 
   private setupIPC(): void {

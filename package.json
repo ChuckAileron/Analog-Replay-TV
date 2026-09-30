@@ -1,7 +1,7 @@
 {
   "name": "analog-replay-tv",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "npm run electron:dev",
@@ -14,9 +14,23 @@
     "electron:start": "npm run compile:electron && cross-env DEBUG=electron:* electron dist-electron/main.js",
     "desktop": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 electron dist-electron/main.js",
     "desktop:debug": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 OPEN_DEVTOOLS=1 electron dist-electron/main.js",
-    "admin": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 ADMIN_WINDOW=1 electron dist-electron/main.js",
-    "admin:debug": "npm run compile:electron && npm run build && cross-env DESKTOP_WINDOW=1 ADMIN_WINDOW=1 OPEN_DEVTOOLS=1 electron dist-electron/main.js",
+    "dist": "npm run dist:current",
+    "dist:current": "npm run compile:electron && npm run build && electron-builder --publish never",
+    "dist:win": "npm run compile:electron && npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run compile:electron && npm run build && electron-builder --mac --publish never",
+    "dist:linux": "npm run compile:electron && npm run build && electron-builder --linux --publish never",
+    "dist:all": "npm run dist:win && npm run dist:mac && npm run dist:linux",
+    "dist:win:portable": "npm run compile:electron && npm run build && electron-builder --win portable --publish never",
+    "dist:mac:portable": "npm run compile:electron && npm run build && electron-builder --mac zip --publish never",
+    "dist:linux:portable": "npm run compile:electron && npm run build && electron-builder --linux AppImage --publish never",
+    "dist:clean": "node -e \"require('node:fs').rmSync('release',{recursive:true,force:true})\"",
     "compile:electron": "tsc -p electron/tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/test",
+    "test:only": "node --test dist-test/test",
+    "test:watch": "tsc -p tsconfig.test.json && node --test --watch dist-test/test",
+    "test:coverage": "node scripts/test-coverage.mjs",
+    "test:coverage:strict": "node scripts/test-coverage.mjs --lines 100 --branches 100 --functions 100",
+    "check": "npm run type-check && npm run lint && npm test",
     "install-ffmpeg": "pwsh -ExecutionPolicy Bypass -File scripts/install-ffmpeg.ps1",
     "check-ffmpeg": "ffmpeg -version || echo 'FFmpeg no está instalado. Ejecuta: npm run install-ffmpeg'",
     "type-check": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit"
@@ -40,7 +54,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@types/electron": "^1.6.10",
-    "@types/node": "^20.19.17",
+    "@types/node": "^22.20.3",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
@@ -48,7 +62,7 @@
     "@vitejs/plugin-react": "^4.1.0",
     "concurrently": "^8.2.1",
     "cross-env": "^7.0.3",
-    "electron": "^38.1.2",
+    "electron": "38.1.2",
     "electron-builder": "^24.6.4",
     "electron-is-dev": "^2.0.0",
     "esbuild": "^0.25.10",
@@ -61,5 +75,8 @@
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.6",
     "wait-on": "^7.0.1"
+  },
+  "allowScripts": {
+    "electron@38.1.2": true
   }
 }

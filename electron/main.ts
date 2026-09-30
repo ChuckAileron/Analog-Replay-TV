@@ -10,6 +10,7 @@ import { videoAnalyzer } from './services/VideoAnalyzer.js';
 import { NativeVideoPlayerManager } from './services/NativeVideoPlayer.js';
 import { VideoStreamManager } from './services/VideoStreamManager.js';
 import { ScheduleServiceMain } from './services/ScheduleService.js';
+import { appDatabase } from './services/AppDatabase.js';
 
 // Importar VideoEngineMain dinámicamente para evitar problemas de paths
 let VideoEngineMain: any;
@@ -26,9 +27,6 @@ const nativePlayerManager = NativeVideoPlayerManager.getInstance();
 
 // Instancia global del VideoStreamManager
 let videoStreamManager: VideoStreamManager | null = null;
-
-// Instancia de la ventana de configuración (consola de administración)
-let adminWindow: BrowserWindow | null = null;
 
 // Prevenir múltiples instancias de la aplicación
 const gotTheLock = app.requestSingleInstanceLock();
@@ -166,41 +164,34 @@ ipcMain.handle('open-external', async (_, filePath) => {
 });
 
 app.whenReady().then(async () => {
-  // Modo "consola de configuración": se abre SOLO la ventana de administración
-  // (electron/scripts "npm run admin"), sin reproductor ni motor de video.
-  const isAdminLaunch = process.env.ADMIN_WINDOW === '1' || process.env.ADMIN_WINDOW === 'true';
-
-  // Inicializar ScheduleService (necesario también para la consola de configuración)
-  try {
-    const scheduleService = ScheduleServiceMain.getInstance();
-    console.log('✅ [Main] ScheduleServiceMain inicializado correctamente');
-    console.log('🔍 [Main] Estado inicial del schedule:', await scheduleService.initialize());
-  } catch (error) {
-    console.error('❌ Error inicializando ScheduleServiceMain:', error);
-  }
-
-  if (isAdminLaunch) {
-    console.log('🖥️ [Main] Modo consola de configuración (ADMIN_WINDOW=1)');
-    createAdminWindow();
-    return;
-  }
-
-  // Inicializar motor de video
-  try {
-    await initializeVideoEngine();
-    console.log('✅ [Main] Motor de video inicializado correctamente');
-  } catch (error) {
-    console.error('❌ Error inicializando motor de video:', error);
-    // Continuar sin motor de video (fallback al reproductor simple)
-  }
-
-  // Crear ventana principal
+  // Crear la ventana principal DE INMEDIATO con una pantalla de carga: no se
+  // espera la inicialización pesada (ScheduleService + motor de video). Así el
+  // usuario ve la ventana al instante aunque el arranque tarde unos segundos
+  // (especialmente en el ejecutable portable, que descomprime la app en temp).
   const mainWindow = createWindow();
-  
+
   // Inicializar VideoStreamManager
   videoStreamManager = new VideoStreamManager(mainWindow);
   console.log('✅ [Main] VideoStreamManager inicializado correctamente');
-  
+
+  if (useTestFile) {
+    // Modo de prueba: no hay pantalla de carga, se usa el test file directo
+    await initializeMainProcessOnce();
+    return;
+  }
+
+  // Esperar a que la pantalla de carga se pinte y recién entonces correr la
+  // inicialización pesada. Si se corren esos awaits antes, el splash nunca
+  // llega a mostrarse y la app parece colgada sin haber abierto la ventana.
+  const runInitAndLoadApp = async (): Promise<void> => {
+    await initializeMainProcessOnce();
+    loadMainApp(mainWindow);
+  };
+
+  mainWindow.webContents.once('did-finish-load', runInitAndLoadApp);
+  // Fallback: si el splash no carga (p. ej. archivo faltante), no dejar la app colgada
+  mainWindow.webContents.once('did-fail-load', runInitAndLoadApp);
+
   // Registrar el protocolo asset
   protocol.registerFileProtocol('asset', (request, callback) => {
     try {
@@ -242,14 +233,68 @@ app.whenReady().then(async () => {
   });
 });
 
+// Modo de arranque
+const useTestFile = process.env.TEST_VIDEOSTREAM === 'true';
+const useLocalFiles = !process.env.VITE_DEV_SERVER_URL;
+const testFilePath = path.join(__dirname, '../test/videostream-manager.html');
+
+// Bandera para no repetir la inicialización pesada si se recrea la ventana
+// (p. ej. macOS con app.on('activate')).
+let appInitialized = false;
+
+async function initializeMainProcessOnce(): Promise<void> {
+  if (appInitialized) {
+    return;
+  }
+  appInitialized = true;
+
+  // Inicializar ScheduleService
+  try {
+    const scheduleService = ScheduleServiceMain.getInstance();
+    console.log('✅ [Main] ScheduleServiceMain inicializado correctamente');
+    console.log('🔍 [Main] Estado inicial del schedule:', await scheduleService.initialize());
+  } catch (error) {
+    console.error('❌ Error inicializando ScheduleServiceMain:', error);
+  }
+
+  // Inicializar motor de video
+  try {
+    await initializeVideoEngine();
+    console.log('✅ [Main] Motor de video inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando motor de video:', error);
+    // Continuar sin motor de video (fallback al reproductor simple)
+  }
+}
+
+// Cargar la app real (build de producción o servidor de Vite). Se invoca cuando
+// el proceso principal ya terminó de inicializar, reemplazando el loader.
+function loadMainApp(mainWindow: BrowserWindow): void {
+  mainWindow.loadURL(
+    useLocalFiles
+      ? `file://${path.join(__dirname, '../dist/index.html')}`
+      : 'http://localhost:5173' // Vite dev server
+  );
+  console.log('🌐 [Main] Loading from:', useLocalFiles ? 'Local files' : 'Dev server');
+}
+
 function createWindow(): BrowserWindow {
-  // Modo "ventana de escritorio": al ejecutar el build de producción con
-  // DESKTOP_WINDOW=1 se usa un marco nativo (la ventana se puede arrastrar y
-  // redimensionar como cualquier otra del escritorio) y NO se abre DevTools.
-  // En desarrollo (VITE_DEV_SERVER_URL) se conserva el comportamiento actual:
-  // ventana sin marco y DevTools abierto para debugging. OPEN_DEVTOOLS=1 fuerza
-  // el inspector también en modo escritorio (útil para depurar el build final).
-  const isDesktopWindow = process.env.DESKTOP_WINDOW === '1' || process.env.DESKTOP_WINDOW === 'true';
+  // Modo "ventana de escritorio": se usa un marco nativo (la ventana se puede
+  // arrastrar y redimensionar como cualquier otra del escritorio) y NO se abre
+  // DevTools. En desarrollo (VITE_DEV_SERVER_URL) se conserva el comportamiento
+  // actual: ventana sin marco y DevTools abierto para debugging.
+  // En los EJECUTABLES generados con electron-builder (dist:win / dist:mac /
+  // dist:linux) no hay forma de inyectar variables de entorno, así que el modo
+  // escritorio es el comportamiento por defecto: si DESKTOP_WINDOW no está
+  // definida se usa `app.isPackaged`. Así el .exe / .dmg / .AppImage abren
+  // exactamente igual que `npm run desktop`. Se puede forzar el modo sin marco
+  // con DESKTOP_WINDOW=0.
+  const desktopWindowEnv = process.env.DESKTOP_WINDOW;
+  const isDesktopWindow = desktopWindowEnv !== undefined
+    ? (desktopWindowEnv === '1' || desktopWindowEnv === 'true')
+    : app.isPackaged;
+  // OPEN_DEVTOOLS=1 fuerza el inspector también en modo escritorio (útil para
+  // depurar el ejecutable final).
   const shouldOpenDevTools = !!process.env.VITE_DEV_SERVER_URL ||
     process.env.OPEN_DEVTOOLS === '1' ||
     process.env.OPEN_DEVTOOLS === 'true';
@@ -351,23 +396,21 @@ function createWindow(): BrowserWindow {
   });
 
   // Load the app
-  // Para testing: cargar archivo de prueba VideoStreamManager
-  const useTestFile = process.env.TEST_VIDEOSTREAM === 'true';
-  const useLocalFiles = !process.env.VITE_DEV_SERVER_URL;
-  
   if (useTestFile) {
-    const testFilePath = path.join(__dirname, '../test-videostream-manager.html');
     console.log('🧪 [Main] Cargando archivo de prueba VideoStreamManager:', testFilePath);
     mainWindow.loadFile(testFilePath);
+  } else if (appInitialized) {
+    // Re-creación de ventana (p. ej. macOS activate): ya está todo inicializado
+    loadMainApp(mainWindow);
   } else {
-    mainWindow.loadURL(
-      useLocalFiles
-        ? `file://${path.join(__dirname, '../dist/index.html')}`
-        : 'http://localhost:5173' // Vite dev server
-      );
+    // Pantalla de carga inmediata: muestra la ventana al instante mientras el
+    // proceso principal termina de inicializar (ver app.whenReady).
+    const splashUrl = useLocalFiles
+      ? `file://${path.join(__dirname, '../dist/splash.html')}`
+      : `${process.env.VITE_DEV_SERVER_URL}/splash.html`;
+    console.log('⏳ [Main] Mostrando pantalla de carga mientras se inicializa...');
+    mainWindow.loadURL(splashUrl);
   }
-
-  console.log('🌐 [Main] Loading from:', useTestFile ? 'VideoStreamManager Test' : useLocalFiles ? 'Local files' : 'Dev server');
 
   // Open the DevTools only in desarrollo (o si OPEN_DEVTOOLS=1). En modo
   // escritorio/producción NO se abren para no molestar al usuario final.
@@ -397,89 +440,6 @@ function createWindow(): BrowserWindow {
   
   return mainWindow;
 }
-
-// Crea (o reutiliza) la ventana de configuración: una app de escritorio aparte,
-// con marco y barra de título nativos, desde la que se administran canales,
-// programas y la programación reutilizando la misma UI del renderer React.
-function createAdminWindow(): BrowserWindow | null {
-  if (adminWindow && !adminWindow.isDestroyed()) {
-    adminWindow.focus();
-    return adminWindow;
-  }
-
-  const openDevTools = !!process.env.VITE_DEV_SERVER_URL ||
-    process.env.OPEN_DEVTOOLS === '1' ||
-    process.env.OPEN_DEVTOOLS === 'true';
-
-  const win = new BrowserWindow({
-    width: 1180,
-    height: 800,
-    minWidth: 820,
-    minHeight: 560,
-    center: true,
-    show: false,
-    title: 'AnalogReplayTV — Configuración',
-    frame: true,
-    autoHideMenuBar: true,
-    backgroundColor: '#141820',
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, '../dist-electron/preload.js'),
-      sandbox: false,
-      spellcheck: false,
-      webSecurity: false,
-      backgroundThrottling: false,
-      experimentalFeatures: true,
-      additionalArguments: [
-        '--disable-web-security',
-        '--allow-file-access-from-files',
-      ],
-    },
-  });
-
-  adminWindow = win;
-
-  // Sin menú de aplicación: la ventana solo muestra el marco y la barra de
-  // título nativa (la barra "File/Edit/View..." no aparece ni con Alt).
-  Menu.setApplicationMenu(null);
-
-  win.on('closed', () => {
-    adminWindow = null;
-  });
-
-  const useDevServer = !!process.env.VITE_DEV_SERVER_URL;
-  if (useDevServer) {
-    console.log('🖥️ [Main] Consola de configuración desde dev server');
-    win.loadURL(`${process.env.VITE_DEV_SERVER_URL}/admin.html`);
-  } else {
-    console.log('🖥️ [Main] Consola de configuración desde build local');
-    win.loadFile(path.join(__dirname, '../dist/admin.html'));
-  }
-
-  if (openDevTools) {
-    console.log('🔧 [Main] Opening DevTools para la consola de configuración...');
-    win.webContents.openDevTools({ mode: 'detach' });
-  }
-
-  win.once('ready-to-show', () => {
-    win.show();
-    win.focus();
-  });
-
-  return win;
-}
-
-// IPC para abrir la consola de configuración desde la ventana de la TV.
-ipcMain.handle('open-admin-window', async () => {
-  try {
-    const win = createAdminWindow();
-    return { success: !!win };
-  } catch (error) {
-    console.error('❌ [Main] Error abriendo la consola de configuración:', error);
-    return { success: false, error: String(error) };
-  }
-});
 
 // Lista de extensiones de video soportadas (soporte extendido: los formatos
 // que no son reproducibles nativamente por Chromium se convierten
@@ -536,6 +496,10 @@ async function getVideoFiles(folderPath: string) {
 }
 
 // Quit when all windows are closed.
+app.once('before-quit', () => {
+  appDatabase.close();
+});
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
@@ -551,8 +515,7 @@ app.on('activate', () => {
 // Manejo de eventos IPC para canales
 ipcMain.handle('save-channels-config', async (_, config) => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/channels/channels.config.json');
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+    appDatabase.saveChannelsConfig(config);
     return true;
   }
   catch (error) {
@@ -563,14 +526,30 @@ ipcMain.handle('save-channels-config', async (_, config) => {
 
 ipcMain.handle('load-channels-config', async () => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/channels/channels.config.json');
-    const data = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(data);
+    return appDatabase.loadChannelsConfig();
   }
   catch (error) {
     console.error('Error loading channels config:', error);
     throw error;
   }
+});
+
+ipcMain.handle('save-settings-config', async (_, settings) => {
+  appDatabase.saveSettings(settings);
+  return true;
+});
+
+ipcMain.handle('migrate-settings-config', async (_, legacySettings) => {
+  return appDatabase.importLegacySettings(legacySettings);
+});
+
+ipcMain.handle('save-commercials-config', async (_, config) => {
+  appDatabase.saveCommercialConfig(config);
+  return true;
+});
+
+ipcMain.handle('load-commercials-config', async () => {
+  return appDatabase.loadCommercialConfig() || { contexts: [], lastUpdated: new Date().toISOString() };
 });
 
 // Manejadores de importación de canales
@@ -598,9 +577,7 @@ ipcMain.handle('import-channel-file', async (_, filePath) => {
     const data = await fs.readFile(filePath, 'utf-8');
     const importedConfig = JSON.parse(data);
     
-    // Guardar en el archivo de configuración
-    const configPath = path.join(process.cwd(), 'src/config/channels/channels.config.json');
-    await fs.writeFile(configPath, JSON.stringify(importedConfig, null, 2), 'utf-8');
+    appDatabase.saveChannelsConfig(importedConfig);
     
     return importedConfig;
   }
@@ -613,8 +590,7 @@ ipcMain.handle('import-channel-file', async (_, filePath) => {
 // Manejo de eventos IPC para shows
 ipcMain.handle('save-shows-config', async (_, config) => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+    appDatabase.saveShowsConfig(config);
     return true;
   }
   catch (error) {
@@ -625,9 +601,7 @@ ipcMain.handle('save-shows-config', async (_, config) => {
 
 ipcMain.handle('load-shows-config', async () => {
   try {
-    const configPath = path.join(process.cwd(), 'src/config/shows/shows.config.json');
-    const data = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(data);
+    return appDatabase.loadShowsConfig();
   }
   catch (error: unknown) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
@@ -1329,6 +1303,25 @@ ipcMain.handle('test-videostream-manager', async (_, config) => {
   } catch (error) {
     console.error('❌ [Main] Error en VideoStreamManager:', error);
     return { success: false, error: String(error) };
+  }
+});
+
+// Handler para cambiar el filtro CRT del video en reproducción en caliente
+// (lo usa el control remoto al mover el ajuste de shader, sin reiniciar el episodio).
+ipcMain.handle('configure-crt-filter', async (_, payload) => {
+  try {
+    if (!videoStreamManager) {
+      throw new Error('VideoStreamManager no inicializado');
+    }
+
+    const enabled = Boolean(payload?.enabled);
+    const style = payload?.style;
+    const applied = await videoStreamManager.configureCrtFilter(enabled, style);
+
+    return { success: true, applied };
+  } catch (error) {
+    console.error('❌ [Main] Error reconfigurando el filtro CRT:', error);
+    return { success: false, applied: false, error: String(error) };
   }
 });
 

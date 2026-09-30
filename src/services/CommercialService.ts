@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import type { CommercialConfig } from '../types/commercial.types';
 import { defaultCommercialConfig } from '../config/commercials/default.commercials';
 
@@ -9,24 +7,15 @@ import { defaultCommercialConfig } from '../config/commercials/default.commercia
 export class CommercialService {
   private static instance: CommercialService;
   private config: CommercialConfig | null = null;
-  private configPath: string;
 
-  constructor(configPath?: string) {
-    this.configPath = configPath || path.join(
-      process.cwd(),
-      'src',
-      'config',
-      'commercials',
-      'commercials.config.json'
-    );
-  }
+  constructor() {}
 
   /**
    * Obtiene la instancia singleton del servicio
    */
-  public static getInstance(configPath?: string): CommercialService {
+  public static getInstance(_configPath?: string): CommercialService {
     if (!CommercialService.instance) {
-      CommercialService.instance = new CommercialService(configPath);
+      CommercialService.instance = new CommercialService();
     }
     return CommercialService.instance;
   }
@@ -36,12 +25,8 @@ export class CommercialService {
    */
   public async loadConfig(): Promise<CommercialConfig> {
     try {
-      if (fs.existsSync(this.configPath)) {
-        const data = fs.readFileSync(this.configPath, 'utf-8');
-        this.config = JSON.parse(data) as CommercialConfig;
-      } else {
-        console.warn(`Archivo de configuración de comerciales no encontrado en: ${this.configPath}`);
-        console.log('Usando configuración por defecto...');
+      this.config = await window.electronAPI.loadCommercialsConfig();
+      if (!this.config) {
         this.config = { ...defaultCommercialConfig };
         await this.saveConfig();
       }
@@ -63,20 +48,10 @@ export class CommercialService {
     }
 
     try {
-      // Asegurar que el directorio existe
-      const dir = path.dirname(this.configPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
       // Actualizar timestamp
       this.config.lastUpdated = new Date().toISOString();
 
-      // Guardar archivo
-      const data = JSON.stringify(this.config, null, 2);
-      fs.writeFileSync(this.configPath, data, 'utf-8');
-      
-      console.log(`Configuración de comerciales guardada en: ${this.configPath}`);
+      await window.electronAPI.saveCommercialsConfig(this.config);
     } catch (error) {
       console.error('Error al guardar la configuración de comerciales:', error);
       throw error;

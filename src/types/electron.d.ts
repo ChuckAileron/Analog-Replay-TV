@@ -55,6 +55,10 @@ declare global {
     // Channels API
     saveChannelsConfig: (config: ChannelConfig) => Promise<boolean>;
     loadChannelsConfig: () => Promise<ChannelConfig>;
+    saveSettingsConfig: (settings: import('./tv.types').TVSettings) => Promise<boolean>;
+    migrateSettingsConfig: (settings: import('./tv.types').TVSettings) => Promise<import('./tv.types').TVSettings>;
+    saveCommercialsConfig: (config: import('./commercial.types').CommercialConfig) => Promise<boolean>;
+    loadCommercialsConfig: () => Promise<import('./commercial.types').CommercialConfig>;
     selectChannelFile: () => Promise<string>;
     importChannelFile: (filePath: string) => Promise<ChannelConfig>;
     
@@ -96,9 +100,6 @@ declare global {
     getFullscreenStatus: () => Promise<{ isFullscreen: boolean }>;
     onFullscreenChanged: (callback: (isFullscreen: boolean) => void) => void;
 
-    // Consola de configuración (ventana de escritorio aparte)
-    openAdminWindow: () => Promise<{ success: boolean; error?: string }>;
-    
     // Asset API
     getLocalFilePath: (virtualPath: string) => Promise<string>;
     getVideoUrl: (filePath: string) => Promise<string>;
@@ -148,6 +149,15 @@ declare global {
       channelStatuses: any[];
       overallProgress: number;
       currentJob?: any;
+    }>;
+
+    // ===== FILTRO CRT =====
+    // Cambia el shader del filtro CRT sobre el video en reproducción, sin
+    // reiniciar el episodio (lo usa el control remoto).
+    configureCrtFilter: (enabled: boolean, style?: import('./tv.types').CRTFilterStyle) => Promise<{
+      success: boolean;
+      applied: boolean;
+      error?: string;
     }>;
 
     // Conversion Event Listeners

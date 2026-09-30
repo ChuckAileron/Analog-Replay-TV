@@ -7,10 +7,7 @@ import type { ChannelChangeResult } from './features/channels/channelManager';
 import { showManager } from './features/shows/showManager';
 import { settingsManager } from './features/settings/settingsManager';
 import { TVGuide } from './components/TVGuide';
-import { Menu90s } from './components/Menu90s';
-import { Menu00s } from './components/Menu00s';
 import { TVShowPlayer } from './components/TVShowPlayer';
-import { ScheduleSetup } from './components/ScheduleSetup';
 import { RemoteControl } from './components/RemoteControl';
 import { AnalogReplayFiller } from './components/AnalogReplayFiller';
 
@@ -19,7 +16,6 @@ import './styles/tv-1990s.css';
 import './styles/tv-2000s.css';
 import './styles/menu-90s.css';
 import './styles/menu-00s.css';
-import './styles/menu.css';
 import './styles/channel-display.css';
 import './styles/volume-display.css';
 import './styles/controls-00s.css';
@@ -33,9 +29,8 @@ function App() {
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const [settings, setSettings] = useState<TVSettings>(settingsManager.getCurrentSettings());
   const [channelDisplayKey, setChannelDisplayKey] = useState<number>(0);
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [channelError, setChannelError] = useState<string | null>(null);
-  // Controla la visibilidad de los botones inferiores (Channel Up/Down, Menu, TV Guide).
+  // Controla la visibilidad de los botones inferiores (Control Remoto, Pantalla Completa).
   // Ocultos por defecto; se muestran con Enter/flechas y se ocultan con Escape.
   const [controlsVisible, setControlsVisible] = useState<boolean>(false);
   // Controla la visibilidad del panel de control remoto simulado
@@ -87,7 +82,7 @@ function App() {
     window.electronAPI.onFullscreenChanged((current) => setIsFullscreen(current));
   }, []);
 
-  // Mostrar/ocultar los botones de control (Channel Up/Down, Menu, TV Guide) con el teclado:
+  // Mostrar/ocultar los botones de control (Control Remoto, Pantalla Completa) con el teclado:
   // Enter o cualquier flecha los muestra; Escape los oculta.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -97,9 +92,9 @@ function App() {
         return;
       }
 
-      // No interferir mientras el menú de configuración o la guía de programación
-      // están abiertos, ya que ellos manejan sus propios atajos de teclado.
-      if (isMenuOpen || showGuide) {
+      // No interferir mientras la guía de programación está abierta, ya que ella
+      // maneja sus propios atajos de teclado.
+      if (showGuide) {
         return;
       }
 
@@ -131,7 +126,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isMenuOpen, showGuide, remoteVisible]);
+  }, [showGuide, remoteVisible]);
 
   // Inicializar canales y configuración al montar el componente
   useEffect(() => {
@@ -139,30 +134,41 @@ function App() {
       try {
         console.log('🚀 [App] Starting initialization...');
         
-        // Cargar configuración
-        setSettings(settingsManager.getCurrentSettings());
+        // Migrar/cargar configuración desde SQLite y mantener localStorage como caché de arranque.
+        const storedSettings = await settingsManager.initialize();
+        setSettings(storedSettings);
+        setCurrentChannel(storedSettings.lastChannel || 1);
         
         // Inicializar canales
         await channelManager.initialize();
         
         // Inicializar sistema de programación
         console.log('🔄 [App] Inicializando sistema de programación...');
-        const status = await window.electronAPI.schedule.initialize();
+        const rawStatus = await window.electronAPI.schedule.initialize();
+
+        // La generación de la programación se administra desde la aplicación
+        // externa de configuración, así que esta ventana ya no ofrece asistente de
+        // año. Si todavía no hay año configurado, la TV arranca igualmente y los
+        // canales se muestran sin programación hasta que se genere desde afuera.
+        const status: ScheduleStatus = rawStatus === 'needs_year_selection' ? 'ready' : rawStatus;
+        if (rawStatus === 'needs_year_selection') {
+          console.warn('⚠️ [App] No hay año de programación configurado. Genera la programación desde la aplicación de configuración para ver contenido.');
+        }
         setScheduleStatus(status);
         
         console.log(`✅ [App] Schedule status: ${status}`);
         
-        // Si no necesita selección de año, sintonizar automáticamente el
-        // último canal que el usuario tenía abierto (persistido en settings).
-        if (status === 'ready') {
-          console.log('✅ [App] Sistema de programación listo, restaurando último canal:', currentChannel);
-          const result = await channelManager.goToChannel(currentChannel);
-          // Se pasa `true` explícitamente porque `scheduleStatus` del estado
-          // del componente aún no refleja 'ready' en este mismo ciclo (closure).
-          await applyChannelChangeResult(result, true);
-        }
-        
+        // Sintonizar automáticamente el último canal que el usuario tenía
+        // abierto (persistido en settings).
+        const lastChannel = storedSettings.lastChannel || 1;
+        console.log('✅ [App] Restaurando último canal:', lastChannel);
+        const result = await channelManager.goToChannel(lastChannel);
+        // Se pasa `true` explícitamente porque `scheduleStatus` del estado
+        // del componente aún no refleja 'ready' en este mismo ciclo (closure).
+        await applyChannelChangeResult(result, true);
+
         // Forzar actualización del display
+
         setChannelDisplayKey(prev => prev + 1);
         
         console.log('✅ [App] Initialization complete');
@@ -371,19 +377,26 @@ function App() {
     setShowGuide(prev => !prev);
   };
 
+  // Ajustes de imagen accesibles desde el panel de ajustes del control remoto.
+  // Son los únicos valores de apariencia que la TV modifica por su cuenta.
   const handleAspectRatioToggle = (): void => {
-    const newSettings = settingsManager.toggleAspectRatio();
-    setSettings(newSettings);
+    setSettings(settingsManager.toggleAspectRatio());
   };
 
   const handleStyleToggle = (): void => {
-    const newSettings = settingsManager.toggleTVStyle();
-    setSettings(newSettings);
+    setSettings(settingsManager.toggleTVStyle());
   };
 
   const handleCRTFilterToggle = (): void => {
-    const newSettings = settingsManager.toggleCRTFilter();
-    setSettings(newSettings);
+    setSettings(settingsManager.toggleCRTFilter());
+  };
+
+  const handleTVFrameToggle = (): void => {
+    setSettings(settingsManager.toggleTVFrame());
+  };
+
+  const handleCRTStyleToggle = (): void => {
+    setSettings(settingsManager.cycleCRTStyle());
   };
 
   // Alterna la pantalla completa de la ventana de la aplicación
@@ -443,79 +456,12 @@ function App() {
     handleGoToChannel(previousChannel);
   };
 
-  // Resetea completamente la programación generada, forzando que el usuario
-  // vuelva a elegir un año de transmisión desde cero.
-  const handleResetSchedule = async (): Promise<void> => {
-    const confirmMessage = settings.tvStyle === '90s'
-      ? '¿ESTÁS SEGURO DE QUE QUIERES RESETEAR LA PROGRAMACIÓN?\n\nSE BORRARÁ TODA LA PROGRAMACIÓN GENERADA Y DEBERÁS ELEGIR UN AÑO NUEVAMENTE.'
-      : '¿Estás seguro de que quieres resetear la programación?\n\nSe borrará toda la programación generada y deberás elegir un año nuevamente.';
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    try {
-      const result = await window.electronAPI.schedule.reset();
-      if (!result.success) {
-        throw new Error(result.error || 'Error desconocido al resetear la programación');
-      }
-
-      console.log('✅ [App] Programación reseteada correctamente');
-      setIsMenuOpen(false);
-      setCurrentShow(null);
-      setChannelError(null);
-      lastScheduleEntryIdRef.current = null;
-      setScheduleStatus('needs_year_selection');
-    } catch (error) {
-      console.error('❌ [App] Error reseteando la programación:', error);
-      alert(
-        settings.tvStyle === '90s'
-          ? 'ERROR AL RESETEAR LA PROGRAMACIÓN. INTENTA DE NUEVO.'
-          : 'Ocurrió un error al resetear la programación. Intenta de nuevo.'
-      );
-    }
-  };
+  // El bisel solo existe en la TV 90s; en el estilo 00s la pantalla va siempre
+  // sin marco, por lo que el ajuste se ignora por completo ahí.
+  const isFrameHidden = settings.tvStyle === '90s' && !settings.tvFrame;
 
   return (
     <div className={`tv-container style-${settings.tvStyle}`}>
-      {/* Pantalla de configuración inicial */}
-      {scheduleStatus === 'needs_year_selection' && (
-        <ScheduleSetup
-          onSetupComplete={async (year: number) => {
-            console.log(`✅ [App] Configuración completada para el año: ${year}`);
-            setScheduleStatus('ready');
-            
-            try {
-              // Reinicializar el sistema
-              const status = await window.electronAPI.schedule.initialize();
-              setScheduleStatus(status);
-              
-              // Cargar show actual después de configurar la programación
-              if (status === 'ready') {
-                const result = await channelManager.changeChannel(currentChannel, 'up');
-                console.log('🔄 [App] Cambio de canal después de configuración:', {
-                  canalAnterior: currentChannel,
-                  canalNuevo: result.channelNumber,
-                  show: result.show?.name || 'No show'
-                });
-                // Usar applyChannelChangeResult para resolver también la programación
-                // real (temporada/episodio/seekTime), no solo el show estático.
-                // Se pasa `true` explícitamente porque `scheduleStatus` del estado
-                // del componente aún no refleja 'ready' en este mismo ciclo (closure).
-                await applyChannelChangeResult(result, true);
-              }
-            } catch (error) {
-              console.error('❌ [App] Error después de configuración:', error);
-              setScheduleStatus('ready'); // Fallback
-            }
-          }}
-          onCancel={() => {
-            console.log('⚠️ [App] Configuración cancelada - usando modo básico');
-            setScheduleStatus('ready');
-          }}
-        />
-      )}
-
       {/* Pantalla de carga */}
       {(scheduleStatus === 'initializing' || scheduleStatus === 'generating' || scheduleStatus === 'converting_videos') && (
         <div style={{
@@ -558,22 +504,7 @@ function App() {
 
       {scheduleStatus === 'ready' && (
         <>
-          {isMenuOpen && (
-            <div 
-              className={`menu-overlay ${settings.tvStyle === '90s' ? 'style-90s' : ''}`}
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                zIndex: 1500
-              }}
-            />
-          )}
-          <div className={`tv-screen aspect-${settings.aspectRatio.replace(':', '-')}`}>
+          <div className={`tv-screen aspect-${settings.aspectRatio.replace(':', '-')}${isFrameHidden ? ' tv-frame-off' : ''}`}>
             {/* Overlay de "TV apagada" simulando el botón de encendido/apagado del control remoto */}
             {!isPoweredOn && (
               <div style={{
@@ -637,11 +568,12 @@ function App() {
                 seekTimeSeconds={currentSeekTime}
                 style={settings.tvStyle === '90s' ? 'retro-90s' : 'retro-00s'}
                 crtFilter={settings.tvStyle === '90s' && settings.crtFilter}
+                crtStyle={settings.crtStyle}
                 volume={settings.volume}
                 muted={settings.isMuted || !isPoweredOn}
               />
             ) : currentProgramType === 'filler' ? (
-              <AnalogReplayFiller tvStyle={settings.tvStyle} crtFilter={settings.crtFilter} />
+              <AnalogReplayFiller tvStyle={settings.tvStyle} crtFilter={settings.crtFilter} crtStyle={settings.crtStyle} />
             ) : (
               <div className="empty-channel" style={{
                 width: '100%',
@@ -682,6 +614,37 @@ function App() {
                 {channelError}
               </div>
             )}
+
+            {/* Botones de control superpuestos sobre la propia pantalla de
+                reproducción: no reservan alto, así que la imagen puede ocupar
+                todo el alto de la ventana. */}
+            {controlsVisible && (
+              <div className="tv-controls">
+                <div className="channel-buttons">
+                  <button
+                    className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                    onClick={() => setRemoteVisible(prev => !prev)}
+                  >
+                    {settings.tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control Remoto'}
+
+                  </button>
+                  <button
+                    className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                    onClick={handleToggleFullscreen}
+                  >
+                    {isFullscreen
+                      ? (settings.tvStyle === '90s' ? 'SALIR DE PANTALLA COMPLETA' : 'Salir de Pantalla Completa')
+                      : (settings.tvStyle === '90s' ? 'PANTALLA COMPLETA' : 'Pantalla Completa')}
+                  </button>
+                  <button
+                    className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
+                    onClick={() => setControlsVisible(false)}
+                  >
+                    {settings.tvStyle === '90s' ? 'OCULTAR BOTONES' : 'Ocultar Botones'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Guía de programación (fuera de .tv-screen para que cubra toda la ventana) */}
@@ -700,62 +663,11 @@ function App() {
             />
           )}
 
-          {controlsVisible && (
-            <div className="tv-controls">
-              <div className="channel-buttons">
-                <button onClick={() => handleChannelChange('up')} disabled={!isPoweredOn}>
-                  Channel Up
-                </button>
-                <button onClick={() => handleChannelChange('down')} disabled={!isPoweredOn}>
-                  Channel Down
-                </button>
-                <button
-                  className={`menu-button ${settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}`}
-                  onClick={() => setIsMenuOpen(prev => !prev)}
-                >
-                  MENU
-                </button>
-                <button
-                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                  onClick={() => window.electronAPI.openAdminWindow()}
-                >
-                  {settings.tvStyle === '90s' ? 'CONFIGURACIÓN' : 'Configuración'}
-                </button>
-                <button
-                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                  onClick={toggleGuide}
-                  disabled={!isPoweredOn}
-                >
-                  {settings.tvStyle === '90s' ? 'TV GUIDE' : 'Program Guide'}
-                </button>
-                <button
-                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                  onClick={() => setRemoteVisible(prev => !prev)}
-                >
-                  {settings.tvStyle === '90s' ? 'CONTROL REMOTO' : 'Control Remoto'}
-                </button>
-                <button
-                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                  onClick={handleToggleFullscreen}
-                >
-                  {isFullscreen
-                    ? (settings.tvStyle === '90s' ? 'SALIR DE PANTALLA COMPLETA' : 'Salir de Pantalla Completa')
-                    : (settings.tvStyle === '90s' ? 'PANTALLA COMPLETA' : 'Pantalla Completa')}
-                </button>
-                <button
-                  className={settings.tvStyle === '90s' ? 'menu-button-90s' : 'menu-button-00s'}
-                  onClick={() => setControlsVisible(false)}
-                >
-                  {settings.tvStyle === '90s' ? 'OCULTAR BOTONES' : 'Ocultar Botones'}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Control remoto flotante sobre la parte inferior de la reproducción */}
           {remoteVisible && (
             <RemoteControl
               tvStyle={settings.tvStyle}
+              settings={settings}
               isPoweredOn={isPoweredOn}
               isMuted={settings.isMuted}
               onClose={() => setRemoteVisible(false)}
@@ -765,29 +677,16 @@ function App() {
               onVolumeUp={handleVolumeUp}
               onVolumeDown={handleVolumeDown}
               onMuteToggle={handleMuteToggle}
-              onMenuToggle={() => setIsMenuOpen(prev => !prev)}
               onGuideToggle={toggleGuide}
               onGoToChannel={handleGoToChannel}
               onLastChannel={handleLastChannel}
+              onAspectRatioToggle={handleAspectRatioToggle}
+              onStyleToggle={handleStyleToggle}
+              onCRTFilterToggle={handleCRTFilterToggle}
+              onCRTStyleToggle={handleCRTStyleToggle}
+              onTVFrameToggle={handleTVFrameToggle}
             />
           )}
-
-          {/* Menús de configuración */}
-          <Menu90s
-            settings={settings}
-            onAspectRatioToggle={handleAspectRatioToggle}
-            onStyleToggle={handleStyleToggle}
-            onCRTFilterToggle={handleCRTFilterToggle}
-            onResetSchedule={handleResetSchedule}
-            isMenuOpen={isMenuOpen && settings.tvStyle === '90s'}
-          />
-          <Menu00s
-            settings={settings}
-            onAspectRatioToggle={handleAspectRatioToggle}
-            onStyleToggle={handleStyleToggle}
-            onResetSchedule={handleResetSchedule}
-            isMenuOpen={isMenuOpen && settings.tvStyle === '00s'}
-          />
         </>
       )}
     </div>

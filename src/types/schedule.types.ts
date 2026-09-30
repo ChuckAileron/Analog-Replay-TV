@@ -132,53 +132,11 @@ export interface CommercialBlock {
   fallbackMessage?: string; // mensaje si no hay comerciales
 }
 
-// Configuración de bloques de tiempo
-export interface TimeBlockConfig {
-  morning: {
-    start: number; // hora en formato 24h
-    end: number;
-    blockDuration: number; // 30 o 60 minutos
-  };
-  afternoon: {
-    start: number;
-    end: number;
-    blockDuration: number;
-  };
-  night: {
-    start: number;
-    end: number;
-    blockDuration: number;
-  };
-  nightOnly: {
-    start: number; // 0 (00:00)
-    end: number;   // 6 (05:59)
-    blockDuration: number;
-  };
-}
-
-// Constantes por defecto
-export const DEFAULT_TIME_BLOCKS: TimeBlockConfig = {
-  morning: {
-    start: 6,  // 06:00
-    end: 12,   // 11:59
-    blockDuration: 60
-  },
-  afternoon: {
-    start: 12, // 12:00
-    end: 18,   // 17:59
-    blockDuration: 60
-  },
-  night: {
-    start: 18, // 18:00
-    end: 24,   // 23:59
-    blockDuration: 60
-  },
-  nightOnly: {
-    start: 0,  // 00:00
-    end: 6,    // 05:59
-    blockDuration: 60
-  }
-};
+// Los bloques horarios de emisión (morning/afternoon/night/all) están
+// definidos de forma canónica en `broadcastBlock.types.ts`, que a su vez
+// re-exporta `electron/services/broadcastBlocks.ts` (única fuente de verdad).
+// Antes vivía aquí un `TimeBlockConfig` con otras horas y un bloque `nightOnly`
+// que nunca se usó; se eliminó para evitar dos definiciones contradictorias.
 
 // Estados de programación
 export type ScheduleStatus = 

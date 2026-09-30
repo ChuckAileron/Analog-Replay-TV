@@ -1,3 +1,5 @@
+import type { BroadcastBlock } from './broadcastBlock.types';
+
 export interface TVShow {
   id:             number;
   name:           string;
@@ -16,6 +18,20 @@ export interface TVShow {
    *   ("emitir episodio solo una vez al día").
    */
   episodeAiringMode?: 'daily-repeat' | 'once-per-day';
+  /**
+   * Restringe la emisión del programa a un único bloque horario del día.
+   * La definición canónica (límites y etiquetas) está en
+   * `broadcastBlock.types.ts`:
+   * - 'morning'   06:00 (inclusive) .. 14:00 (exclusive)
+   * - 'afternoon' 14:00 (inclusive) .. 22:00 (exclusive)
+   * - 'night'     22:00 (inclusive) .. 06:00 (exclusive)
+   * - 'all'       sin restricción de horario (valor por defecto)
+   *
+   * Un programa restringido nunca se emite fuera de su bloque ni más allá del
+   * límite de este; si su episodio completo no cabe, se salta y el hueco se
+   * rellena con el logo de estación.
+   */
+  broadcastBlock?: BroadcastBlock;
 }
 
 export interface TVSeason {

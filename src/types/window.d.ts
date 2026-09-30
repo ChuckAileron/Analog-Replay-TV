@@ -1,11 +1,17 @@
 import { ChannelConfig } from '../features/channels/channelsStorage';
 import type { VideoMetadata, ConversionOptions } from './video.types';
+import type { TVSettings } from './tv.types';
+import type { CommercialConfig } from './commercial.types';
 
 declare global {
   interface ElectronAPI {
     // Channels API
     saveChannelsConfig: (config: ChannelConfig) => Promise<boolean>;
     loadChannelsConfig: () => Promise<ChannelConfig>;
+    saveSettingsConfig: (settings: TVSettings) => Promise<boolean>;
+    migrateSettingsConfig: (settings: TVSettings) => Promise<TVSettings>;
+    saveCommercialsConfig: (config: CommercialConfig) => Promise<boolean>;
+    loadCommercialsConfig: () => Promise<CommercialConfig>;
     selectChannelFile: () => Promise<string>;
     importChannelFile: (filePath: string) => Promise<ChannelConfig>;
     

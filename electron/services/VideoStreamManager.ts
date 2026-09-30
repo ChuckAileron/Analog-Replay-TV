@@ -5,6 +5,8 @@ import { promises as fs } from 'fs';
 import crypto from 'crypto';
 import os from 'os';
 import { videoAnalyzer } from './VideoAnalyzer.js';
+import { buildCrtApplyScript, buildCrtReconfigureScript } from './crtFilterRuntime.js';
+import { DEFAULT_CRT_FILTER_STYLE, isCRTFilterStyle, type CRTFilterStyle } from './crtShaders.js';
 
 /**
  * Estrategias de reproducción de video
@@ -35,6 +37,8 @@ export interface PlaybackConfig {
   autoPlay?: boolean;
   loop?: boolean;
   crtFilter?: boolean;
+  /** Shader del filtro CRT. Solo se usa si `crtFilter` es true. */
+  crtStyle?: CRTFilterStyle;
 }
 
 /**
@@ -191,10 +195,11 @@ export class VideoStreamManager {
    */
   public async playVideo(config: PlaybackConfig): Promise<void> {
     const { filePath, seekTime = 0, autoPlay = true, crtFilter = false } = config;
-    
+    const crtStyle: CRTFilterStyle = isCRTFilterStyle(config.crtStyle) ? config.crtStyle : DEFAULT_CRT_FILTER_STYLE;
+
     console.log(`🎮 [VideoStreamManager] Reproduciendo: ${filePath}`);
     console.log(`⏰ [VideoStreamManager] Seek time: ${seekTime}s`);
-    console.log(`🎨 [VideoStreamManager] CRT Filter: ${crtFilter}`);
+    console.log(`🎨 [VideoStreamManager] CRT Filter: ${crtFilter} (${crtStyle})`);
 
     // Verificar que el archivo fuente existe
     try {
@@ -225,15 +230,15 @@ export class VideoStreamManager {
     // Ejecutar estrategia apropiada
     switch (formatInfo.strategy) {
       case PlaybackStrategy.NATIVE_VIDEO:
-        await this.playNativeVideo(filePath, seekTime, autoPlay, crtFilter);
+        await this.playNativeVideo(filePath, seekTime, autoPlay, crtFilter, crtStyle);
         break;
-        
+
       case PlaybackStrategy.FFMPEG_TRANSCODE:
-        await this.playWithTranscoding(filePath, seekTime, autoPlay, crtFilter);
+        await this.playWithTranscoding(filePath, seekTime, autoPlay, crtFilter, crtStyle);
         break;
-        
+
       case PlaybackStrategy.FFMPEG_HTTP_STREAM:
-        await this.playWithHttpStreaming(filePath, seekTime, autoPlay, crtFilter);
+        await this.playWithHttpStreaming(filePath, seekTime, autoPlay, crtFilter, crtStyle);
         break;
     }
   }
@@ -241,7 +246,7 @@ export class VideoStreamManager {
   /**
    * Estrategia 1: Reproducción nativa HTML5
    */
-  private async playNativeVideo(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false): Promise<void> {
+  private async playNativeVideo(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false, crtStyle: CRTFilterStyle = DEFAULT_CRT_FILTER_STYLE): Promise<void> {
     console.log(`⚡ [VideoStreamManager] Reproducción nativa: ${filePath}`);
 
     const videoScript = `
@@ -376,19 +381,12 @@ export class VideoStreamManager {
           stageResizeObserver.observe(videoContainer);
           window.VSMPlayer.stageResizeObserver = stageResizeObserver;
           
-          // Si existía un bucle de dibujo CRT (canvas) de una reproducción
-          // anterior, cancelarlo para no acumular loops en paralelo.
-          if (window.VSMPlayer.crtRafHandle != null && window.VSMPlayer.crtVideoRef) {
-            try {
-              if (window.VSMPlayer.crtUsesVFC && typeof window.VSMPlayer.crtVideoRef.cancelVideoFrameCallback === 'function') {
-                window.VSMPlayer.crtVideoRef.cancelVideoFrameCallback(window.VSMPlayer.crtRafHandle);
-              } else {
-                cancelAnimationFrame(window.VSMPlayer.crtRafHandle);
-              }
-            } catch (e) {}
+          // Si existía un filtro CRT activo de una reproducción anterior,
+          // liberarlo (contexto WebGL, observers y bucle de dibujo) para no
+          // acumular recursos en paralelo.
+          if (window.VSMCrt && window.VSMCrt.version === 2) {
+            try { window.VSMCrt.dispose(); } catch (e) {}
           }
-          window.VSMPlayer.crtRafHandle = null;
-          window.VSMPlayer.crtVideoRef = null;
           
           const videoElement = document.createElement('video');
           videoElement.id = 'vsm-main-video';
@@ -456,73 +454,20 @@ export class VideoStreamManager {
           stage.appendChild(videoElement);
           videoContainer.appendChild(stage);
           
-          // ===== Filtro CRT vía <canvas> (horneado en píxeles, no CSS) =====
+          // ===== Filtro CRT (Canvas 2D o shader WebGL) =====
           // En vez de aplicar el filtro de color con la propiedad CSS \`filter\`
           // sobre el <video> visible, lo cual Chromium puede re-rasterizar a la
           // resolución de PANTALLA (no la del "stage" base) cuando detecta un
           // \`transform: scale()\` ancestro —anulando la optimización anterior y
-          // causando el lag reportado—, se dibuja cada frame del video ya
-          // filtrado sobre un <canvas> de resolución FIJA y pequeña mediante
-          // \`ctx.filter\` (Canvas 2D soporta la misma sintaxis que CSS filter).
-          // El canvas resultante es un bitmap ya renderizado que la GPU solo
-          // necesita estirar como una textura normal, sin volver a calcular el
-          // filtro sin importar cuán grande se muestre (pantalla completa
-          // incluida). El <video> original se mantiene en el DOM (oculto) para
-          // que el decodificador de hardware siga funcionando con normalidad.
+          // causando el lag reportado—, el filtro se calcula sobre un <canvas> de
+          // resolución FIJA y pequeña y luego ese canvas se escala como una
+          // textura normal. Hay dos backends:
+          //   - "analog-replay": Canvas 2D con \`ctx.filter\` (filtro original).
+          //   - "royale":        shader WebGL propio (ver crtShaders.ts).
+          // El <video> original se mantiene en el DOM (oculto) para que el
+          // decodificador de hardware siga funcionando con normalidad.
           if (${crtFilter}) {
-            try {
-              videoElement.style.opacity = '0';
-              videoElement.style.pointerEvents = 'none';
-              
-              const crtCanvas = document.createElement('canvas');
-              crtCanvas.id = 'vsm-crt-canvas';
-              crtCanvas.width = currentBaseWidth;
-              crtCanvas.height = BASE_STAGE_HEIGHT;
-              crtCanvas.style.position = 'absolute';
-              crtCanvas.style.top = '0';
-              crtCanvas.style.left = '0';
-              crtCanvas.style.width = '100%';
-              crtCanvas.style.height = '100%';
-              crtCanvas.style.backgroundColor = '#000';
-              crtCanvas.classList.add('crt-filter-canvas');
-              stage.appendChild(crtCanvas);
-              
-              const ctx = crtCanvas.getContext('2d');
-              const CRT_CANVAS_FILTER = 'contrast(1.2) brightness(0.95) saturate(1.3) sepia(0.05) hue-rotate(5deg)';
-              const usesVFC = typeof videoElement.requestVideoFrameCallback === 'function';
-              
-              const scheduleNextFrame = () => {
-                if (usesVFC) {
-                  window.VSMPlayer.crtRafHandle = videoElement.requestVideoFrameCallback(drawCrtFrame);
-                } else {
-                  window.VSMPlayer.crtRafHandle = requestAnimationFrame(drawCrtFrame);
-                }
-              };
-              
-              const drawCrtFrame = () => {
-                if (ctx && videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
-                  ctx.filter = CRT_CANVAS_FILTER;
-                  try {
-                    ctx.drawImage(videoElement, 0, 0, crtCanvas.width, crtCanvas.height);
-                  } catch (drawError) {
-                    // Ignorar frames fallidos puntuales (ej. durante un seek)
-                  }
-                }
-                scheduleNextFrame();
-              };
-              
-              window.VSMPlayer.crtVideoRef = videoElement;
-              window.VSMPlayer.crtUsesVFC = usesVFC;
-              scheduleNextFrame();
-              
-              console.log('🎨 [VideoStreamManager] Filtro CRT aplicado vía canvas (' + (usesVFC ? 'requestVideoFrameCallback' : 'requestAnimationFrame') + ')');
-            } catch (crtError) {
-              // Si algo falla creando el canvas (ej. contexto 2D no disponible),
-              // usar el filtro CSS directo sobre el video como respaldo.
-              console.warn('⚠️ [VideoStreamManager] No se pudo inicializar el canvas CRT, usando filtro CSS directo:', crtError);
-              videoElement.style.opacity = '1';
-              videoElement.classList.add('crt-filter');
-            }
+            ${buildCrtApplyScript(crtStyle)}
           }
           
           // Verificar si el elemento está visible
@@ -639,7 +584,7 @@ export class VideoStreamManager {
   /**
    * Estrategia 2: Transcodificación con FFmpeg
    */
-  private async playWithTranscoding(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false): Promise<void> {
+  private async playWithTranscoding(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false, crtStyle: CRTFilterStyle = DEFAULT_CRT_FILTER_STYLE): Promise<void> {
     console.log(`🔄 [VideoStreamManager] Transcoding: ${filePath}`);
     
     // Crear nombre de archivo único basado en hash del archivo original
@@ -654,7 +599,7 @@ export class VideoStreamManager {
       console.log(`✅ [VideoStreamManager] Archivo de cache encontrado, reutilizando: ${cachedFilePath}`);
       
       // Reproducir el archivo cacheado directamente
-      await this.playNativeVideo(cachedFilePath, 0, autoPlay, crtFilter); // seekTime ya aplicado durante transcoding original
+      await this.playNativeVideo(cachedFilePath, 0, autoPlay, crtFilter, crtStyle); // seekTime ya aplicado durante transcoding original
       return;
     } catch {
       // El archivo no existe en cache, proceder con transcoding
@@ -778,7 +723,7 @@ export class VideoStreamManager {
       
       // Reproducir el archivo transcodificado
       console.log(`🎬 [VideoStreamManager] Reproduciendo archivo transcodificado...`);
-      await this.playNativeVideo(tempFilePath, 0, autoPlay, crtFilter); // seekTime ya aplicado
+      await this.playNativeVideo(tempFilePath, 0, autoPlay, crtFilter, crtStyle); // seekTime ya aplicado
       
       // Marcar el estado actual
       this.currentPlayback = {
@@ -850,13 +795,41 @@ export class VideoStreamManager {
   /**
    * Estrategia 3: HTTP Streaming con FFmpeg
    */
-  private async playWithHttpStreaming(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false): Promise<void> {
+  private async playWithHttpStreaming(filePath: string, seekTime: number, autoPlay: boolean, crtFilter: boolean = false, crtStyle: CRTFilterStyle = DEFAULT_CRT_FILTER_STYLE): Promise<void> {
     console.log(`🌐 [VideoStreamManager] HTTP Streaming: ${filePath}`);
-    
+
     // TODO: Implementar HTTP server interno con FFmpeg
     // Por ahora, intentar reproducción nativa como fallback
     console.warn('⚠️ [VideoStreamManager] HTTP streaming no implementado aún, intentando reproducción nativa');
-    await this.playNativeVideo(filePath, seekTime, autoPlay, crtFilter);
+    await this.playNativeVideo(filePath, seekTime, autoPlay, crtFilter, crtStyle);
+  }
+
+  /**
+   * Cambia el filtro CRT del video en reproducción sin reiniciar el episodio.
+   *
+   * Se invoca cuando el usuario mueve el control remoto: así cambiar de shader
+   * (o apagar/encender el filtro) es instantáneo y no corta la reproducción.
+   *
+   * @param {boolean} enabled Si el filtro CRT debe estar activo
+   * @param {CRTFilterStyle} style Shader a usar ('analog-replay' | 'royale')
+   * @returns {Promise<boolean>} true si se aplicó sobre el video actual
+   */
+  public async configureCrtFilter(enabled: boolean, style?: CRTFilterStyle): Promise<boolean> {
+    if (!this.mainWindow || this.mainWindow.isDestroyed()) return false;
+
+    const crtStyle: CRTFilterStyle = isCRTFilterStyle(style) ? style : DEFAULT_CRT_FILTER_STYLE;
+
+    try {
+      const result = await this.mainWindow.webContents.executeJavaScript(
+        buildCrtReconfigureScript(enabled, crtStyle)
+      );
+      const applied = Boolean(result && result.applied);
+      console.log(`🎨 [VideoStreamManager] Filtro CRT reconfigurado: ${enabled ? crtStyle : 'off'} (${applied ? 'ok' : 'sin video en pantalla'})`);
+      return applied;
+    } catch (error) {
+      console.warn('⚠️ [VideoStreamManager] No se pudo reconfigurar el filtro CRT:', error);
+      return false;
+    }
   }
 
   /**

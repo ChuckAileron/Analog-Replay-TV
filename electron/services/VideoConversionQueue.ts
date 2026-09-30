@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
-import { VideoConverter } from './VideoConverter';
-import { VideoAnalyzer } from './VideoAnalyzer';
+import { VideoConverter } from './VideoConverter.js';
+import { VideoAnalyzer } from './VideoAnalyzer.js';
 import type { ConversionProgress, VideoMetadata, ShowEntry } from '../types/video.types';
 import * as path from 'path';
 

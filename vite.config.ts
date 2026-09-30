@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: path.resolve(__dirname, 'src'),
   plugins: [react()],
   optimizeDeps: {
     exclude: ['electron'],
@@ -24,14 +25,12 @@ export default defineConfig({
   },
   base: './',
   build: {
-    outDir: 'dist',
+    outDir: path.resolve(__dirname, 'dist'),
     assetsDir: 'assets',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-        admin: path.resolve(__dirname, 'admin.html'),
-      },
+      input: path.resolve(__dirname, 'src/index.html'),
     },
   },
+  publicDir: path.resolve(__dirname, 'public'),
 })

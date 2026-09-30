@@ -123,6 +123,19 @@ try {
         }
       },
 
+      saveSettingsConfig: async (settings: Record<string, unknown>) => {
+        return ipcRenderer.invoke('save-settings-config', settings);
+      },
+      migrateSettingsConfig: async (legacySettings: Record<string, unknown>) => {
+        return ipcRenderer.invoke('migrate-settings-config', legacySettings);
+      },
+      saveCommercialsConfig: async (config: Record<string, unknown>) => {
+        return ipcRenderer.invoke('save-commercials-config', config);
+      },
+      loadCommercialsConfig: async () => {
+        return ipcRenderer.invoke('load-commercials-config');
+      },
+
       // Channel Import API
       selectChannelFile: async () => {
         console.log('Opening channel file dialog');
@@ -542,6 +555,15 @@ try {
         }
       },
 
+      configureCrtFilter: async (enabled: boolean, style?: string) => {
+        try {
+          return await ipcRenderer.invoke('configure-crt-filter', { enabled, style });
+        } catch (error) {
+          console.error('Error in configureCrtFilter:', error);
+          return { success: false, applied: false };
+        }
+      },
+
       cleanupTempFile: async (tempFilePath: string) => {
         console.log('Requesting temp file cleanup:', tempFilePath);
         try {
@@ -730,18 +752,6 @@ try {
       },
 
       // ===== FIN RENDERER EVENTS API =====
-
-      // ===== APP / VENTANAS =====
-      // Abre la consola de configuración en su propia ventana de escritorio
-      openAdminWindow: async () => {
-        try {
-          const result = await ipcRenderer.invoke('open-admin-window');
-          return result ?? { success: true };
-        } catch (error) {
-          console.error('Error openAdminWindow:', error);
-          return { success: false, error: String(error) };
-        }
-      },
 
       // ===== FIN MOTOR DE VIDEO =====
     }

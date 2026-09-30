@@ -1,6 +1,7 @@
 // Wrapper para adaptar TVShow a VideoStreamManager
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { TVShow, TVSeason, TVEpisode } from '../types/show.types';
+import type { CRTFilterStyle } from '../types/tv.types';
 import { getEpisodeFileNames } from '../utils/episodeFiles';
 import { groupEpisodesIntoBlocks, parseDurationToSeconds } from '../utils/episodeBlocks';
 import '../styles/loading-animations.css';
@@ -13,6 +14,7 @@ interface TVShowPlayerProps {
   style?: 'retro-90s' | 'retro-00s' | 'modern';
   className?: string;
   crtFilter?: boolean;
+  crtStyle?: CRTFilterStyle;   // Shader del filtro CRT ('analog-replay' | 'royale')
   volume?: number;  // 0-100
   muted?: boolean;
 }
@@ -34,6 +36,7 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
   style = 'retro-90s',
   className = '',
   crtFilter = false,
+  crtStyle = 'analog-replay',
   volume = 100,
   muted = false
 }) => {
@@ -155,7 +158,8 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
         filePath: fullPath,
         seekTime: Math.max(0, Math.floor(localSeekSeconds)),
         autoPlay: true,
-        crtFilter: crtFilter
+        crtFilter: crtFilter,
+        crtStyle: crtStyle
       });
 
       console.log('✅ [TVShowPlayer] Reproducción iniciada exitosamente');
@@ -371,42 +375,27 @@ export const TVShowPlayer: React.FC<TVShowPlayerProps> = ({
     };
   }, []);
 
-  // Efecto separado para manejar solo el cambio de filtro CRT sin reiniciar video
+  // Efecto separado para manejar el filtro CRT sin reiniciar el video.
+  // delegated a VideoStreamManager, que reconstruye la capa del filtro
+  // (Canvas 2D o shader WebGL) sobre el <video> que ya está reproduciendo.
   useEffect(() => {
-    // Solo aplicar/remover la clase CRT al video existente
-    const applyFilterToExistingVideo = async () => {
+    if (isLoading || error) return;
+    if (!window.electronAPI?.configureCrtFilter) return;
+
+    let cancelled = false;
+    const applyCrtFilter = async () => {
       try {
-        const script = `
-          (() => {
-            const video = document.querySelector('#vsm-main-video');
-            if (video) {
-              if (${crtFilter}) {
-                video.classList.add('crt-filter');
-                console.log('🎨 [CRT] Filtro aplicado a video existente');
-              } else {
-                video.classList.remove('crt-filter');
-                console.log('🎨 [CRT] Filtro removido de video existente');
-              }
-              return { success: true, hasVideo: true };
-            }
-            return { success: true, hasVideo: false };
-          })();
-        `;
-        
-        if ((window as any).electronAPI?.executeScript) {
-          const result = await (window as any).electronAPI.executeScript(script);
-          console.log('🎨 [TVShowPlayer] CRT filter toggle result:', result);
-        }
-      } catch {
-        console.log('🎨 [TVShowPlayer] No video element to apply CRT filter to yet');
+        const result = await window.electronAPI.configureCrtFilter(crtFilter, crtStyle);
+        if (cancelled) return;
+        console.log('🎨 [TVShowPlayer] Filtro CRT:', crtFilter ? crtStyle : 'OFF', result);
+      } catch (crtError) {
+        console.log('🎨 [TVShowPlayer] No se pudo aplicar el filtro CRT:', crtError);
       }
     };
 
-    // Solo ejecutar si no estamos cargando (es decir, hay un video ya reproduciendo)
-    if (!isLoading && !error) {
-      applyFilterToExistingVideo();
-    }
-  }, [crtFilter, isLoading, error]); // Solo cuando cambie el filtro CRT
+    applyCrtFilter();
+    return () => { cancelled = true; };
+  }, [crtFilter, crtStyle, isLoading, error]); // Solo cuando cambie el filtro CRT
 
   // Efecto separado para aplicar volumen/mute al video existente sin reiniciar la reproducción
   // (usado por el control remoto simulado y el ajuste de volumen del menú)
